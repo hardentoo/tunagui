@@ -1,0 +1,22 @@
+name:                tunagui
+version:             0.1.0.0
+-- synopsis:            
+-- description:         
+homepage:            https://github.com/masatoko/tunagui
+license:             BSD3
+license-file:        LICENSE
+author:              Masato Kobayashi
+maintainer:          masatokodo@gmail.com
+-- copyright:           
+category:            Graphics
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  -- exposed-modules:     
+  -- other-modules:       
+  -- other-extensions:    
+  build-depends:       base >=4.7 && <4.8
+  -- hs-source-dirs:      
+  default-language:    Haskell2010
