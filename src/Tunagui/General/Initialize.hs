@@ -11,13 +11,11 @@ import qualified SDL
 import           Tunagui.General.Data (Contents (..), Settings, withTWindow)
 
 withTunagui :: Settings -> (Contents -> IO a) -> IO a
-withTunagui _stg work = bracket_ SDL.initializeAll
-                                 SDL.quit
-                                 go
-  where
-    go = withTWindow $ \tWin -> do
-          _ <- forkIO eventLoop
-          work $ Contents tWin
+withTunagui _stg work =
+  bracket_ SDL.initializeAll SDL.quit $
+    withTWindow $ \tWin -> do
+      _ <- forkIO eventLoop
+      work $ Contents tWin
 
 eventLoop :: IO () -- MOVE!
 eventLoop = loop
