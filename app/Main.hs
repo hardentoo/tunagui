@@ -8,6 +8,7 @@ import qualified Tunagui            as GUI
 main :: IO ()
 main =
   GUI.withTunagui GUI.Settings $ \_ ->
-    forever $ do
-      putStrLn "."
-      threadDelay 1000000
+    GUI.withTWindow $ \_tw ->
+      forever $ do
+        putStrLn "."
+        threadDelay 1000000

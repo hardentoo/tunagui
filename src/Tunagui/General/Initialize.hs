@@ -4,42 +4,18 @@ module Tunagui.General.Initialize
 
 import           Control.Concurrent   (forkIO, threadDelay)
 import           Control.Exception
-import qualified Data.Text            as T
-import           Linear               (V2 (..))
 
-import           SDL                  (($=))
 import qualified SDL
 
-import           Tunagui.General.Data (Contents (..), Settings)
-
-newTunagui :: Settings -> IO Contents
-newTunagui _stg = do
-  SDL.initializeAll
-  w <- SDL.createWindow (T.pack "title") winConf
-  r <- SDL.createRenderer w (-1) SDL.defaultRenderer
-  return Contents
-    { mainWindow = w
-    , mainRenderer = r
-    }
-  where
-    winConf = SDL.defaultWindow
-      { SDL.windowResizable = True
-      , SDL.windowInitialSize = V2 300 300
-      }
-
-releaseTunagui :: Contents -> IO ()
-releaseTunagui c = do
-  SDL.destroyWindow $ mainWindow c
-  SDL.destroyRenderer $ mainRenderer c
-  SDL.quit
+import           Tunagui.General.Data (Contents(..), Settings, withTWindow)
 
 withTunagui :: Settings -> (Contents -> IO a) -> IO a
-withTunagui stg work =
-  bracket (newTunagui stg) releaseTunagui $ \tunagui -> do
-    forkIO $ do
-      eventLoop
-      releaseTunagui tunagui
-    work tunagui
+withTunagui _stg work =
+  bracket SDL.initializeAll
+          (const SDL.quit)
+          (\_ -> withTWindow $ \twin -> do
+                  _ <- forkIO eventLoop
+                  work $ Contents twin)
 
 eventLoop :: IO () -- dummy
 eventLoop = loop
