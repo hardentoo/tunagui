@@ -1,6 +1,7 @@
 module Tunagui
-( tunagui
+( Settings(..)
+, withTunagui
 ) where
 
-tunagui :: String
-tunagui = "test"
+import Tunagui.General.Data (Settings(..))
+import Tunagui.General.Initialize (withTunagui)

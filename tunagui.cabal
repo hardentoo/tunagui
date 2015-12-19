@@ -16,6 +16,8 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Tunagui
+                     , Tunagui.General.Data
+                     , Tunagui.General.Initialize
   -- other-modules:
   -- other-extensions:
   build-depends:       base

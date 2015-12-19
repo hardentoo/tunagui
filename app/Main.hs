@@ -1,6 +1,7 @@
 module Main where
 
-import Tunagui
+import qualified Tunagui as GUI
 
 main :: IO ()
-main = putStrLn tunagui
+main =
+  GUI.withTunagui GUI.Settings $ \tng -> putStrLn "work"
