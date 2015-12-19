@@ -3,5 +3,5 @@ module Tunagui
 , withTunagui
 ) where
 
-import Tunagui.General.Data (Settings(..))
-import Tunagui.General.Initialize (withTunagui)
+import           Tunagui.General.Data       (Settings (..))
+import           Tunagui.General.Initialize (withTunagui)

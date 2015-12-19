@@ -6,7 +6,7 @@ module Tunagui.General.Data
 import qualified SDL
 
 data Contents = Contents
-  { mainWindow :: SDL.Window
+  { mainWindow   :: SDL.Window
   , mainRenderer :: SDL.Renderer
   }
 

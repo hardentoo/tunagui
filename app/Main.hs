@@ -1,9 +1,9 @@
 module Main where
 
-import Control.Monad (forever)
-import Control.Concurrent (threadDelay)
+import           Control.Concurrent (threadDelay)
+import           Control.Monad      (forever)
 
-import qualified Tunagui as GUI
+import qualified Tunagui            as GUI
 
 main :: IO ()
 main =

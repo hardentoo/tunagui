@@ -2,15 +2,15 @@ module Tunagui.General.Initialize
   ( withTunagui
   ) where
 
-import Control.Exception
-import Linear (V2(..))
-import qualified Data.Text as T
-import Control.Concurrent (forkIO, threadDelay)
+import           Control.Concurrent   (forkIO, threadDelay)
+import           Control.Exception
+import qualified Data.Text            as T
+import           Linear               (V2 (..))
 
+import           SDL                  (($=))
 import qualified SDL
-import SDL (($=))
 
-import Tunagui.General.Data (Contents(..), Settings)
+import           Tunagui.General.Data (Contents (..), Settings)
 
 newTunagui :: Settings -> IO Contents
 newTunagui _stg = do
