@@ -1,7 +1,12 @@
 module Tunagui.General.Data
-  ( Tunagui(..)
+  ( Contents(..)
   , Settings(..)
   ) where
 
-data Tunagui = Tunagui -- dummy
+import qualified SDL
+
+data Contents = Contents
+  { mainWindow :: SDL.Window
+  }
+
 data Settings = Settings -- dummy
