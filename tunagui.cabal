@@ -29,7 +29,7 @@ library
 executable tunagui-exe
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -rtsopts
+  ghc-options:         -rtsopts -Wall
   build-depends:       base
                      , tunagui
   default-language:    Haskell2010
