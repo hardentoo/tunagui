@@ -2,25 +2,30 @@ module Tunagui.General.Initialize
   ( withTunagui
   ) where
 
-import           Control.Concurrent   (forkIO, threadDelay)
+import           Control.Concurrent   (forkIO)
 import           Control.Exception
+import           Control.Monad        (unless)
 
 import qualified SDL
 
-import           Tunagui.General.Data (Contents(..), Settings, withTWindow)
+import           Tunagui.General.Data (Contents (..), Settings, withTWindow)
 
 withTunagui :: Settings -> (Contents -> IO a) -> IO a
-withTunagui _stg work =
-  bracket SDL.initializeAll
-          (const SDL.quit)
-          (\_ -> withTWindow $ \twin -> do
-                  _ <- forkIO eventLoop
-                  work $ Contents twin)
+withTunagui _stg work = bracket_ SDL.initializeAll
+                                 SDL.quit
+                                 go
+  where
+    go = withTWindow $ \tWin -> do
+          _ <- forkIO eventLoop
+          work $ Contents tWin
 
-eventLoop :: IO () -- dummy
+eventLoop :: IO () -- MOVE!
 eventLoop = loop
   where
     loop :: IO ()
     loop = do
-      threadDelay 1000000
-      loop
+      es <- SDL.pollEvents
+      unless (any isQuit es) loop
+
+    isQuit :: SDL.Event -> Bool
+    isQuit e = SDL.eventPayload e == SDL.QuitEvent
