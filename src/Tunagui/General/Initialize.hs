@@ -16,7 +16,11 @@ newTunagui :: Settings -> IO Contents
 newTunagui _stg = do
   SDL.initializeAll
   w <- SDL.createWindow (T.pack "title") winConf
-  return Contents {mainWindow = w}
+  r <- SDL.createRenderer w (-1) SDL.defaultRenderer
+  return Contents
+    { mainWindow = w
+    , mainRenderer = r
+    }
   where
     winConf = SDL.defaultWindow
       { SDL.windowResizable = True
@@ -26,6 +30,7 @@ newTunagui _stg = do
 releaseTunagui :: Contents -> IO ()
 releaseTunagui c = do
   SDL.destroyWindow $ mainWindow c
+  SDL.destroyRenderer $ mainRenderer c
   SDL.quit
 
 withTunagui :: Settings -> (Contents -> IO a) -> IO a
