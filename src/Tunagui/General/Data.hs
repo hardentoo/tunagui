@@ -1,5 +1,6 @@
 module Tunagui.General.Data
   ( Contents(..)
+  , FrameEvents(..)
   , Settings(..)
   --
   , TWindow(..)
@@ -13,9 +14,18 @@ import           Control.Exception (bracket)
 import qualified Data.Text         as T
 import           Linear            (V2 (..))
 import qualified SDL
+import           FRP.Sodium
+
+import           Tunagui.General.Types (IPoint)
 
 data Contents = Contents
   { mainWindow :: TWindow
+  }
+
+data FrameEvents = FrameEvents
+  { eQuit :: Event ()
+  , ePML :: Event IPoint -- Press Mouse Left
+  , eRML :: Event IPoint -- Release Mouse Left
   }
 
 data Settings = Settings -- dummy

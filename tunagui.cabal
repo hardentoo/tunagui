@@ -17,11 +17,14 @@ library
   hs-source-dirs:      src
   exposed-modules:     Tunagui
                      , Tunagui.General.Data
+                     , Tunagui.General.Types
+                     , Tunagui.General.Event
                      , Tunagui.General.Initialize
   -- other-modules:
   -- other-extensions:
   build-depends:       base
                      , text
+                     , sodium
                      , sdl2
                      , linear
   default-language:    Haskell2010

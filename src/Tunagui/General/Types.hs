@@ -1,7 +1,13 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 module Tunagui.General.Types
-  ( Point (..)
+  (
+    IPoint, Point(..)
   ) where
 
 import Linear (V2(..))
 
-newtype Point = P (V2 Int)
+type IPoint = Point Int
+
+newtype Point a = P (V2 a)
+  deriving (Show, Eq, Functor)
