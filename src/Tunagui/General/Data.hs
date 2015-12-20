@@ -1,9 +1,11 @@
 module Tunagui.General.Data
-  ( Contents(..)
-  , FrameEvents(..)
-  , Settings(..)
+  (
+    TunaContents (..)
+  , TunaState (..)
+  , FrameEvents (..)
+  , Settings (..)
   --
-  , TWindow(..)
+  , TWindow (..)
   -- , newTWindow
   -- , releaseTWindow
   , withTWindow
@@ -18,9 +20,14 @@ import           FRP.Sodium
 
 import           Tunagui.General.Types (IPoint)
 
-data Contents = Contents
-  { mainWindow :: TWindow
+data TunaContents = TunaContents
+  { cntTWindow :: TWindow
+  , cntEvents :: FrameEvents
   }
+
+data TunaState = TunaState
+  { stTest :: Int -- test!
+  } deriving Show
 
 data FrameEvents = FrameEvents
   { eQuit :: Event ()
