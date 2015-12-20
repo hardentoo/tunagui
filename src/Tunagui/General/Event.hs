@@ -2,15 +2,15 @@ module Tunagui.General.Event
   ( listenAllEvents
   ) where
 
-import           Control.Concurrent (forkIO)
 import           Control.Applicative
+import           Control.Concurrent    (forkIO)
 import           Control.Monad         (unless, when)
 import           FRP.Sodium
 import qualified Linear.Affine         as A
 
 import qualified SDL
 
-import           Tunagui.General.Data (FrameEvents(..))
+import           Tunagui.General.Data  (FrameEvents (..))
 import qualified Tunagui.General.Types as T
 
 type EventPusher = SDL.Event -> Reactive ()

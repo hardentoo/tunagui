@@ -4,11 +4,11 @@ module Tunagui.General.Tunagui
   ( Tunagui, runTunagui
   ) where
 
-import Control.Applicative
-import Control.Monad.Reader
-import Control.Monad.State
+import           Control.Applicative
+import           Control.Monad.Reader
+import           Control.Monad.State
 
-import Tunagui.General.Data (TunaContents(..), TunaState(..))
+import           Tunagui.General.Data (TunaContents (..), TunaState (..))
 
 newtype Tunagui a = Tng {
     runTng :: ReaderT TunaContents (StateT TunaState IO) a

@@ -5,7 +5,7 @@ module Tunagui.General.Types
     IPoint, Point(..)
   ) where
 
-import Linear (V2(..))
+import           Linear (V2 (..))
 
 type IPoint = Point Int
 

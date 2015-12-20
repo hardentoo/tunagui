@@ -6,23 +6,21 @@ module Tunagui.General.Data
   , Settings (..)
   --
   , TWindow (..)
-  -- , newTWindow
-  -- , releaseTWindow
   , withTWindow
   --
   ) where
 
-import           Control.Exception (bracket)
-import qualified Data.Text         as T
-import           Linear            (V2 (..))
-import qualified SDL
+import           Control.Exception     (bracket)
+import qualified Data.Text             as T
 import           FRP.Sodium
+import           Linear                (V2 (..))
+import qualified SDL
 
 import           Tunagui.General.Types (IPoint)
 
 data TunaContents = TunaContents
   { cntTWindow :: TWindow
-  , cntEvents :: FrameEvents
+  , cntEvents  :: FrameEvents
   }
 
 data TunaState = TunaState
@@ -31,8 +29,8 @@ data TunaState = TunaState
 
 data FrameEvents = FrameEvents
   { eQuit :: Event ()
-  , ePML :: Event IPoint -- Press Mouse Left
-  , eRML :: Event IPoint -- Release Mouse Left
+  , ePML  :: Event IPoint -- Press Mouse Left
+  , eRML  :: Event IPoint -- Release Mouse Left
   }
 
 data Settings = Settings -- dummy

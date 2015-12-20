@@ -7,9 +7,10 @@ import           Control.Exception
 
 import qualified SDL
 
-import Tunagui.General.Tunagui (Tunagui, runTunagui)
-import           Tunagui.General.Data  (TunaContents(..), Settings, withTWindow)
-import           Tunagui.General.Event (listenAllEvents)
+import           Tunagui.General.Data    (Settings, TunaContents (..),
+                                          withTWindow)
+import           Tunagui.General.Event   (listenAllEvents)
+import           Tunagui.General.Tunagui (Tunagui, runTunagui)
 
 withTunagui :: Settings -> Tunagui a -> IO a
 withTunagui _stg tunagui =
