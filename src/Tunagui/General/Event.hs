@@ -40,7 +40,6 @@ listenAllEvents = do
         isQuit e = SDL.eventPayload e == SDL.QuitEvent
 
 type EventPair a = (Event a, EventPusher)
-type EventHelper a = (a -> Reactive ()) -> SDL.Event -> Reactive ()
 
 quitEvent :: IO (EventPair ())
 quitEvent = fmap work <$> sync newEvent
@@ -57,3 +56,4 @@ mouseEvent motion button = fmap work <$> sync newEvent
               isB = SDL.mouseButtonEventButton dat == button
               (A.P p) = SDL.mouseButtonEventPos dat
           when (isM && isB) $ push $ fromIntegral <$> T.P p
+        _ -> return ()

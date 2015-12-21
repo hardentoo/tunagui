@@ -16,16 +16,21 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Tunagui
+                     , Tunagui.Operation
                      , Tunagui.General.Data
-                     , Tunagui.General.Tunagui
                      , Tunagui.General.Types
                      , Tunagui.General.Event
                      , Tunagui.General.Initialize
+                     , Tunagui.Internal.Base
+                     , Tunagui.Internal.Operation.Draw
+                     , Tunagui.Internal.Operation.Draw.SDL
   -- other-modules:
   -- other-extensions:
   build-depends:       base
                      , mtl
+                     , transformers
                      , text
+                     , operational
                      , sodium
                      , sdl2
                      , linear
