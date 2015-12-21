@@ -8,11 +8,12 @@ import Control.Monad.Operational
 import Control.Monad.Reader (asks)
 import Linear.V2 (V2(..))
 import Linear.V4 (V4(..))
+import FRP.Sodium
 
 import qualified Tunagui.General.Types as T
-import Tunagui.General.Data (cntTWindow)
+import qualified Tunagui.General.Data as D
 import Tunagui.Internal.Base
-import qualified Tunagui.Internal.Operation.Draw.SDL as D
+import qualified Tunagui.Internal.Operation.Draw.SDL as R
 
 data TunaguiI a where
   TestOperation :: TunaguiI ()
@@ -32,13 +33,17 @@ eval :: ProgramViewT TunaguiI Base a -> Base a
 eval (Return a) = return a
 
 eval (TestOperation :>>= is) = do
-  tw <- asks cntTWindow
+  -- test mouse button click
+  e <- asks (D.ePML . D.cntEvents)
+  liftIO . sync $ listen e print
+  --
+  tw <- asks D.cntTWindow
   liftIO $ do
     print "in Tunagui Monad!"
-    D.runDraw tw $ do
-      D.setColor (V4 255 0 0 255)
-      D.clear
-      D.setColor (V4 255 255 255 255)
-      D.drawRect (T.P (V2 100 100)) (T.S (V2 100 100))
-      D.flush
+    R.runDraw tw $ do
+      R.setColor (V4 255 0 0 255)
+      R.clear
+      R.setColor (V4 255 255 255 255)
+      R.drawRect (T.P (V2 100 100)) (T.S (V2 100 100))
+      R.flush
   interpret (is ())
