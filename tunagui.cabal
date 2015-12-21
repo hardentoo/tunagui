@@ -22,8 +22,8 @@ library
                      , Tunagui.General.Event
                      , Tunagui.General.Initialize
                      , Tunagui.Internal.Base
-                     , Tunagui.Internal.Operation.Draw
-                     , Tunagui.Internal.Operation.Draw.SDL
+                     , Tunagui.Internal.Operation.Render
+                     , Tunagui.Internal.Operation.Render.SDL
   -- other-modules:
   -- other-extensions:
   build-depends:       base

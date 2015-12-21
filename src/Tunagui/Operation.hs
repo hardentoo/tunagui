@@ -13,7 +13,7 @@ import FRP.Sodium
 import qualified Tunagui.General.Types as T
 import qualified Tunagui.General.Data as D
 import Tunagui.Internal.Base
-import qualified Tunagui.Internal.Operation.Draw.SDL as R
+import qualified Tunagui.Internal.Operation.Render.SDL as R
 
 data TunaguiI a where
   TestOperation :: TunaguiI ()
@@ -40,7 +40,7 @@ eval (TestOperation :>>= is) = do
   r <- asks (D.twRenderer . D.cntTWindow)
   liftIO $ do
     print "in Tunagui Monad!"
-    R.runDraw r $ do
+    R.runRender r $ do
       R.setColor (V4 255 0 0 255)
       R.clear
       R.setColor (V4 255 255 255 255)

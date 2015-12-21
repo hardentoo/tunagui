@@ -1,8 +1,8 @@
 {-# LANGUAGE GADTs #-}
 
-module Tunagui.Internal.Operation.Draw.SDL
+module Tunagui.Internal.Operation.Render.SDL
   (
-    runDraw
+    runRender
   ----- Operation
   -- Basic
   , clear
@@ -23,17 +23,17 @@ import           SDL                             (($=))
 import qualified SDL
 
 import qualified Tunagui.General.Types as T
-import           Tunagui.Internal.Operation.Draw
+import           Tunagui.Internal.Operation.Render
 
-runDraw = interpret
+runRender = interpret
 
-interpret :: SDL.Renderer -> DrawP IO a -> IO ()
+interpret :: SDL.Renderer -> RenderP IO a -> IO ()
 interpret r is = eval r =<< viewT is
 
 convP (T.P p) = A.P $ fromIntegral <$> p
 convS (T.S s) = fromIntegral <$> s
 
-eval :: SDL.Renderer -> ProgramViewT DrawI IO a -> IO ()
+eval :: SDL.Renderer -> ProgramViewT RenderI IO a -> IO ()
 eval _ (Return _) = return ()
 
 -- Basic
