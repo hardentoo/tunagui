@@ -53,11 +53,11 @@ newTWindow = do
       , SDL.windowInitialSize = V2 300 300
       }
 
-releaseTWindow :: TWindow -> IO ()
-releaseTWindow twin = do
+freeTWindow :: TWindow -> IO ()
+freeTWindow twin = do
   SDL.destroyRenderer $ twRenderer twin
   SDL.destroyWindow $ twWindow twin
 
 withTWindow :: (TWindow -> IO a) -> IO a
 withTWindow =
-  bracket newTWindow releaseTWindow
+  bracket newTWindow freeTWindow
