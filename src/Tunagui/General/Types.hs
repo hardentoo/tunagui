@@ -2,12 +2,17 @@
 
 module Tunagui.General.Types
   (
-    IPoint, Point(..)
+    Point(..), IPoint
+  , Size(..), ISize
   ) where
 
 import           Linear (V2 (..))
 
-type IPoint = Point Int
-
 newtype Point a = P (V2 a)
   deriving (Show, Eq, Functor)
+
+newtype Size a = S (V2 a)
+  deriving (Show, Eq, Functor)
+
+type IPoint = Point Int
+type ISize = Size Int

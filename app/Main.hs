@@ -11,10 +11,9 @@ import qualified Tunagui                as GUI
 import qualified Tunagui.Operation      as OP
 
 main :: IO ()
-main = do
-  print "test"
+main =
   GUI.withTunagui GUI.Settings $ do
-    OP.testOperate
+    OP.testOperation
     liftIO . forever $ do
       putStrLn "."
       threadDelay 1000000
