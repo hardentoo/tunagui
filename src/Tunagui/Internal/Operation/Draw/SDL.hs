@@ -23,30 +23,30 @@ import           SDL                             (($=))
 import qualified SDL
 
 import qualified Tunagui.General.Types as T
-import           Tunagui.General.Data            (TWindow (..))
 import           Tunagui.Internal.Operation.Draw
 
 runDraw = interpret
 
-interpret :: TWindow -> DrawP IO a -> IO ()
-interpret t is = eval t =<< viewT is
+interpret :: SDL.Renderer -> DrawP IO a -> IO ()
+interpret r is = eval r =<< viewT is
 
-eval :: TWindow -> ProgramViewT DrawI IO a -> IO ()
+convP (T.P p) = A.P $ fromIntegral <$> p
+convS (T.S s) = fromIntegral <$> s
+
+eval :: SDL.Renderer -> ProgramViewT DrawI IO a -> IO ()
 eval _ (Return _) = return ()
-eval tw i = eval' i
-  where
-    rnd = twRenderer tw
-    convP (T.P p) = A.P $ fromIntegral <$> p
-    convS (T.S s) = fromIntegral <$> s
-    --
-    eval' (Clear :>>= is) = SDL.clear rnd >> interpret tw (is ())
-    eval' (Flush :>>= is) = SDL.present rnd >> interpret tw (is ())
-    eval' (SetColor c :>>= is) = do
-      SDL.rendererDrawColor rnd $= c
-      interpret tw (is ())
-    eval' (FillRect p s :>>= is) = do
-      SDL.fillRect rnd $ Just (SDL.Rectangle (convP p) (convS s))
-      interpret tw (is ())
-    eval' (DrawRect p s :>>= is) = do
-      SDL.drawRect rnd $ Just (SDL.Rectangle (convP p) (convS s))
-      interpret tw (is ())
+
+-- Basic
+eval r (Clear :>>= is) = SDL.clear r >> interpret r (is ())
+eval r (Flush :>>= is) = SDL.present r >> interpret r (is ())
+eval r (SetColor c :>>= is) = do
+  SDL.rendererDrawColor r $= c
+  interpret r (is ())
+
+-- Rect
+eval r (FillRect p s :>>= is) = do
+  SDL.fillRect r $ Just (SDL.Rectangle (convP p) (convS s))
+  interpret r (is ())
+eval r (DrawRect p s :>>= is) = do
+  SDL.drawRect r $ Just (SDL.Rectangle (convP p) (convS s))
+  interpret r (is ())

@@ -37,10 +37,10 @@ eval (TestOperation :>>= is) = do
   e <- asks (D.ePML . D.cntEvents)
   liftIO . sync $ listen e print
   --
-  tw <- asks D.cntTWindow
+  r <- asks (D.twRenderer . D.cntTWindow)
   liftIO $ do
     print "in Tunagui Monad!"
-    R.runDraw tw $ do
+    R.runDraw r $ do
       R.setColor (V4 255 0 0 255)
       R.clear
       R.setColor (V4 255 255 255 255)
