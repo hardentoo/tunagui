@@ -1,6 +1,6 @@
-module Tunagui.Primitive.Button where
+module Tunagui.Widgets.Prim.Button where
 
-data Button
+data Button = Button
 
 newButton :: IO Button
 newButton = do
