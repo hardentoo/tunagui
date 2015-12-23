@@ -5,11 +5,9 @@ import           Control.Monad               (forever)
 import           Control.Monad.IO.Class      (liftIO)
 
 import           FRP.Sodium
-import           Linear.V2
 
 import qualified Tunagui                     as GUI
 
-import           Tunagui.General.Types       as T
 import           Tunagui.Operation
 
 import           Tunagui.Widgets.Features    (onClick)
@@ -19,7 +17,7 @@ main :: IO ()
 main =
   GUI.withTunagui GUI.Settings $ do
     testOperation
-    btn <- mkButton $ ButtonConfig (T.S (V2 100 40))
+    btn <- mkButton $ ButtonConfig 100 40
     _ <- liftIO . sync . listen (onClick btn) $ \p -> putStrLn $ "click: " ++ show p
     --
     liftIO . forever $ do

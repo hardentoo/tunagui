@@ -15,33 +15,48 @@ import           Tunagui.Internal.Base
 import qualified Tunagui.Widgets.Prim.Component.ClickableArea as CLK
 
 import           Tunagui.Widgets.Features                     (Clickable,
-                                                               onClick)
+                                                               Renderable,
+                                                               onClick, render)
 
 -- TODO: Hide 'newButton' from user
 
 data Button = Button
-  { btnClkArea :: CLK.ClickableArea
+  { btnPos :: Behavior (T.Point Int)
+  , btnSize :: Behavior (T.Size Int)
+  -- Features
+  , btnClkArea :: CLK.ClickableArea
   }
 
 data ButtonConfig = ButtonConfig
-  { btnSize :: T.Size Int
+  { btnWidth :: Int
+  , btnHeight :: Int
   }
 
 
 instance Clickable Button where
   onClick = CLK.clickEvent . btnClkArea
 
+instance Renderable Button where
+  render = renderButton
+
 newButton :: ButtonConfig -> Base Button
 newButton cfg = do
   es <- asks D.cntEvents
   liftIO $ do
     (behPos,_) <- sync . newBehavior $ T.P (V2 0 0)
-    (behSize,_) <- sync . newBehavior $ btnSize cfg
+    (behSize,_) <- sync . newBehavior $ iniSize
     let behShape = T.Rect <$> behSize
     clk <- CLK.mkClickableArea behPos behShape (D.ePML es) (D.eRML es)
-    return $ Button clk
+    return $ Button behPos behSize clk
+  where
+    w = btnWidth cfg
+    h = btnHeight cfg
+    iniSize = T.S (V2 w h)
 
 -- freeButton :: Button -> IO ()
 -- freeButton button = do
 --   putStrLn "Add code freeing Button here."
 --   return ()
+
+renderButton :: Button -> IO ()
+renderButton = undefined
