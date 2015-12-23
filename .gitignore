@@ -16,3 +16,8 @@ cabal.sandbox.config
 *.hp
 stack.yaml
 .stack-work/
+
+### OSX ###
+.DS_Store
+.AppleDouble
+.LSOverride
