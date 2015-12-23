@@ -13,10 +13,8 @@ module Tunagui.Internal.Operation.Render.SDL
   , drawRect
   ) where
 
-import           Control.Applicative
-import           Control.Monad.IO.Class          (liftIO)
 import           Control.Monad.Operational
-import           Linear                          (V4 (..))
+import           Linear.V2
 import qualified Linear.Affine as A
 
 import           SDL                             (($=))
@@ -25,12 +23,16 @@ import qualified SDL
 import qualified Tunagui.General.Types as T
 import           Tunagui.Internal.Operation.Render
 
+runRender :: SDL.Renderer -> RenderP IO a -> IO ()
 runRender = interpret
 
 interpret :: SDL.Renderer -> RenderP IO a -> IO ()
 interpret r is = eval r =<< viewT is
 
+convP :: (Integral a, Integral b) => T.Point a -> A.Point V2 b
 convP (T.P p) = A.P $ fromIntegral <$> p
+
+convS :: (Integral a, Integral b) => T.Size a -> V2 b
 convS (T.S s) = fromIntegral <$> s
 
 eval :: SDL.Renderer -> ProgramViewT RenderI IO a -> IO ()
