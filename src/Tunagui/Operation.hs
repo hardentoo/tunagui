@@ -10,19 +10,19 @@ module Tunagui.Operation
   , mkButton
   ) where
 
-import Control.Monad.Operational
-import Control.Monad.Reader (asks)
-import Linear.V2 (V2(..))
-import Linear.V4 (V4(..))
-import FRP.Sodium
+import           Control.Monad.Operational
+import           Control.Monad.Reader                  (asks)
+import           FRP.Sodium
+import           Linear.V2                             (V2 (..))
+import           Linear.V4                             (V4 (..))
 
-import qualified Tunagui.General.Types as T
-import qualified Tunagui.General.Data as D
-import Tunagui.Internal.Base
+import qualified Tunagui.General.Data                  as D
+import qualified Tunagui.General.Types                 as T
+import           Tunagui.Internal.Base
 import qualified Tunagui.Internal.Operation.Render.SDL as R
 
-import Tunagui.Widgets.Features
-import qualified Tunagui.Widgets.Prim.Button as Button
+import           Tunagui.Widgets.Features
+import qualified Tunagui.Widgets.Prim.Button           as Button
 
 -- *****************************************************************************
 data TunaguiI a where

@@ -6,7 +6,7 @@ import           Linear                    (V4 (..))
 
 import           Control.Monad.Operational
 
-import           Tunagui.General.Types (IPoint, ISize)
+import           Tunagui.General.Types     (IPoint, ISize)
 
 type Render s = [s]
 

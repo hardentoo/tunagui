@@ -4,17 +4,18 @@ module Tunagui.Widgets.Prim.Button
   , newButton
   ) where
 
-import Control.Monad.Reader (asks)
-import FRP.Sodium
-import Linear.V2
+import           Control.Monad.Reader                         (asks)
+import           FRP.Sodium
+import           Linear.V2
 
 
-import qualified Tunagui.General.Data as D
-import qualified Tunagui.General.Types as T
-import Tunagui.Internal.Base
+import qualified Tunagui.General.Data                         as D
+import qualified Tunagui.General.Types                        as T
+import           Tunagui.Internal.Base
 import qualified Tunagui.Widgets.Prim.Component.ClickableArea as CLK
 
-import Tunagui.Widgets.Features (Clickable, onClick)
+import           Tunagui.Widgets.Features                     (Clickable,
+                                                               onClick)
 
 data Button = Button {
     btnClkArea :: CLK.ClickableArea

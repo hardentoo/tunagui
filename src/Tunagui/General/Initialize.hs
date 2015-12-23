@@ -11,7 +11,7 @@ import           Tunagui.General.Data  (Settings, TunaContents (..),
                                         withTWindow)
 import           Tunagui.General.Event (listenAllEvents)
 import           Tunagui.Internal.Base (Base, runBase)
-import           Tunagui.Operation     (interpret, TunaguiP)
+import           Tunagui.Operation     (TunaguiP, interpret)
 
 withTunagui :: Settings -> TunaguiP Base a -> IO a
 withTunagui _stg program =

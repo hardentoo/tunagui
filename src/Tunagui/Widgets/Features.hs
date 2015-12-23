@@ -1,6 +1,6 @@
 module Tunagui.Widgets.Features where
 
-import FRP.Sodium
+import           FRP.Sodium
 
 import qualified Tunagui.General.Types as T
 
