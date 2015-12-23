@@ -21,9 +21,4 @@ withTunagui _stg pgm =
            (withTWindow $ \tWin -> do
               es <- listenAllEvents
               let cnt = TunaContents tWin es
-              fst <$> runBase (interpret pgm) cnt mkState)
-
-mkState :: TunaState
-mkState = TunaState tree
-  where
-    tree = Container DirV []
+              fst <$> runBase (interpret pgm) cnt TunaState)

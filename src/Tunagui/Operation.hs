@@ -27,6 +27,7 @@ import qualified Tunagui.Widgets.Prim.Button           as Button
 -- *****************************************************************************
 data TunaguiI a where
   TestOperation :: TunaguiI ()
+  PushWidget    :: a -> TunaguiI ()
   -- make widgets
   MkButton      :: Button.ButtonConfig -> TunaguiI Button.Button
 
@@ -37,6 +38,7 @@ interpret is = eval =<< viewT is
 
 -- *****************************************************************************
 testOperation = singleton TestOperation
+pushWidget    = singleton . PushWidget
 mkButton      = singleton . MkButton
 
 -- *****************************************************************************
@@ -55,6 +57,10 @@ eval (TestOperation :>>= is) = do
     R.setColor (V4 255 255 255 255)
     R.drawRect (T.P (V2 100 100)) (T.S (V2 100 100))
     R.flush
+  interpret (is ())
+
+eval (PushWidget w :>>= is) = do
+  -- pushWidget
   interpret (is ())
 
 -- make widgets ================================================================

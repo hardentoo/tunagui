@@ -13,11 +13,12 @@ module Tunagui.General.Data
 import           Control.Exception      (bracket)
 import qualified Data.Text              as T
 import           FRP.Sodium
+import           GHC.Conc.Sync          (TVar, atomically, newTVar)
 import           Linear                 (V2 (..))
 import qualified SDL
 
 import           Tunagui.General.Types  (IPoint)
-import           Tunagui.Widgets.Layout (WidgetTree)
+import           Tunagui.Widgets.Layout (Direction (..), WidgetTree (..))
 
 data TunaContents = TunaContents
   { cntTWindow :: TWindow
@@ -25,8 +26,6 @@ data TunaContents = TunaContents
   }
 
 data TunaState = TunaState
-  { stTree :: WidgetTree
-  }
 
 data FrameEvents = FrameEvents
   { eQuit :: Event ()
@@ -38,16 +37,17 @@ data Settings = Settings -- dummy
 
 -- TWindow
 data TWindow = TWindow
-  { twWindow   :: SDL.Window
-  , twRenderer :: SDL.Renderer
---, twWidgetTree
+  { twWindow     :: SDL.Window
+  , twRenderer   :: SDL.Renderer
+  , twWidgetTree :: TVar WidgetTree
   }
 
 newTWindow :: IO TWindow
 newTWindow = do
   w <- SDL.createWindow (T.pack "title") winConf
   r <- SDL.createRenderer w (-1) SDL.defaultRenderer
-  return $ TWindow w r
+  tree <- atomically . newTVar $ Container DirV []
+  return $ TWindow w r tree
   where
     winConf = SDL.defaultWindow
       { SDL.windowResizable = True
