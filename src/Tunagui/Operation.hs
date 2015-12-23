@@ -8,7 +8,6 @@ module Tunagui.Operation
   --
   , testOperation
   , mkButton
-  -- , onClick
   ) where
 
 import Control.Monad.Operational
@@ -30,8 +29,6 @@ data TunaguiI a where
   TestOperation :: TunaguiI ()
   -- make widgets
   MkButton      :: TunaguiI Button.Button
-  -- widget operation
-  -- OnClick       :: Clickable a => a -> TunaguiI (Event (T.Point Int))
 
 type TunaguiP m a = ProgramT TunaguiI m a
 
@@ -41,30 +38,24 @@ interpret is = eval =<< viewT is
 -- *****************************************************************************
 testOperation = singleton TestOperation
 mkButton      = singleton MkButton
--- onClick       = singleton . OnClick
 
 -- *****************************************************************************
 eval :: ProgramViewT TunaguiI Base a -> Base a
 eval (Return a) = return a
 
+-- test mouse button click
 eval (TestOperation :>>= is) = do
-  -- test mouse button click
   e <- asks (D.ePML . D.cntEvents)
   liftIO . sync $ listen e print
   --
   r <- asks (D.twRenderer . D.cntTWindow)
-  liftIO $ do
-    print "in Tunagui Monad!"
-    R.runRender r $ do
-      R.setColor (V4 255 0 0 255)
-      R.clear
-      R.setColor (V4 255 255 255 255)
-      R.drawRect (T.P (V2 100 100)) (T.S (V2 100 100))
-      R.flush
+  liftIO . R.runRender r $ do
+    R.setColor (V4 255 0 0 255)
+    R.clear
+    R.setColor (V4 255 255 255 255)
+    R.drawRect (T.P (V2 100 100)) (T.S (V2 100 100))
+    R.flush
   interpret (is ())
 
 -- make widgets ================================================================
 eval (MkButton :>>= is) = interpret . is =<< Button.newButton
-
--- widget operation ============================================================
--- eval (OnClick clickable :>>= is) = interpret . is $ onClickF clickable
