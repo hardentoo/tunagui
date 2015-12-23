@@ -19,18 +19,18 @@ type IPoint = Point Int
 type ISize = Size Int
 
 data Shape a
-  = Rect (Point a) (Size a)
-  | Circle (Point a) a
+  = Rect (Size a)
+  | Circle a
 
-within :: (Num a, Ord a) => Point a -> Shape a -> Bool
-within (P (V2 x y)) (Rect (P (V2 x1 y1)) (S (V2 w h))) =
-  (x >= x1) && (x <= x2) && (y >= y1) && (y <= y2)
+within :: (Num a, Ord a) => Point a -> (Point a, Shape a) -> Bool
+within (P (V2 x y)) (P (V2 x0 y0), Rect (S (V2 w h))) =
+  (x >= x0) && (x <= x1) && (y >= y0) && (y <= y1)
   where
-    x2 = x1 + w
-    y2 = y1 + h
-within (P (V2 x y)) (Circle (P (V2 x0 y0)) r) =
+    x1 = x0 + w
+    y1 = y0 + h
+within (P (V2 x y)) (P (V2 x0 y0), Circle r) =
   distSqr <= r * r
   where
-    dx = x0 - x
-    dy = y0 - y
+    dx = (x0 + r) - x
+    dy = (y0 + r) - y
     distSqr = dx * dx + dy * dy

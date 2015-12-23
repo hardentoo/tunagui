@@ -14,15 +14,17 @@ data ClickableArea = ClickableArea
   }
 
 mkClickableArea ::
+  Behavior (T.Point Int) ->
   Behavior (T.Shape Int) ->
   Event (T.Point Int) ->
   Event (T.Point Int) ->
   IO ClickableArea
-mkClickableArea bShape eClick eRelease = sync $ do
+mkClickableArea bPos bShape eClick eRelease = sync $ do
   behWaitingRls <- hold False ((const True <$> eClkOn) `merge` (const False <$> eRelease))
   let eClk = (fst . fst) <$> filterE snd (snapshot (,) eRlsOn behWaitingRls)
   return $ ClickableArea eClk
   where
     within' = uncurry T.within
-    eClkOn = filterE within' $ snapshot (,) eClick bShape
-    eRlsOn = filterE within' $ snapshot (,) eRelease bShape
+    bArea = (,) <$> bPos <*> bShape
+    eClkOn = filterE within' $ snapshot (,) eClick bArea
+    eRlsOn = filterE within' $ snapshot (,) eRelease bArea
