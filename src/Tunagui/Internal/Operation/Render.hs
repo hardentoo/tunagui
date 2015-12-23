@@ -8,8 +8,6 @@ import           Control.Monad.Operational
 
 import           Tunagui.General.Types     (IPoint, ISize)
 
-type Render s = [s]
-
 data RenderI a where
   Clear :: RenderI ()
   Flush :: RenderI ()

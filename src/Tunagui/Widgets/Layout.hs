@@ -21,3 +21,6 @@ instance Show WidgetTree where
 pushW :: (Show a, Renderable a) => a -> WidgetTree -> WidgetTree
 pushW a (Container dir ws) = Container dir (ws ++ [Widget a])
 pushW _ (Widget _) = error "Undefined! Change this code!"
+
+-- renderWT :: WidgetTree -> IO ()
+-- renderWT
