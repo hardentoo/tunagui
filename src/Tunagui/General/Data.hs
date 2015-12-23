@@ -10,13 +10,14 @@ module Tunagui.General.Data
   --
   ) where
 
-import           Control.Exception     (bracket)
-import qualified Data.Text             as T
+import           Control.Exception      (bracket)
+import qualified Data.Text              as T
 import           FRP.Sodium
-import           Linear                (V2 (..))
+import           Linear                 (V2 (..))
 import qualified SDL
 
-import           Tunagui.General.Types (IPoint)
+import           Tunagui.General.Types  (IPoint)
+import           Tunagui.Widgets.Layout (WidgetTree)
 
 data TunaContents = TunaContents
   { cntTWindow :: TWindow
@@ -24,8 +25,8 @@ data TunaContents = TunaContents
   }
 
 data TunaState = TunaState
-  { stTest :: Int -- test!
-  } deriving Show
+  { stTree :: WidgetTree
+  }
 
 data FrameEvents = FrameEvents
   { eQuit :: Event ()

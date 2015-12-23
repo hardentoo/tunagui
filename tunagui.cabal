@@ -25,6 +25,7 @@ library
                      , Tunagui.Internal.Operation.Render
                      , Tunagui.Internal.Operation.Render.SDL
                      , Tunagui.Widgets.Features
+                     , Tunagui.Widgets.Layout
                      , Tunagui.Widgets.Prim.Button
                      , Tunagui.Widgets.Prim.Component.ClickableArea
   -- other-modules:
