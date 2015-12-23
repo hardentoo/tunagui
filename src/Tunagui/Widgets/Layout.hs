@@ -2,7 +2,9 @@
 
 module Tunagui.Widgets.Layout where
 
-import Tunagui.Widgets.Features (Renderable, render)
+import           Control.Monad.IO.Class   (MonadIO, liftIO)
+import           Tunagui.Widgets.Features (Renderable, render)
+import           Tunagui.Internal.Operation.Render (RenderP)
 
 data WidgetTree =
   forall a. (Show a, Renderable a)
@@ -22,5 +24,10 @@ pushW :: (Show a, Renderable a) => a -> WidgetTree -> WidgetTree
 pushW a (Container dir ws) = Container dir (ws ++ [Widget a])
 pushW _ (Widget _) = error "Undefined! Change this code!"
 
--- renderWT :: WidgetTree -> IO ()
--- renderWT
+renderWT :: MonadIO m => WidgetTree -> RenderP m ()
+renderWT (Widget a)       = do
+  liftIO $ print a
+  render a
+renderWT (Container _ ws) = do
+  liftIO $ print ws
+  mapM_ renderWT ws

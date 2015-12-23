@@ -7,6 +7,7 @@ module Tunagui.Operation
     TunaguiP, interpret
   --
   , testOperation
+  , testRenderTree
   , pushWidget
   , mkButton
   ) where
@@ -30,6 +31,7 @@ import qualified Tunagui.Widgets.Prim.Button           as Button
 -- *****************************************************************************
 data TunaguiI a where
   TestOperation :: TunaguiI ()
+  TestRenderTree :: TunaguiI ()
   PushWidget    :: (Show a, Renderable a) => a -> TunaguiI ()
   -- make widgets
   MkButton      :: Button.ButtonConfig -> TunaguiI Button.Button
@@ -40,9 +42,10 @@ interpret :: TunaguiP Base a -> Base a
 interpret is = eval =<< viewT is
 
 -- *****************************************************************************
-testOperation = singleton TestOperation
-pushWidget w  = singleton . PushWidget $ w
-mkButton      = singleton . MkButton
+testOperation  = singleton TestOperation
+testRenderTree = singleton TestRenderTree
+pushWidget w   = singleton . PushWidget $ w
+mkButton       = singleton . MkButton
 
 -- *****************************************************************************
 eval :: ProgramViewT TunaguiI Base a -> Base a
@@ -60,6 +63,15 @@ eval (TestOperation :>>= is) = do
     R.setColor (V4 255 255 255 255)
     R.drawRect (T.P (V2 100 100)) (T.S (V2 100 100))
     R.flush
+  interpret (is ())
+
+eval (TestRenderTree :>>= is) = do
+  twin <- asks D.cntTWindow
+  liftIO $ do
+    tree <- atomically . readTVar . D.twWidgetTree $ twin
+    R.runRender (D.twRenderer twin) $ do
+      renderWT tree
+      R.flush
   interpret (is ())
 
 eval (PushWidget w :>>= is) = do

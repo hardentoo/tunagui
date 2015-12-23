@@ -8,6 +8,7 @@ import           Control.Monad.IO.Class                       (MonadIO)
 import           Control.Monad.Reader                         (asks)
 import           FRP.Sodium
 import           Linear.V2
+import           Linear.V4
 import qualified SDL
 
 
@@ -67,4 +68,8 @@ newButton cfg = do
 renderB :: MonadIO m => Button -> RenderP m ()
 renderB btn = do
   (p,s) <- liftIO . sync $ (,) <$> sample (btnPos btn) <*> sample (btnSize btn)
-  R.drawRect p s
+  liftIO $ do
+    print btn
+    print (p,s)
+  R.setColor $ V4 0 255 255 255
+  R.fillRect p s

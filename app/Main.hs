@@ -4,7 +4,7 @@ import           Control.Concurrent          (threadDelay)
 import           Control.Monad               (forever)
 import           Control.Monad.IO.Class      (liftIO)
 
-import           FRP.Sodium
+-- import           FRP.Sodium
 
 import qualified Tunagui                     as GUI
 
@@ -18,8 +18,9 @@ main =
   GUI.withTunagui GUI.Settings $ do
     testOperation
     btn <- mkButton $ ButtonConfig 100 40
-    _ <- liftIO . sync . listen (onClick btn) $ \p -> putStrLn $ "click: " ++ show p
+    -- _ <- liftIO . sync . listen (onClick btn) $ \p -> putStrLn $ "click: " ++ show p
     pushWidget btn
+    testRenderTree
     --
     liftIO . forever $ do
       putStrLn "."
