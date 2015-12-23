@@ -19,6 +19,7 @@ main =
     testOperation
     btn <- mkButton $ ButtonConfig 100 40
     _ <- liftIO . sync . listen (onClick btn) $ \p -> putStrLn $ "click: " ++ show p
+    pushWidget btn
     --
     liftIO . forever $ do
       putStrLn "."

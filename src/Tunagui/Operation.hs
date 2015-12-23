@@ -7,12 +7,14 @@ module Tunagui.Operation
     TunaguiP, interpret
   --
   , testOperation
+  , pushWidget
   , mkButton
   ) where
 
 import           Control.Monad.Operational
 import           Control.Monad.Reader                  (asks)
 import           FRP.Sodium
+import           GHC.Conc.Sync
 import           Linear.V2                             (V2 (..))
 import           Linear.V4                             (V4 (..))
 
@@ -22,12 +24,13 @@ import           Tunagui.Internal.Base
 import qualified Tunagui.Internal.Operation.Render.SDL as R
 
 import           Tunagui.Widgets.Features
+import           Tunagui.Widgets.Layout
 import qualified Tunagui.Widgets.Prim.Button           as Button
 
 -- *****************************************************************************
 data TunaguiI a where
   TestOperation :: TunaguiI ()
-  PushWidget    :: a -> TunaguiI ()
+  PushWidget    :: (Show a, Renderable a) => a -> TunaguiI ()
   -- make widgets
   MkButton      :: Button.ButtonConfig -> TunaguiI Button.Button
 
@@ -38,7 +41,7 @@ interpret is = eval =<< viewT is
 
 -- *****************************************************************************
 testOperation = singleton TestOperation
-pushWidget    = singleton . PushWidget
+pushWidget w  = singleton . PushWidget $ w
 mkButton      = singleton . MkButton
 
 -- *****************************************************************************
@@ -60,7 +63,11 @@ eval (TestOperation :>>= is) = do
   interpret (is ())
 
 eval (PushWidget w :>>= is) = do
-  -- pushWidget
+  tTree <- asks (D.twWidgetTree . D.cntTWindow)
+  liftIO . atomically $ do
+    t <- readTVar tTree
+    writeTVar tTree $ pushW w t
+  liftIO $ print =<< atomically (readTVar tTree) -- TEST!
   interpret (is ())
 
 -- make widgets ================================================================

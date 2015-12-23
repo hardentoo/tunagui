@@ -32,6 +32,8 @@ data ButtonConfig = ButtonConfig
   , btnHeight :: Int
   }
 
+instance Show Button where
+  show _ = "< Button >"
 
 instance Clickable Button where
   onClick = CLK.clickEvent . btnClkArea
