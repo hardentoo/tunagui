@@ -2,7 +2,13 @@
 
 -- Users can use these operations.
 
-module Tunagui.Operation where
+module Tunagui.Operation
+  (
+    TunaguiP, interpret
+  --
+  , testOperation
+  , mkButton
+  ) where
 
 import Control.Monad.Operational
 import Control.Monad.Reader (asks)
@@ -15,20 +21,24 @@ import qualified Tunagui.General.Data as D
 import Tunagui.Internal.Base
 import qualified Tunagui.Internal.Operation.Render.SDL as R
 
+import qualified Tunagui.Widgets.Prim.Button as Button
+
+-- *****************************************************************************
 data TunaguiI a where
   TestOperation :: TunaguiI ()
+  -- make widgets
+  MkButton      :: TunaguiI Button.Button
 
 type TunaguiP m a = ProgramT TunaguiI m a
-
-testOperation :: (Monad m) => TunaguiP m ()
-testOperation = singleton TestOperation
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
 
 interpret :: TunaguiP Base a -> Base a
 interpret is = eval =<< viewT is
 
+-- *****************************************************************************
+testOperation = singleton TestOperation
+mkButton      = singleton MkButton
+
+-- *****************************************************************************
 eval :: ProgramViewT TunaguiI Base a -> Base a
 eval (Return a) = return a
 
@@ -47,3 +57,8 @@ eval (TestOperation :>>= is) = do
       R.drawRect (T.P (V2 100 100)) (T.S (V2 100 100))
       R.flush
   interpret (is ())
+
+-- make widgets ================================================================
+eval (MkButton :>>= is) = do
+  btn <- liftIO Button.newButton
+  interpret (is btn)

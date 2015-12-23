@@ -8,12 +8,14 @@ import           Control.Monad.IO.Class (liftIO)
 
 import qualified Tunagui                as GUI
 
-import qualified Tunagui.Operation      as OP
+import           Tunagui.Operation
 
 main :: IO ()
 main =
   GUI.withTunagui GUI.Settings $ do
-    OP.testOperation
+    testOperation
+    _btn <- mkButton
+    --
     liftIO . forever $ do
       putStrLn "."
       threadDelay 1000000

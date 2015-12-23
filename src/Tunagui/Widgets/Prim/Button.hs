@@ -1,5 +1,7 @@
 module Tunagui.Widgets.Prim.Button where
 
+import qualified Tunagui.Widgets.Prim.Component.Clickable as CLK
+
 data Button = Button
 
 newButton :: IO Button
@@ -9,7 +11,7 @@ newButton = do
   -- * Allocate video resource
   return Button
 
-freeButton :: Button -> IO ()
-freeButton button = do
-  putStrLn "Add code freeing Button here."
-  return ()
+-- freeButton :: Button -> IO ()
+-- freeButton button = do
+--   putStrLn "Add code freeing Button here."
+--   return ()
