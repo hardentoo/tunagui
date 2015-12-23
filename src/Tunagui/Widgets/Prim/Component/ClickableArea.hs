@@ -1,25 +1,27 @@
-module Tunagui.Widgets.Prim.Component.Clickable where
-  -- (
-  -- ) where
+module Tunagui.Widgets.Prim.Component.ClickableArea
+  (
+    ClickableArea (..)
+  , mkClickableArea
+  ) where
 
 import Control.Applicative
 import FRP.Sodium
 
 import qualified Tunagui.General.Types as T
 
-data Clickable = Clickable
+data ClickableArea = ClickableArea
   { clkClickEvent :: Event (T.Point Int)
   }
 
-mkClickable ::
+mkClickableArea ::
   Behavior (T.Shape Int) ->
   Event (T.Point Int) ->
   Event (T.Point Int) ->
-  IO Clickable
-mkClickable bShape eClick eRelease = sync $ do
+  IO ClickableArea
+mkClickableArea bShape eClick eRelease = sync $ do
   behWaitingRls <- hold False ((const True <$> eClkOn) `merge` (const False <$> eRelease))
   let eClk = (fst . fst) <$> filterE snd (snapshot (,) eRlsOn behWaitingRls)
-  return $ Clickable eClk
+  return $ ClickableArea eClk
   where
     within' = uncurry T.within
     eClkOn = filterE within' $ snapshot (,) eClick bShape

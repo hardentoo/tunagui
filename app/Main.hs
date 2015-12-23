@@ -16,7 +16,7 @@ main =
     testOperation
     btn <- mkButton
     e <- onClick btn
-    _ <- liftIO . sync . listen e $ \p -> putStrLn "click: " ++ show p
+    _ <- liftIO . sync . listen e $ \p -> putStrLn $ "click: " ++ show p
     --
     liftIO . forever $ do
       putStrLn "."

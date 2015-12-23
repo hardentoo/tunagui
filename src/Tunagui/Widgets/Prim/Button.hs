@@ -12,11 +12,11 @@ import Linear.V2
 import qualified Tunagui.General.Data as D
 import qualified Tunagui.General.Types as T
 import Tunagui.Internal.Base
-import qualified Tunagui.Widgets.Prim.Component.Clickable as CLK
+import qualified Tunagui.Widgets.Prim.Component.ClickableArea as CLK
 
 data Button = Button
   {
-    btnClk :: CLK.Clickable
+    btnClkArea :: CLK.ClickableArea
   }
 
 newButton :: Base Button
@@ -25,7 +25,7 @@ newButton = do
   liftIO $ do
     let shape = mkShape
     (behShape,_) <- sync $ newBehavior shape
-    clk <- CLK.mkClickable behShape (D.ePML es) (D.eRML es)
+    clk <- CLK.mkClickableArea behShape (D.ePML es) (D.eRML es)
     return $ Button clk
   where
     mkShape = T.Rect (T.P (V2 0 0)) (T.S (V2 100 100))
@@ -36,4 +36,4 @@ newButton = do
 --   return ()
 
 onClickButton :: Button -> Event (T.Point Int)
-onClickButton = CLK.clkClickEvent . btnClk
+onClickButton = CLK.clkClickEvent . btnClkArea

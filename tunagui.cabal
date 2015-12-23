@@ -25,7 +25,7 @@ library
                      , Tunagui.Internal.Operation.Render
                      , Tunagui.Internal.Operation.Render.SDL
                      , Tunagui.Widgets.Prim.Button
-                     , Tunagui.Widgets.Prim.Component.Clickable
+                     , Tunagui.Widgets.Prim.Component.ClickableArea
   -- other-modules:
   -- other-extensions:
   build-depends:       base
