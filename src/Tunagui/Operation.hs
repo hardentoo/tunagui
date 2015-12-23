@@ -28,7 +28,7 @@ import qualified Tunagui.Widgets.Prim.Button           as Button
 data TunaguiI a where
   TestOperation :: TunaguiI ()
   -- make widgets
-  MkButton      :: TunaguiI Button.Button
+  MkButton      :: Button.ButtonConfig -> TunaguiI Button.Button
 
 type TunaguiP m a = ProgramT TunaguiI m a
 
@@ -37,7 +37,7 @@ interpret is = eval =<< viewT is
 
 -- *****************************************************************************
 testOperation = singleton TestOperation
-mkButton      = singleton MkButton
+mkButton      = singleton . MkButton
 
 -- *****************************************************************************
 eval :: ProgramViewT TunaguiI Base a -> Base a
@@ -58,4 +58,4 @@ eval (TestOperation :>>= is) = do
   interpret (is ())
 
 -- make widgets ================================================================
-eval (MkButton :>>= is) = interpret . is =<< Button.newButton
+eval (MkButton cfg :>>= is) = interpret . is =<< Button.newButton cfg

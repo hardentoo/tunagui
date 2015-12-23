@@ -1,6 +1,6 @@
 module Tunagui.Widgets.Prim.Button
   (
-    Button (..)
+    Button (..), ButtonConfig (..)
   , newButton
   ) where
 
@@ -17,25 +17,29 @@ import qualified Tunagui.Widgets.Prim.Component.ClickableArea as CLK
 import           Tunagui.Widgets.Features                     (Clickable,
                                                                onClick)
 
-data Button = Button {
-    btnClkArea :: CLK.ClickableArea
+-- TODO: Hide 'newButton' from user
+
+data Button = Button
+  { btnClkArea :: CLK.ClickableArea
   }
+
+data ButtonConfig = ButtonConfig
+  { btnSize :: T.Size Int
+  }
+
 
 instance Clickable Button where
   onClick = CLK.clickEvent . btnClkArea
 
-newButton :: Base Button
-newButton = do
+newButton :: ButtonConfig -> Base Button
+newButton cfg = do
   es <- asks D.cntEvents
   liftIO $ do
     (behPos,_) <- sync . newBehavior $ T.P (V2 0 0)
-    (behSize,_) <- sync . newBehavior $ T.S (V2 widgh height)
+    (behSize,_) <- sync . newBehavior $ btnSize cfg
     let behShape = T.Rect <$> behSize
     clk <- CLK.mkClickableArea behPos behShape (D.ePML es) (D.eRML es)
     return $ Button clk
-  where
-    widgh = 100
-    height = 50
 
 -- freeButton :: Button -> IO ()
 -- freeButton button = do
