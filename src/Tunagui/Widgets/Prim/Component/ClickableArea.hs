@@ -10,7 +10,7 @@ import FRP.Sodium
 import qualified Tunagui.General.Types as T
 
 data ClickableArea = ClickableArea
-  { clkClickEvent :: Event (T.Point Int)
+  { clickEvent :: Event (T.Point Int)
   }
 
 mkClickableArea ::

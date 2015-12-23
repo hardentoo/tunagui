@@ -2,22 +2,26 @@ module Tunagui.Widgets.Prim.Button
   (
     Button (..)
   , newButton
-  , onClickButton
   ) where
 
 import Control.Monad.Reader (asks)
 import FRP.Sodium
 import Linear.V2
 
+
 import qualified Tunagui.General.Data as D
 import qualified Tunagui.General.Types as T
 import Tunagui.Internal.Base
 import qualified Tunagui.Widgets.Prim.Component.ClickableArea as CLK
 
-data Button = Button
-  {
+import Tunagui.Widgets.Features (Clickable, onClick)
+
+data Button = Button {
     btnClkArea :: CLK.ClickableArea
   }
+
+instance Clickable Button where
+  onClick = CLK.clickEvent . btnClkArea
 
 newButton :: Base Button
 newButton = do
@@ -34,6 +38,3 @@ newButton = do
 -- freeButton button = do
 --   putStrLn "Add code freeing Button here."
 --   return ()
-
-onClickButton :: Button -> Event (T.Point Int)
-onClickButton = CLK.clkClickEvent . btnClkArea

@@ -9,14 +9,14 @@ import           FRP.Sodium
 import qualified Tunagui                as GUI
 
 import           Tunagui.Operation
+import Tunagui.Widgets.Features (onClick)
 
 main :: IO ()
 main =
   GUI.withTunagui GUI.Settings $ do
     testOperation
     btn <- mkButton
-    e <- onClick btn
-    _ <- liftIO . sync . listen e $ \p -> putStrLn $ "click: " ++ show p
+    _ <- liftIO . sync . listen (onClick btn) $ \p -> putStrLn $ "click: " ++ show p
     --
     liftIO . forever $ do
       putStrLn "."

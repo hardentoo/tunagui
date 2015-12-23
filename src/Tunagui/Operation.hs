@@ -8,7 +8,7 @@ module Tunagui.Operation
   --
   , testOperation
   , mkButton
-  , onClick
+  -- , onClick
   ) where
 
 import Control.Monad.Operational
@@ -22,6 +22,7 @@ import qualified Tunagui.General.Data as D
 import Tunagui.Internal.Base
 import qualified Tunagui.Internal.Operation.Render.SDL as R
 
+import Tunagui.Widgets.Features
 import qualified Tunagui.Widgets.Prim.Button as Button
 
 -- *****************************************************************************
@@ -30,7 +31,7 @@ data TunaguiI a where
   -- make widgets
   MkButton      :: TunaguiI Button.Button
   -- widget operation
-  OnClick       :: Button.Button -> TunaguiI (Event (T.Point Int)) -- Clickable a
+  -- OnClick       :: Clickable a => a -> TunaguiI (Event (T.Point Int))
 
 type TunaguiP m a = ProgramT TunaguiI m a
 
@@ -40,7 +41,7 @@ interpret is = eval =<< viewT is
 -- *****************************************************************************
 testOperation = singleton TestOperation
 mkButton      = singleton MkButton
-onClick       = singleton . OnClick
+-- onClick       = singleton . OnClick
 
 -- *****************************************************************************
 eval :: ProgramViewT TunaguiI Base a -> Base a
@@ -66,4 +67,4 @@ eval (TestOperation :>>= is) = do
 eval (MkButton :>>= is) = interpret . is =<< Button.newButton
 
 -- widget operation ============================================================
-eval (OnClick btn :>>= is) = interpret . is $ Button.onClickButton btn
+-- eval (OnClick clickable :>>= is) = interpret . is $ onClickF clickable
