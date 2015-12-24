@@ -7,12 +7,12 @@ import           Control.Exception
 
 import qualified SDL
 
-import           Tunagui.General.Data   (Settings, TunaContents (..),
-                                         TunaState (..), withTWindow)
-import           Tunagui.General.Event  (listenAllEvents)
-import           Tunagui.Internal.Base  (Base, runBase)
-import           Tunagui.Operation      (TunaguiP, interpret)
-import           Tunagui.Widgets.Layout (Direction (..), WidgetTree (..))
+import           Tunagui.General.Data  (Settings, TunaContents (..),
+                                        TunaState (..), withTWindow)
+import           Tunagui.General.Event (listenAllEvents)
+import           Tunagui.Internal.Base (Base, runBase)
+import           Tunagui.Operation     (TunaguiP, interpret)
+import           Tunagui.Widget.Layout (Direction (..), WidgetTree (..))
 
 withTunagui :: Settings -> TunaguiP Base a -> IO a
 withTunagui _stg pgm =

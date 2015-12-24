@@ -10,15 +10,15 @@ module Tunagui.General.Data
   --
   ) where
 
-import           Control.Exception      (bracket)
-import qualified Data.Text              as T
+import           Control.Exception     (bracket)
+import qualified Data.Text             as T
 import           FRP.Sodium
-import           GHC.Conc.Sync          (TVar, atomically, newTVar)
-import           Linear                 (V2 (..))
+import           GHC.Conc.Sync         (TVar, atomically, newTVar)
+import           Linear                (V2 (..))
 import qualified SDL
 
-import           Tunagui.General.Types  (IPoint)
-import           Tunagui.Widgets.Layout (Direction (..), WidgetTree (..))
+import           Tunagui.General.Types (IPoint)
+import           Tunagui.Widget.Layout (Direction (..), WidgetTree (..))
 
 data TunaContents = TunaContents
   { cntTWindow :: TWindow

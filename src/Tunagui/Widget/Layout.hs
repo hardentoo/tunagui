@@ -1,10 +1,10 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
-module Tunagui.Widgets.Layout where
+module Tunagui.Widget.Layout where
 
-import           Control.Monad.IO.Class   (MonadIO, liftIO)
-import           Tunagui.Widgets.Features (Renderable, render)
+import           Control.Monad.IO.Class            (MonadIO, liftIO)
 import           Tunagui.Internal.Operation.Render (RenderP)
+import           Tunagui.Widget.Features           (Renderable, render)
 
 data WidgetTree =
   forall a. (Show a, Renderable a)

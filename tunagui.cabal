@@ -24,10 +24,10 @@ library
                      , Tunagui.Internal.Base
                      , Tunagui.Internal.Operation.Render
                      , Tunagui.Internal.Operation.Render.SDL
-                     , Tunagui.Widgets.Features
-                     , Tunagui.Widgets.Layout
-                     , Tunagui.Widgets.Prim.Button
-                     , Tunagui.Widgets.Prim.Component.ClickableArea
+                     , Tunagui.Widget.Features
+                     , Tunagui.Widget.Layout
+                     , Tunagui.Widget.Prim.Button
+                     , Tunagui.Widget.Prim.Component.ClickableArea
   -- other-modules:
   -- other-extensions:
   build-depends:       base

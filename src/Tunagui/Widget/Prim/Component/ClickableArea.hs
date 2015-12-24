@@ -1,4 +1,4 @@
-module Tunagui.Widgets.Prim.Component.ClickableArea
+module Tunagui.Widget.Prim.Component.ClickableArea
   (
     ClickableArea (..)
   , mkClickableArea

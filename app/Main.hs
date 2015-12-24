@@ -1,17 +1,17 @@
 module Main where
 
-import           Control.Concurrent          (threadDelay)
-import           Control.Monad               (forever)
-import           Control.Monad.IO.Class      (liftIO)
+import           Control.Concurrent         (threadDelay)
+import           Control.Monad              (forever)
+import           Control.Monad.IO.Class     (liftIO)
 
 -- import           FRP.Sodium
 
-import qualified Tunagui                     as GUI
+import qualified Tunagui                    as GUI
 
 import           Tunagui.Operation
 
-import           Tunagui.Widgets.Features    (onClick)
-import           Tunagui.Widgets.Prim.Button
+-- import           Tunagui.Widget.Features    (onClick)
+import           Tunagui.Widget.Prim.Button
 
 main :: IO ()
 main =

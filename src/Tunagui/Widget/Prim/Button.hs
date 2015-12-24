@@ -1,27 +1,26 @@
-module Tunagui.Widgets.Prim.Button
+module Tunagui.Widget.Prim.Button
   (
     Button (..), ButtonConfig (..)
   , newButton
   ) where
 
-import           Control.Monad.IO.Class                       (MonadIO)
-import           Control.Monad.Reader                         (asks)
+import           Control.Monad.IO.Class                      (MonadIO)
+import           Control.Monad.Reader                        (asks)
 import           FRP.Sodium
 import           Linear.V2
 import           Linear.V4
 import qualified SDL
 
 
-import qualified Tunagui.General.Data                         as D
-import qualified Tunagui.General.Types                        as T
+import qualified Tunagui.General.Data                        as D
+import qualified Tunagui.General.Types                       as T
 import           Tunagui.Internal.Base
-import qualified Tunagui.Widgets.Prim.Component.ClickableArea as CLK
-
-import           Tunagui.Internal.Operation.Render            (RenderP)
-import           Tunagui.Internal.Operation.Render.SDL        as R
-import           Tunagui.Widgets.Features                     (Clickable,
-                                                               Renderable,
-                                                               onClick, render)
+import           Tunagui.Internal.Operation.Render           (RenderP)
+import           Tunagui.Internal.Operation.Render.SDL       as R
+import           Tunagui.Widget.Features                     (Clickable,
+                                                              Renderable,
+                                                              onClick, render)
+import qualified Tunagui.Widget.Prim.Component.ClickableArea as CLK
 
 -- TODO: Hide 'newButton' from user
 

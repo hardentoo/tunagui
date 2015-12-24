@@ -1,8 +1,7 @@
-module Tunagui.Widgets.Features where
+module Tunagui.Widget.Features where
 
 import           Control.Monad.IO.Class            (MonadIO)
 import           FRP.Sodium
-import qualified SDL
 
 import qualified Tunagui.General.Types             as T
 import           Tunagui.Internal.Operation.Render
