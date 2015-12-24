@@ -67,14 +67,13 @@ newButton cfg = do
     h = btnHeight cfg
     iniSize = T.S (V2 w h)
 
-locateB :: Button -> T.Point Int -> IO (T.Range Int)
+locateB :: Button -> T.Point Int -> Reactive (T.Range Int)
 locateB btn p = do
-  sync $ setPos btn p
-  sync $ do
-    pos <- sample (btnPos btn)
-    size <- sample (btnSize btn)
-    let pos' = pos `T.plusPS` size
-    return $ T.R pos pos'
+  setPos btn p
+  pos <- sample (btnPos btn)
+  size <- sample (btnSize btn)
+  let pos' = pos `T.plusPS` size
+  return $ T.R pos pos'
 
 renderB :: MonadIO m => Button -> RenderP m ()
 renderB btn = do

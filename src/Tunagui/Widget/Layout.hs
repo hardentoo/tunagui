@@ -31,15 +31,15 @@ pushW a (Container dir ws) = Container dir (ws ++ [Widget a])
 pushW _ (Widget _) = error "Undefined! Change this code! @Layout"
 
 locateWT :: WidgetTree -> IO ()
-locateWT widgetTree = void $ go (T.P (V2 0 0)) widgetTree
+locateWT widgetTree = void . sync $ go (T.P (V2 0 0)) widgetTree
   where
-    go :: T.Point Int -> WidgetTree -> IO (T.Range Int)
+    go :: T.Point Int -> WidgetTree -> Reactive (T.Range Int)
     go p0 (Widget a)         = locate a p0
     go p0 (Container dir ws) = do
       ranges <- foldM locateWithRanges [T.R p0 p0] ws
       return $ T.R (foldl' leftTop p0 ranges) (foldl' rightBottom p0 ranges)
       where
-        locateWithRanges :: [T.Range Int] -> WidgetTree -> IO [T.Range Int]
+        locateWithRanges :: [T.Range Int] -> WidgetTree -> Reactive [T.Range Int]
         locateWithRanges rs@(r:_)   (Widget a)        = (:rs) <$> locate a (nextPt dir r)
         locateWithRanges rs@(r:_) c@(Container _ ws') = (:rs) <$> go (nextPt dir r) c
 
