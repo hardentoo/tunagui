@@ -4,6 +4,8 @@ module Tunagui.General.Types
   (
     Point(..), IPoint
   , Size(..), ISize
+  , plusPS
+  , Range(..)
   , Shape(..), within
   ) where
 
@@ -14,6 +16,14 @@ newtype Point a = P (V2 a)
 
 newtype Size a = S (V2 a)
   deriving (Show, Eq, Functor)
+
+plusPS :: Num a => Point a -> Size a -> Point a
+plusPS (P p) (S s) = P $ (+) <$> p <*> s
+
+data Range a = R
+  { leftTop     :: Point a
+  , rightBottom :: Point a
+  } deriving (Show, Eq)
 
 type IPoint = Point Int
 type ISize = Size Int

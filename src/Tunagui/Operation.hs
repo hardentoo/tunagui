@@ -51,10 +51,10 @@ mkButton       = singleton . MkButton
 eval :: ProgramViewT TunaguiI Base a -> Base a
 eval (Return a) = return a
 
--- test mouse button click
+-- Test for rendering
 eval (TestOperation :>>= is) = do
-  e <- asks (D.ePML . D.cntEvents)
-  liftIO . sync $ listen e print
+  -- e <- asks (D.ePML . D.cntEvents)
+  -- liftIO . sync $ listen e print
   --
   r <- asks (D.twRenderer . D.cntTWindow)
   liftIO . R.runRender r $ do
@@ -69,6 +69,7 @@ eval (TestRenderTree :>>= is) = do
   twin <- asks D.cntTWindow
   liftIO $ do
     tree <- atomically . readTVar . D.twWidgetTree $ twin
+    locateWT tree
     R.runRender (D.twRenderer twin) $ do
       renderWT tree
       R.flush

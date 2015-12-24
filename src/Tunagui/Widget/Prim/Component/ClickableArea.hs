@@ -18,8 +18,8 @@ mkClickableArea ::
   Behavior (T.Shape Int) ->
   Event (T.Point Int) ->
   Event (T.Point Int) ->
-  IO ClickableArea
-mkClickableArea bPos bShape eClick eRelease = sync $ do
+  Reactive ClickableArea
+mkClickableArea bPos bShape eClick eRelease = do
   behWaitingRls <- hold False ((const True <$> eClkOn) `merge` (const False <$> eRelease))
   let eClk = (fst . fst) <$> filterE snd (snapshot (,) eRlsOn behWaitingRls)
   return $ ClickableArea eClk
