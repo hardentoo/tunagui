@@ -9,7 +9,6 @@ import           Control.Monad.Reader                        (asks)
 import           FRP.Sodium
 import           Linear.V2
 import           Linear.V4
-import qualified SDL
 
 import qualified Tunagui.General.Data                        as D
 import qualified Tunagui.General.Types                       as T

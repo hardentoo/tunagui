@@ -2,7 +2,6 @@ module Tunagui.General.Event
   ( listenAllEvents
   ) where
 
-import           Control.Applicative
 import           Control.Concurrent    (forkIO)
 import           Control.Monad         (unless, when)
 import           FRP.Sodium
