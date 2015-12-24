@@ -78,5 +78,7 @@ locateB btn p = do
 renderB :: MonadIO m => Button -> RenderP m ()
 renderB btn = do
   (p,s) <- liftIO . sync $ (,) <$> sample (btnPos btn) <*> sample (btnSize btn)
-  R.setColor $ V4 0 255 255 255
+  R.setColor $ V4 255 255 255 255
   R.fillRect p s
+  R.setColor $ V4 137 140 149 255
+  R.drawRect p s

@@ -14,8 +14,8 @@ main :: IO ()
 main =
   GUI.withTunagui GUI.Settings $ do
     testOperation
-    btn1 <- mkButton $ ButtonConfig 100 40
-    btn2 <- mkButton $ ButtonConfig 150 40
+    btn1 <- mkButton $ ButtonConfig 50 20
+    btn2 <- mkButton $ ButtonConfig 40 20
     _ <- liftIO . sync . listen (onClick btn1) $ \p -> putStrLn $ "click (1): " ++ show p
     _ <- liftIO . sync . listen (onClick btn2) $ \p -> putStrLn $ "click (2): " ++ show p
     mapM_ pushWidget [btn1, btn2]

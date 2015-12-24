@@ -71,6 +71,8 @@ eval (TestRenderTree :>>= is) = do
     tree <- atomically . readTVar . D.twWidgetTree $ twin
     locateWT tree
     R.runRender (D.twRenderer twin) $ do
+      R.setColor $ V4 240 240 240 255
+      R.clear
       renderWT tree
       R.flush
   interpret (is ())
