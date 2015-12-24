@@ -31,28 +31,36 @@ pushW a (Container dir ws) = Container dir (ws ++ [Widget a])
 pushW _ (Widget _) = error "Undefined! Change this code! @Layout"
 
 locateWT :: WidgetTree -> IO ()
-locateWT widgetTree = void . sync $ go (T.P (V2 0 0)) widgetTree
+locateWT widgetTree = void . sync $ go widgetTree (T.P (V2 0 0))
   where
-    go :: T.Point Int -> WidgetTree -> Reactive (T.Range Int)
-    go p0 (Widget a)         = locate a p0
-    go p0 (Container dir ws) = do
-      ranges <- foldM locateWithRanges [T.R p0 p0] ws
+    go :: WidgetTree -> T.Point Int -> Reactive (T.Range Int)
+    go (Widget a)         p0 = locate a p0
+    go (Container dir ws) p0 = do
+      ranges <- foldM locate' [T.R p0 p0] ws
       return $ T.R (foldl' leftTop p0 ranges) (foldl' rightBottom p0 ranges)
       where
-        locateWithRanges :: [T.Range Int] -> WidgetTree -> Reactive [T.Range Int]
-        locateWithRanges rs@(r:_)   (Widget a)        = (:rs) <$> locate a (nextPt dir r)
-        locateWithRanges rs@(r:_) c@(Container _ ws') = (:rs) <$> go (nextPt dir r) c
+        locate' :: [T.Range Int] -> WidgetTree -> Reactive [T.Range Int]
+        locate' rs@(r:_) tree = (:rs) <$> work tree (nextFrom r)
+          where
+            work (Widget a)          = locate a
+            work cnt@(Container _ _) = go cnt
 
         leftTop :: Ord a => T.Point a -> T.Range a -> T.Point a
-        leftTop (T.P (V2 x y)) (T.R (T.P (V2 x' y')) _) = T.P (V2 (min x x') (min x y'))
+        leftTop point range =
+          let (T.P (V2 x y)) = point
+              (T.R (T.P (V2 x' y')) _) = range
+          in T.P (V2 (min x x') (min y y'))
 
         rightBottom :: Ord a => T.Point a -> T.Range a -> T.Point a
-        rightBottom (T.P (V2 x y)) (T.R _ (T.P (V2 x' y'))) = T.P (V2 (max x x') (max x y'))
+        rightBottom point range =
+          let (T.P (V2 x y)) = point
+              (T.R _ (T.P (V2 x' y'))) = range
+          in T.P (V2 (max x x') (max y y'))
 
-    nextPt dir (T.R (T.P (V2 x0 y0)) (T.P (V2 x1 y1))) =
-      case dir of
-        DirH -> T.P (V2 x1 y0)
-        DirV -> T.P (V2 x0 y1)
+        nextFrom (T.R (T.P (V2 x0 y0)) (T.P (V2 x1 y1))) =
+          case dir of
+            DirH -> T.P (V2 x1 y0)
+            DirV -> T.P (V2 x0 y1)
 
 renderWT :: MonadIO m => WidgetTree -> RenderP m ()
 renderWT (Widget a)       = render a
