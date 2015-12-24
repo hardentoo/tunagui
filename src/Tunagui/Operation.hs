@@ -19,6 +19,8 @@ import           GHC.Conc.Sync
 import           Linear.V2                             (V2 (..))
 import           Linear.V4                             (V4 (..))
 
+import           Control.Arrow
+
 import qualified Tunagui.General.Data                  as D
 import qualified Tunagui.General.Types                 as T
 import           Tunagui.Internal.Base
@@ -26,15 +28,15 @@ import qualified Tunagui.Internal.Operation.Render.SDL as R
 
 import           Tunagui.Widget.Features
 import           Tunagui.Widget.Layout
-import qualified Tunagui.Widget.Prim.Button           as Button
+import qualified Tunagui.Widget.Prim.Button            as Button
 
 -- *****************************************************************************
 data TunaguiI a where
-  TestOperation :: TunaguiI ()
+  TestOperation  :: TunaguiI ()
   TestRenderTree :: TunaguiI ()
-  PushWidget    :: (Show a, Renderable a) => a -> TunaguiI ()
+  PushWidget     :: WidgetTree -> TunaguiI ()
   -- make widgets
-  MkButton      :: Button.ButtonConfig -> TunaguiI Button.Button
+  MkButton       :: Button.ButtonConfig -> TunaguiI (Button.Button, WidgetTree)
 
 type TunaguiP m a = ProgramT TunaguiI m a
 
@@ -79,11 +81,18 @@ eval (TestRenderTree :>>= is) = do
 
 eval (PushWidget w :>>= is) = do
   tTree <- asks (D.twWidgetTree . D.cntTWindow)
-  liftIO . atomically $ do
-    t <- readTVar tTree
-    writeTVar tTree $ pushW w t
-  liftIO $ print =<< atomically (readTVar tTree) -- TEST!
+  liftIO . atomically $
+    writeTVar tTree =<< pushW w <$> readTVar tTree
   interpret (is ())
 
 -- make widgets ================================================================
-eval (MkButton cfg :>>= is) = interpret . is =<< Button.newButton cfg
+
+-- | Make new Button.
+eval (MkButton cfg :>>= is) =
+  (interpret . is) =<< genWT =<< Button.newButton cfg
+
+-- *****************************************************************************
+-- Utilities
+
+genWT :: (Show a, Renderable a) => a -> Base (a, WidgetTree)
+genWT a = return (a, Widget a)

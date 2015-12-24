@@ -3,7 +3,7 @@
 module Tunagui.Widget.Layout where
 
 import           Control.Monad                     (foldM, void)
-import           Control.Monad.IO.Class            (MonadIO, liftIO)
+import           Control.Monad.IO.Class            (MonadIO)
 import           Data.Foldable                     (foldl')
 import           FRP.Sodium
 import           Linear.V2
@@ -26,10 +26,12 @@ instance Show WidgetTree where
   show (Container dir ws) = "Container " ++ show dir ++ " " ++ show ws
 
 -- TODO: This is test code. Fix it.
-pushW :: (Show a, Renderable a) => a -> WidgetTree -> WidgetTree
-pushW a (Container dir ws) = Container dir (ws ++ [Widget a])
+pushW :: WidgetTree -> WidgetTree -> WidgetTree
+pushW w (Container dir ws) = Container dir (ws ++ [w])
 pushW _ (Widget _) = error "Undefined! Change this code! @Layout"
 
+-- |
+-- Fix the location of WidgetTree
 locateWT :: WidgetTree -> IO ()
 locateWT widgetTree = void . sync $ go widgetTree (T.P (V2 0 0))
   where
@@ -62,6 +64,8 @@ locateWT widgetTree = void . sync $ go widgetTree (T.P (V2 0 0))
             DirH -> T.P (V2 x1 y0)
             DirV -> T.P (V2 x0 y1)
 
+-- |
+-- Render all widgets in WidgetTree.
 renderWT :: MonadIO m => WidgetTree -> RenderP m ()
 renderWT (Widget a)       = render a
 renderWT (Container _ ws) = mapM_ renderWT ws
