@@ -16,17 +16,22 @@ type EventPusher = SDL.Event -> Reactive ()
 
 listenAllEvents :: IO FrameEvents
 listenAllEvents = do
-  (eQuit', pQuit) <- quitEvent
-  (ePML',  pPML)  <- mouseEvent SDL.Pressed  SDL.ButtonLeft
-  (eRML',  pRML)  <- mouseEvent SDL.Released SDL.ButtonLeft
-  --
-  let ps = [pQuit, pPML, pRML]
+  (ps, events) <- sync $ do
+    (eQuit', pQuit) <- quitEvent
+    (ePML', pPML) <- mouseEvent SDL.Pressed  SDL.ButtonLeft
+    (eRML', pRML) <- mouseEvent SDL.Released SDL.ButtonLeft
+    --
+    behQuit' <- hold False eQuit'
+    --
+    let ps = [pQuit, pPML, pRML]
+        events = FrameEvents
+          { behQuit = behQuit'
+          , ePML = ePML'
+          , eRML = eRML'
+          }
+    return (ps, events)
   forkIO $ eventLoop ps
-  return FrameEvents
-    { eQuit = eQuit'
-    , ePML = ePML'
-    , eRML = eRML'
-    }
+  return events
   where
     eventLoop :: [EventPusher] -> IO ()
     eventLoop ps = go
@@ -40,13 +45,13 @@ listenAllEvents = do
 
 type EventPair a = (Event a, EventPusher)
 
-quitEvent :: IO (EventPair ())
-quitEvent = fmap work <$> sync newEvent
+quitEvent :: Reactive (EventPair Bool)
+quitEvent = fmap work <$> newEvent
   where
-    work push e = when (SDL.eventPayload e == SDL.QuitEvent) $ push ()
+    work push e = when (SDL.eventPayload e == SDL.QuitEvent) $ push True
 
-mouseEvent :: SDL.InputMotion -> SDL.MouseButton -> IO (EventPair T.IPoint)
-mouseEvent motion button = fmap work <$> sync newEvent
+mouseEvent :: SDL.InputMotion -> SDL.MouseButton -> Reactive (EventPair T.IPoint)
+mouseEvent motion button = fmap work <$> newEvent
   where
     work push e =
       case SDL.eventPayload e of

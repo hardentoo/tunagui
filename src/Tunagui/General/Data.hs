@@ -28,7 +28,7 @@ data TunaContents = TunaContents
 data TunaState = TunaState
 
 data FrameEvents = FrameEvents
-  { eQuit :: Event ()
+  { behQuit :: Behavior Bool
   , ePML  :: Event IPoint -- Press Mouse Left
   , eRML  :: Event IPoint -- Release Mouse Left
   }

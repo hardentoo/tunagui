@@ -5,7 +5,6 @@ module Tunagui.Internal.Base
   , liftIO
   ) where
 
-import           Control.Applicative
 import           Control.Monad.Reader
 import           Control.Monad.State
 

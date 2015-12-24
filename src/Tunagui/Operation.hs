@@ -8,6 +8,7 @@ module Tunagui.Operation
   --
   , testOperation
   , testRenderTree
+  , quitBehav
   , pushWidget
   , mkButton
   ) where
@@ -18,8 +19,6 @@ import           FRP.Sodium
 import           GHC.Conc.Sync
 import           Linear.V2                             (V2 (..))
 import           Linear.V4                             (V4 (..))
-
-import           Control.Arrow
 
 import qualified Tunagui.General.Data                  as D
 import qualified Tunagui.General.Types                 as T
@@ -34,6 +33,7 @@ import qualified Tunagui.Widget.Prim.Button            as Button
 data TunaguiI a where
   TestOperation  :: TunaguiI ()
   TestRenderTree :: TunaguiI ()
+  QuitBehav      :: TunaguiI (Behavior Bool)
   PushWidget     :: WidgetTree -> TunaguiI ()
   -- make widgets
   MkButton       :: Button.ButtonConfig -> TunaguiI (Button.Button, WidgetTree)
@@ -44,10 +44,16 @@ interpret :: TunaguiP Base a -> Base a
 interpret is = eval =<< viewT is
 
 -- *****************************************************************************
-testOperation  = singleton TestOperation
+testOperation :: ProgramT TunaguiI m ()
+testOperation = singleton TestOperation
+testRenderTree :: ProgramT TunaguiI m ()
 testRenderTree = singleton TestRenderTree
-pushWidget w   = singleton . PushWidget $ w
-mkButton       = singleton . MkButton
+quitBehav :: ProgramT TunaguiI m (Behavior Bool)
+quitBehav = singleton QuitBehav
+pushWidget :: WidgetTree -> ProgramT TunaguiI m ()
+pushWidget w = singleton . PushWidget $ w
+mkButton :: Button.ButtonConfig -> ProgramT TunaguiI m (Button.Button, WidgetTree)
+mkButton = singleton . MkButton
 
 -- *****************************************************************************
 eval :: ProgramViewT TunaguiI Base a -> Base a
@@ -78,6 +84,9 @@ eval (TestRenderTree :>>= is) = do
       renderWT tree
       R.flush
   interpret (is ())
+
+eval (QuitBehav :>>= is) =
+  interpret . is =<< asks (D.behQuit . D.cntEvents)
 
 eval (PushWidget w :>>= is) = do
   tTree <- asks (D.twWidgetTree . D.cntTWindow)

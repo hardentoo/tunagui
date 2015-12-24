@@ -4,7 +4,6 @@ module Tunagui.Widget.Prim.Component.ClickableArea
   , mkClickableArea
   ) where
 
-import           Control.Applicative
 import           FRP.Sodium
 
 import qualified Tunagui.General.Types as T

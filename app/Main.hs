@@ -1,7 +1,7 @@
 module Main where
 
 import           Control.Concurrent         (threadDelay)
-import           Control.Monad              (forever)
+import           Control.Monad              (unless)
 import           Control.Monad.IO.Class     (liftIO)
 import           FRP.Sodium
 
@@ -21,6 +21,10 @@ main =
     mapM_ pushWidget [w1, w2]
     testRenderTree
     --
-    liftIO . forever $ do
-      putStrLn "."
-      threadDelay 1000000
+    quit <- quitBehav
+    let loop = do
+          putStrLn "."
+          threadDelay 1000000
+          q <- sync $ sample quit
+          unless q loop
+    liftIO loop

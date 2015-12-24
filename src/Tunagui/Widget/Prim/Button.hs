@@ -71,8 +71,7 @@ locateB btn p = do
   setPos btn p
   pos <- sample (btnPos btn)
   size <- sample (btnSize btn)
-  let pos' = pos `T.plusPS` size
-  return $ T.R pos pos'
+  return $ T.R pos (pos `T.plusPS` size)
 
 renderB :: MonadIO m => Button -> RenderP m ()
 renderB btn = do

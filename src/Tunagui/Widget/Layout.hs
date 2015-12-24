@@ -42,6 +42,7 @@ locateWT widgetTree = void . sync $ go widgetTree (T.P (V2 0 0))
       return $ T.R (foldl' leftTop p0 ranges) (foldl' rightBottom p0 ranges)
       where
         locate' :: [T.Range Int] -> WidgetTree -> Reactive [T.Range Int]
+        locate' []       _    = undefined
         locate' rs@(r:_) tree = (:rs) <$> work tree (nextFrom r)
           where
             work (Widget a)          = locate a
