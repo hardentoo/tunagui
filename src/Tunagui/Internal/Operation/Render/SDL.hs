@@ -3,14 +3,6 @@
 module Tunagui.Internal.Operation.Render.SDL
   (
     runRender
-  ----- Operation
-  -- Basic
-  , clear
-  , flush
-  , setColor
-  -- Rect
-  , fillRect
-  , drawRect
   ) where
 
 import           Control.Monad.Operational

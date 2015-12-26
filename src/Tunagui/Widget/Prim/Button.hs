@@ -4,16 +4,14 @@ module Tunagui.Widget.Prim.Button
   , newButton
   ) where
 
-import           Control.Monad.IO.Class                      (MonadIO)
+import           Control.Monad.IO.Class                      (MonadIO, liftIO)
 import           FRP.Sodium
 import           Linear.V2
 import           Linear.V4
 
 import qualified Tunagui.General.Data                        as D
 import qualified Tunagui.General.Types                       as T
-import           Tunagui.Internal.Base
-import           Tunagui.Internal.Operation.Render           (RenderP)
-import           Tunagui.Internal.Operation.Render.SDL       as R
+import           Tunagui.Internal.Operation.Render           as R
 import           Tunagui.Widget.Features                     (Clickable,
                                                               Renderable,
                                                               onClick, render,
@@ -71,7 +69,7 @@ locateB btn p = do
   size <- sample (btnSize btn)
   return $ T.R pos (pos `T.plusPS` size)
 
-renderB :: MonadIO m => Button -> RenderP m ()
+renderB :: MonadIO m => Button -> R.RenderP m ()
 renderB btn = do
   (p,s) <- liftIO . sync $ (,) <$> sample (btnPos btn) <*> sample (btnSize btn)
   R.setColor $ V4 255 255 255 255

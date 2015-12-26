@@ -15,7 +15,8 @@ import           Linear.V4                             (V4 (..))
 import qualified Tunagui.General.Data                  as D
 import qualified Tunagui.General.Types                 as T
 import           Tunagui.Internal.Base
-import qualified Tunagui.Internal.Operation.Render.SDL as R
+import           Tunagui.Internal.Operation.Render.SDL (runRender)
+import qualified Tunagui.Internal.Operation.Render     as R
 
 import           Tunagui.Widget.Features
 import           Tunagui.Widget.Layout
@@ -51,7 +52,7 @@ runTWin = interpret
       liftIO $ do
         tree <- atomically . readTVar $ D.twWidgetTree twin
         locateWT tree
-        R.runRender (D.twRenderer twin) $ do
+        runRender (D.twRenderer twin) $ do
           R.setColor $ V4 240 240 240 255
           R.clear
           renderWT tree
