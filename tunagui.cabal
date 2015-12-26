@@ -29,7 +29,7 @@ library
                      , Tunagui.Internal.Base
                      , Tunagui.Internal.Operation.Render
                      , Tunagui.Internal.Operation.Render.SDL
-                     , Tunagui.Widget.Prim.Component.ClickableArea
+                     , Tunagui.Widget.Component
 
   -- other-extensions:
   build-depends:       base

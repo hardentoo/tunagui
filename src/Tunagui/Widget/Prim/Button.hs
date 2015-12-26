@@ -9,14 +9,14 @@ import           FRP.Sodium
 import           Linear.V2
 import           Linear.V4
 
-import qualified Tunagui.General.Data                        as D
-import qualified Tunagui.General.Types                       as T
-import           Tunagui.Internal.Operation.Render           as R
-import           Tunagui.Widget.Features                     (Clickable,
-                                                              Renderable,
-                                                              onClick, render,
-                                                              locate)
-import qualified Tunagui.Widget.Prim.Component.ClickableArea as CLK
+import qualified Tunagui.General.Data              as D
+import qualified Tunagui.General.Types             as T
+import           Tunagui.Internal.Operation.Render as R
+import           Tunagui.Widget.Features           (Clickable,
+                                                   Renderable,
+                                                   onClick, render,
+                                                   locate)
+import qualified Tunagui.Widget.Component          as CMP
 
 -- TODO: Hide 'newButton' from user
 
@@ -26,7 +26,7 @@ data Button = Button
   -- Setter of attributes
   , setPos     :: T.Point Int -> Reactive ()
   -- Features
-  , btnClkArea :: CLK.ClickableArea
+  , btnClkArea :: CMP.ClickableArea
   }
 
 data ButtonConfig = ButtonConfig
@@ -38,7 +38,7 @@ instance Show Button where
   show _ = "< Button >"
 
 instance Clickable Button where
-  onClick = CLK.clickEvent . btnClkArea
+  onClick = CMP.clickEvent . btnClkArea
 
 instance Renderable Button where
   render = renderB
@@ -50,7 +50,7 @@ newButton cfg es =
     (behPos, pushPos) <- newBehavior $ T.P (V2 0 0)
     (behSize, _)      <- newBehavior iniSize
     let behShape = T.Rect <$> behSize
-    clk <- CLK.mkClickableArea behPos behShape (D.wePML es) (D.weRML es)
+    clk <- CMP.mkClickableArea behPos behShape (D.wePML es) (D.weRML es)
     return Button
       { btnPos = behPos
       , btnSize = behSize
