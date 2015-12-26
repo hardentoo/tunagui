@@ -4,7 +4,7 @@
 
 module Tunagui.Operation where
 
-import           Control.Monad.IO.Class                (MonadIO)
+import           Control.Monad.IO.Class                (MonadIO, liftIO)
 import           Control.Monad.Operational
 import           Control.Monad.Reader                  (asks)
 import           FRP.Sodium
@@ -14,7 +14,6 @@ import           Linear.V4                             (V4 (..))
 
 import qualified Tunagui.General.Data                  as D
 import qualified Tunagui.General.Types                 as T
-import           Tunagui.Internal.Base
 import           Tunagui.Internal.Operation.Render.SDL (runRender)
 import qualified Tunagui.Internal.Operation.Render     as R
 
