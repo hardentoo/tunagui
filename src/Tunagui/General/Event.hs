@@ -45,6 +45,7 @@ listenAllEvents = do
 
 type EventPair a = (Event a, EventPusher)
 
+-- | TODO: Each window should have quit event
 quitEvent :: Reactive (EventPair Bool)
 quitEvent = fmap work <$> newEvent
   where

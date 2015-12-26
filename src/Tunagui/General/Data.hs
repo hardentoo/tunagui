@@ -54,6 +54,9 @@ data WinEvents = WinEvents
   , weRML :: Event (T.Point Int)
   }
 
+-- TODO: Config with initial position
+-- TODO: Config with initial size
+-- TODO: Config with scalability
 newTWindow :: FrameEvents -> IO TWindow
 newTWindow es = do
   w <- SDL.createWindow (T.pack "title") temporalWinConf
