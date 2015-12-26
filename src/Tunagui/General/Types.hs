@@ -2,8 +2,7 @@
 
 module Tunagui.General.Types
   (
-    Point(..), IPoint
-  , Size(..), ISize
+    Point(..), Size(..)
   , plusPS
   , Range(..)
   , Shape(..), within
@@ -24,9 +23,6 @@ data Range a = R
   { leftTop     :: Point a
   , rightBottom :: Point a
   } deriving (Show, Eq)
-
-type IPoint = Point Int
-type ISize = Size Int
 
 data Shape a
   = Rect (Size a)

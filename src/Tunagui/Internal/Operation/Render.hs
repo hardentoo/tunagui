@@ -6,15 +6,15 @@ import           Linear                    (V4 (..))
 
 import           Control.Monad.Operational
 
-import           Tunagui.General.Types     (IPoint, ISize)
+import           Tunagui.General.Types     (Point, Size)
 
 data RenderI a where
   Clear :: RenderI ()
   Flush :: RenderI ()
   SetColor :: V4 Word8 -> RenderI ()
   -- Figure
-  FillRect :: IPoint -> ISize -> RenderI ()
-  DrawRect :: IPoint -> ISize -> RenderI ()
+  FillRect :: Point Int -> Size Int -> RenderI ()
+  DrawRect :: Point Int -> Size Int -> RenderI ()
 
 type RenderP m a = ProgramT RenderI m a
 
@@ -27,8 +27,8 @@ flush = singleton Flush
 setColor :: V4 Word8 -> RenderP m ()
 setColor = singleton . SetColor
 
-fillRect :: IPoint -> ISize -> RenderP m ()
+fillRect :: Point Int -> Size Int -> RenderP m ()
 fillRect p s = singleton $ FillRect p s
 
-drawRect :: IPoint -> ISize -> RenderP m ()
+drawRect :: Point Int -> Size Int -> RenderP m ()
 drawRect p s = singleton $ DrawRect p s
