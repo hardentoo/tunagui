@@ -1,5 +1,7 @@
 {-# LANGUAGE GADTs #-}
 
+-- TODO: This module will be abolished.
+
 -- Users can use these operations.
 
 module Tunagui.Operation

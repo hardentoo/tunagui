@@ -50,14 +50,16 @@ quitEvent = fmap work <$> newEvent
   where
     work push e = when (SDL.eventPayload e == SDL.QuitEvent) $ push True
 
-mouseEvent :: SDL.InputMotion -> SDL.MouseButton -> Reactive (EventPair T.IPoint)
+mouseEvent :: SDL.InputMotion -> SDL.MouseButton -> Reactive (EventPair (SDL.Window, T.Point Int))
 mouseEvent motion button = fmap work <$> newEvent
   where
     work push e =
       case SDL.eventPayload e of
         SDL.MouseButtonEvent dat -> do
+          let win = SDL.mouseButtonEventWindow dat
           let isM = SDL.mouseButtonEventMotion dat == motion
               isB = SDL.mouseButtonEventButton dat == button
               (A.P p) = SDL.mouseButtonEventPos dat
-          when (isM && isB) $ push $ fromIntegral <$> T.P p
+              point = fromIntegral <$> T.P p
+          when (isM && isB) $ push (win, point)
         _ -> return ()

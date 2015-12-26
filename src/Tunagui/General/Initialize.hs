@@ -7,15 +7,13 @@ import           Control.Exception
 import qualified SDL
 
 import           Tunagui.General.Data  (Settings, TunaContents (..),
-                                        TunaState (..))
+                                        TunaState (..), Tunagui (..))
 import           Tunagui.General.Event (listenAllEvents)
-import           Tunagui.Internal.Base (Base, runBase)
-import           Tunagui.Operation     (TunaguiP, interpret)
+-- import           Tunagui.Internal.Base (Base, runBase)
+-- import           Tunagui.Operation     (TunaguiP, interpret)
 
-withTunagui :: Settings -> TunaguiP Base a -> IO a
-withTunagui _stg pgm =
-  bracket_ SDL.initializeAll SDL.quit work
-  where
-    work = do
-      contents <- TunaContents <$> listenAllEvents
-      fst <$> runBase (interpret pgm) contents TunaState
+withTunagui :: Settings -> (Tunagui -> IO a) -> IO a
+withTunagui _stg work =
+  bracket_ SDL.initializeAll
+           SDL.quit
+           (work =<< Tunagui <$> (TunaContents <$> listenAllEvents) <*> pure TunaState)

@@ -5,7 +5,6 @@ module Tunagui.Widget.Prim.Button
   ) where
 
 import           Control.Monad.IO.Class                      (MonadIO)
-import           Control.Monad.Reader                        (asks)
 import           FRP.Sodium
 import           Linear.V2
 import           Linear.V4
@@ -47,14 +46,13 @@ instance Renderable Button where
   render = renderB
   locate = locateB
 
-newButton :: ButtonConfig -> Base Button
-newButton cfg = do
-  es <- asks D.cntEvents
-  liftIO . sync $ do
+newButton :: ButtonConfig -> D.WinEvents -> IO Button
+newButton cfg es =
+  sync $ do
     (behPos, pushPos) <- newBehavior $ T.P (V2 0 0)
     (behSize, _)      <- newBehavior iniSize
     let behShape = T.Rect <$> behSize
-    clk <- CLK.mkClickableArea behPos behShape (D.ePML es) (D.eRML es)
+    clk <- CLK.mkClickableArea behPos behShape (D.wePML es) (D.weRML es)
     return Button
       { btnPos = behPos
       , btnSize = behSize

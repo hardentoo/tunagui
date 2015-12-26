@@ -1,24 +1,29 @@
 module Tunagui.General.Data
   (
-    TunaContents (..)
+    Tunagui (..)
+  , TunaContents (..)
   , TunaState (..)
   , FrameEvents (..)
   , Settings (..)
   --
   , TWindow (..)
+  , WinEvents (..)
   , withTWindow, newTWindow, freeTWindow
   --
+  , testOverwriteTree
   ) where
 
 import           Control.Exception     (bracket)
 import qualified Data.Text             as T
 import           FRP.Sodium
-import           GHC.Conc.Sync         (TVar, atomically, newTVar)
+import           GHC.Conc.Sync         (TVar, atomically, newTVar, writeTVar)
 import           Linear                (V2 (..))
 import qualified SDL
 
-import           Tunagui.General.Types (IPoint)
-import           Tunagui.Widget.Layout (WidgetTree (..))
+import qualified Tunagui.General.Types as T
+import           Tunagui.Widget.Layout (WidgetTree (..), Direction (..))
+
+data Tunagui = Tunagui TunaContents TunaState
 
 data TunaContents = TunaContents
   { cntEvents  :: FrameEvents
@@ -29,8 +34,8 @@ data TunaState = TunaState
 -- TODO: Click event must have window ID
 data FrameEvents = FrameEvents
   { behQuit :: Behavior Bool
-  , ePML  :: Event IPoint -- Press Mouse Left
-  , eRML  :: Event IPoint -- Release Mouse Left
+  , ePML  :: Event (SDL.Window, T.Point Int) -- Press Mouse Left
+  , eRML  :: Event (SDL.Window, T.Point Int) -- Release Mouse Left
   }
 
 data Settings = Settings -- dummy
@@ -40,30 +45,41 @@ data TWindow = TWindow
   { twWindow     :: SDL.Window
   , twRenderer   :: SDL.Renderer
   , twWidgetTree :: TVar WidgetTree
+  , twEvents     :: WinEvents
   }
 
--- newTWindow' :: IO TWindow
--- newTWindow' = newTWindow $ Container DirV []
+-- | Events of each TWindow
+data WinEvents = WinEvents
+  { wePML :: Event (T.Point Int)
+  , weRML :: Event (T.Point Int)
+  }
 
-newTWindow :: WidgetTree -> IO TWindow
-newTWindow tree = do
+newTWindow :: FrameEvents -> IO TWindow
+newTWindow es = do
   w <- SDL.createWindow (T.pack "title") temporalWinConf
   TWindow w <$> SDL.createRenderer w (-1) SDL.defaultRenderer
-            <*> atomically (newTVar tree)
+            <*> atomically (newTVar (Container DirV []))
+            <*> pure (mkEvents w)
   where
     temporalWinConf = SDL.defaultWindow
       { SDL.windowResizable = True
       , SDL.windowInitialSize = V2 300 300
       }
+    mkEvents win = WinEvents
+        { wePML = matchWindow $ ePML es
+        , weRML = matchWindow $ eRML es
+        }
+      where
+        matchWindow = fmap snd . filterE ((==win) . fst)
 
 freeTWindow :: TWindow -> IO ()
 freeTWindow twin = do
   SDL.destroyRenderer $ twRenderer twin
   SDL.destroyWindow $ twWindow twin
 
--- withTWindow :: (TWindow -> IO a) -> IO a
--- withTWindow =
---   bracket newTWindow' freeTWindow
+withTWindow :: FrameEvents -> (TWindow -> IO a) -> IO a
+withTWindow fe = bracket (newTWindow fe) freeTWindow
 
-withTWindow :: WidgetTree -> (TWindow -> IO a) -> IO a
-withTWindow tree = bracket (newTWindow tree) freeTWindow
+testOverwriteTree :: WidgetTree -> TWindow -> IO ()
+testOverwriteTree tree tw =
+  atomically $ writeTVar (twWidgetTree tw) tree

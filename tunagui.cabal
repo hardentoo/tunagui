@@ -16,7 +16,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Tunagui
-                     , Tunagui.Operation
+                    --  , Tunagui.Operation
                      , Tunagui.General.Data
                      , Tunagui.General.Types
                      , Tunagui.General.Event
