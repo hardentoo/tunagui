@@ -7,12 +7,12 @@ import           FRP.Sodium
 import           Control.Monad.Managed      (runManaged, managed)
 
 import qualified Tunagui                    as GUI
+import           Tunagui                    (WidgetTree (..), Direction (..))
 import           Tunagui.Operation
 import           Tunagui.Widget.Features    (onClick)
 import           Tunagui.Widget.Prim.Button
 
 -- test
-import Tunagui.Widget.Layout
 import Tunagui.General.Data
 
 main :: IO ()

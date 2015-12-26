@@ -20,7 +20,6 @@ library
                      , Tunagui.Widget.Features
                      , Tunagui.Widget.Prim.Button
                      --
-                     , Tunagui.Widget.Layout
                      , Tunagui.General.Data
   other-modules:
                        Tunagui.General.Types
@@ -29,6 +28,7 @@ library
                      , Tunagui.Internal.Base
                      , Tunagui.Internal.Operation.Render
                      , Tunagui.Internal.Operation.Render.SDL
+                     , Tunagui.Widget.Layout
                      , Tunagui.Widget.Component
 
   -- other-extensions:

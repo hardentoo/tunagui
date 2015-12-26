@@ -1,6 +1,12 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
-module Tunagui.Widget.Layout where
+module Tunagui.Widget.Layout
+  (
+    WidgetTree (..)
+  , Direction (..)
+  , locateWT
+  , renderWT
+  ) where
 
 import           Control.Monad                     (foldM, void)
 import           Control.Monad.IO.Class            (MonadIO)
@@ -24,11 +30,6 @@ data Direction
 instance Show WidgetTree where
   show (Widget a) = "Widget " ++ show a
   show (Container dir ws) = "Container " ++ show dir ++ " " ++ show ws
-
--- TODO: This is test code. Fix it.
-pushW :: WidgetTree -> WidgetTree -> WidgetTree
-pushW w (Container dir ws) = Container dir (ws ++ [w])
-pushW _ (Widget _) = error "Undefined! Change this code! @Layout"
 
 -- |
 -- Fix the location of WidgetTree
