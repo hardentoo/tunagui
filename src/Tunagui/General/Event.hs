@@ -30,7 +30,7 @@ listenAllEvents = do
           , eRML = eRML'
           }
     return (ps, events)
-  forkIO $ eventLoop ps
+  _ <- forkIO $ eventLoop ps
   return events
   where
     eventLoop :: [EventPusher] -> IO ()

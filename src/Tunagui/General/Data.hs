@@ -6,7 +6,7 @@ module Tunagui.General.Data
   , Settings (..)
   --
   , TWindow (..)
-  , withTWindow
+  , withTWindow, newTWindow, freeTWindow
   --
   ) where
 
@@ -18,15 +18,15 @@ import           Linear                (V2 (..))
 import qualified SDL
 
 import           Tunagui.General.Types (IPoint)
-import           Tunagui.Widget.Layout (Direction (..), WidgetTree (..))
+import           Tunagui.Widget.Layout (WidgetTree (..))
 
 data TunaContents = TunaContents
-  { cntTWindow :: TWindow
-  , cntEvents  :: FrameEvents
+  { cntEvents  :: FrameEvents
   }
 
 data TunaState = TunaState
 
+-- TODO: Click event must have window ID
 data FrameEvents = FrameEvents
   { behQuit :: Behavior Bool
   , ePML  :: Event IPoint -- Press Mouse Left
@@ -42,14 +42,16 @@ data TWindow = TWindow
   , twWidgetTree :: TVar WidgetTree
   }
 
-newTWindow :: IO TWindow
-newTWindow = do
-  w <- SDL.createWindow (T.pack "title") winConf
-  r <- SDL.createRenderer w (-1) SDL.defaultRenderer
-  tree <- atomically . newTVar $ Container DirV []
-  return $ TWindow w r tree
+-- newTWindow' :: IO TWindow
+-- newTWindow' = newTWindow $ Container DirV []
+
+newTWindow :: WidgetTree -> IO TWindow
+newTWindow tree = do
+  w <- SDL.createWindow (T.pack "title") temporalWinConf
+  TWindow w <$> SDL.createRenderer w (-1) SDL.defaultRenderer
+            <*> atomically (newTVar tree)
   where
-    winConf = SDL.defaultWindow
+    temporalWinConf = SDL.defaultWindow
       { SDL.windowResizable = True
       , SDL.windowInitialSize = V2 300 300
       }
@@ -59,6 +61,9 @@ freeTWindow twin = do
   SDL.destroyRenderer $ twRenderer twin
   SDL.destroyWindow $ twWindow twin
 
-withTWindow :: (TWindow -> IO a) -> IO a
-withTWindow =
-  bracket newTWindow freeTWindow
+-- withTWindow :: (TWindow -> IO a) -> IO a
+-- withTWindow =
+--   bracket newTWindow' freeTWindow
+
+withTWindow :: WidgetTree -> (TWindow -> IO a) -> IO a
+withTWindow tree = bracket (newTWindow tree) freeTWindow

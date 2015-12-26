@@ -17,5 +17,5 @@ newtype Base a = Base {
               MonadReader TunaContents, MonadState TunaState)
 
 runBase :: Base a -> TunaContents -> TunaState -> IO (a, TunaState)
-runBase k contents state =
-  runStateT (runReaderT (runB k) contents) state
+runBase k c s =
+  runStateT (runReaderT (runB k) c) s

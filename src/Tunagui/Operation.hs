@@ -9,7 +9,7 @@ module Tunagui.Operation
   , testOperation
   , testRenderTree
   , quitBehav
-  , pushWidget
+  -- , pushWidget
   , mkButton
   ) where
 
@@ -31,10 +31,10 @@ import qualified Tunagui.Widget.Prim.Button            as Button
 
 -- *****************************************************************************
 data TunaguiI a where
-  TestOperation  :: TunaguiI ()
-  TestRenderTree :: TunaguiI ()
+  TestOperation  :: D.TWindow -> TunaguiI ()
+  TestRenderTree :: D.TWindow -> TunaguiI ()
   QuitBehav      :: TunaguiI (Behavior Bool)
-  PushWidget     :: WidgetTree -> TunaguiI ()
+  -- PushWidget     :: WidgetTree -> TunaguiI ()
   -- make widgets
   MkButton       :: Button.ButtonConfig -> TunaguiI (Button.Button, WidgetTree)
 
@@ -44,14 +44,14 @@ interpret :: TunaguiP Base a -> Base a
 interpret is = eval =<< viewT is
 
 -- *****************************************************************************
-testOperation :: ProgramT TunaguiI m ()
-testOperation = singleton TestOperation
-testRenderTree :: ProgramT TunaguiI m ()
-testRenderTree = singleton TestRenderTree
+testOperation :: D.TWindow -> ProgramT TunaguiI m ()
+testOperation = singleton . TestOperation
+testRenderTree :: D.TWindow -> ProgramT TunaguiI m ()
+testRenderTree = singleton . TestRenderTree
 quitBehav :: ProgramT TunaguiI m (Behavior Bool)
 quitBehav = singleton QuitBehav
-pushWidget :: WidgetTree -> ProgramT TunaguiI m ()
-pushWidget w = singleton . PushWidget $ w
+-- pushWidget :: WidgetTree -> ProgramT TunaguiI m ()
+-- pushWidget w = singleton . PushWidget $ w
 mkButton :: Button.ButtonConfig -> ProgramT TunaguiI m (Button.Button, WidgetTree)
 mkButton = singleton . MkButton
 
@@ -60,12 +60,11 @@ eval :: ProgramViewT TunaguiI Base a -> Base a
 eval (Return a) = return a
 
 -- Test for rendering
-eval (TestOperation :>>= is) = do
+eval (TestOperation tw :>>= is) = do
   -- e <- asks (D.ePML . D.cntEvents)
   -- liftIO . sync $ listen e print
   --
-  r <- asks (D.twRenderer . D.cntTWindow)
-  liftIO . R.runRender r $ do
+  liftIO . R.runRender (D.twRenderer tw) $ do
     R.setColor (V4 255 0 0 255)
     R.clear
     R.setColor (V4 255 255 255 255)
@@ -73,12 +72,11 @@ eval (TestOperation :>>= is) = do
     R.flush
   interpret (is ())
 
-eval (TestRenderTree :>>= is) = do
-  twin <- asks D.cntTWindow
+eval (TestRenderTree tw :>>= is) = do
   liftIO $ do
-    tree <- atomically . readTVar . D.twWidgetTree $ twin
+    tree <- atomically . readTVar . D.twWidgetTree $ tw
     locateWT tree
-    R.runRender (D.twRenderer twin) $ do
+    R.runRender (D.twRenderer tw) $ do
       R.setColor $ V4 240 240 240 255
       R.clear
       renderWT tree
@@ -88,11 +86,11 @@ eval (TestRenderTree :>>= is) = do
 eval (QuitBehav :>>= is) =
   interpret . is =<< asks (D.behQuit . D.cntEvents)
 
-eval (PushWidget w :>>= is) = do
-  tTree <- asks (D.twWidgetTree . D.cntTWindow)
-  liftIO . atomically $
-    writeTVar tTree =<< pushW w <$> readTVar tTree
-  interpret (is ())
+-- eval (PushWidget w :>>= is) = do
+--   tTree <- asks (D.twWidgetTree . D.cntTWindow)
+--   liftIO . atomically $
+--     writeTVar tTree =<< pushW w <$> readTVar tTree
+--   interpret (is ())
 
 -- make widgets ================================================================
 
