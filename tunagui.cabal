@@ -17,18 +17,20 @@ library
   hs-source-dirs:      src
   exposed-modules:     Tunagui
                      , Tunagui.Operation
+                     , Tunagui.Widget.Features
+                     , Tunagui.Widget.Prim.Button
+                     --
+                     , Tunagui.Widget.Layout
                      , Tunagui.General.Data
-                     , Tunagui.General.Types
+  other-modules:
+                       Tunagui.General.Types
                      , Tunagui.General.Event
                      , Tunagui.General.Initialize
                      , Tunagui.Internal.Base
                      , Tunagui.Internal.Operation.Render
                      , Tunagui.Internal.Operation.Render.SDL
-                     , Tunagui.Widget.Features
-                     , Tunagui.Widget.Layout
-                     , Tunagui.Widget.Prim.Button
                      , Tunagui.Widget.Prim.Component.ClickableArea
-  -- other-modules:
+
   -- other-extensions:
   build-depends:       base
                      , mtl
