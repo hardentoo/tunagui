@@ -9,8 +9,8 @@ import           Linear.V2
 
 import qualified Tunagui                as GUI
 import           Tunagui                (WidgetTree (..), Direction (..)
-                                        , ButtonConfig (..), onClick
-                                        , withTWindow, WinConfig (..))
+                                        ,withTWindow, WinConfig (..))
+import           Tunagui.Widget         (ButtonConfig (..), onClick)
 import           Tunagui.Operation
 
 main :: IO ()

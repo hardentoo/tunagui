@@ -17,8 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Tunagui
                      , Tunagui.Operation
-                     , Tunagui.Widget.Features
-                     , Tunagui.Widget.Prim.Button
+                     , Tunagui.Widget
   other-modules:
                        Tunagui.General.Data
                      , Tunagui.General.Types
@@ -28,8 +27,10 @@ library
                      , Tunagui.Internal.Render
                      , Tunagui.Internal.Render.SDL
                      , Tunagui.Operation.TWindow
+                     , Tunagui.Widget.Features
                      , Tunagui.Widget.Layout
                      , Tunagui.Widget.Component
+                     , Tunagui.Widget.Prim.Button
 
   -- other-extensions:
   build-depends:       base
