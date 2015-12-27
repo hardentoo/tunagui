@@ -28,6 +28,7 @@ please copy sdl2-ttf/src/SDL to tunagui/src directory
 git clone 'git@github.com:sbidin/sdl2-ttf.git'
 
 cp -r sdl2-ttf/src/SDL tunagui/src/
+cp -r sdl2-ttf/cbits tunagui/
 ```
 
 ### Using Stack

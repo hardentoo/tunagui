@@ -7,10 +7,12 @@ module Tunagui.Internal.Render.SDL
 
 import           Control.Monad.Operational
 import           Linear.V2
+import           Linear.V4
 import qualified Linear.Affine as A
 
 import           SDL                             (($=))
 import qualified SDL
+import qualified SDL.Font as TTF
 
 import qualified Tunagui.General.Types as T
 import           Tunagui.Internal.Render
@@ -43,4 +45,14 @@ eval r (FillRect p s :>>= is) = do
   interpret r (is ())
 eval r (DrawRect p s :>>= is) = do
   SDL.drawRect r $ Just (SDL.Rectangle (convP p) (convS s))
+  interpret r (is ())
+
+-- Text
+eval r (RenderText (T.P p) text :>>= is) = do
+  font <- TTF.load "data/sample.ttf" 14
+  surface <- TTF.blended font (V4 0 0 0 255) text
+  texture <- SDL.createTextureFromSurface r surface
+  (w, h) <- TTF.size font text
+  let rect = Just $ SDL.Rectangle (fromIntegral <$> A.P p) (fromIntegral <$> V2 w h)
+  SDL.copy r texture Nothing rect
   interpret r (is ())

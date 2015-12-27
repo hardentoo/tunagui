@@ -9,6 +9,7 @@ import           Control.Monad.IO.Class   (MonadIO, liftIO)
 import           FRP.Sodium
 import           Linear.V2
 import           Linear.V4
+import qualified Data.Text                as T
 
 import qualified Tunagui.General.Data     as D
 import qualified Tunagui.General.Types    as T
@@ -29,6 +30,7 @@ data Button = Button
   , setPos     :: T.Point Int -> Reactive ()
   -- Features
   , btnClkArea :: CMP.ClickableArea
+  , btnText :: Maybe T.Text
   }
 
 data ButtonConfig = ButtonConfig
@@ -38,6 +40,7 @@ data ButtonConfig = ButtonConfig
   , btnMaxWidth :: Maybe Int
   , btnMinHeight :: Maybe Int
   , btnMaxHeight :: Maybe Int
+  , bcText :: Maybe T.Text
   } deriving Show
 
 defaultButtonConfig :: ButtonConfig
@@ -48,6 +51,7 @@ defaultButtonConfig = ButtonConfig
   , btnMaxWidth = Nothing
   , btnMinHeight = Nothing
   , btnMaxHeight = Nothing
+  , bcText = Nothing
   }
 
 instance Show Button where
@@ -81,6 +85,7 @@ newButton cnf es =
       , btnSize = behSize
       , setPos = pushPos
       , btnClkArea = clk
+      , btnText = bcText cnf
       }
     where
       minW = case btnMinWidth cnf of
@@ -110,3 +115,7 @@ renderB btn = do
   R.fillRect p s
   R.setColor $ V4 137 140 149 255
   R.drawRect p s
+  --
+  case btnText btn of
+    Just text -> R.renderText p text
+    Nothing   -> return ()

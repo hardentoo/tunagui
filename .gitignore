@@ -18,6 +18,9 @@ stack.yaml
 .stack-work/
 
 src/SDL/
+cbits/
+
+data/
 
 ### OSX ###
 .DS_Store

@@ -20,14 +20,22 @@ main =
     -- 1st window
     withTWindow (WinConfig "main" True (V2 600 400)) tng $ \tw1 -> do
       _ <- runTWin tw1 $ do
-        (btn1, w1) <- mkButton (defaultButtonConfig {btnMinWidth = Just 100, btnMinHeight = Just 50})
+        (btn1, w1) <- mkButton (defaultButtonConfig
+          { btnMinWidth = Just 100
+          , btnMinHeight = Just 50
+          , bcText = Just "button1"
+          })
         testOverwriteTreeOP (Container DirV [w1])
         testRenderTree
         liftIO . sync $ listen (onClick btn1) $ \p -> putStrLn $ "click (1): " ++ show p
       -- 2nd window
       withTWindow (WinConfig "sub" False (V2 200 200)) tng $ \tw2 -> do
         _ <- runTWin tw2 $ do
-          (btn2, w2) <- mkButton (defaultButtonConfig {btnMinWidth = Just 50, btnMinHeight = Just 100})
+          (btn2, w2) <- mkButton (defaultButtonConfig
+            { btnMinWidth = Just 50
+            , btnMinHeight = Just 100
+            , bcText = Just "button2"
+            })
           testOverwriteTreeOP (Container DirV [w2])
           testRenderTree
           liftIO . sync $ listen (onClick btn2) $ \p -> putStrLn $ "click (2): " ++ show p

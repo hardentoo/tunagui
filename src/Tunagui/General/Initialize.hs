@@ -5,15 +5,21 @@ module Tunagui.General.Initialize
 import           Control.Exception
 
 import qualified SDL
+import qualified SDL.Font as TTF
 
 import           Tunagui.General.Data  (Settings, TunaContents (..),
                                         TunaState (..), Tunagui (..))
 import           Tunagui.General.Event (listenAllEvents)
--- import           Tunagui.Internal.Base (Base, runBase)
--- import           Tunagui.Operation     (TunaguiP, interpret)
 
 withTunagui :: Settings -> (Tunagui -> IO a) -> IO a
 withTunagui _stg work =
-  bracket_ SDL.initializeAll
-           SDL.quit
+  bracket_ init
+           quit
            (work =<< Tunagui <$> (TunaContents <$> listenAllEvents) <*> pure TunaState)
+  where
+    init = do
+      SDL.initializeAll
+      TTF.initialize
+    quit = do
+      TTF.quit
+      SDL.quit

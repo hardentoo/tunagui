@@ -3,6 +3,7 @@ module Tunagui.Internal.Render where
 
 import           Data.Word                 (Word8)
 import           Linear                    (V4 (..))
+import qualified Data.Text                 as T
 
 import           Control.Monad.Operational
 
@@ -15,6 +16,8 @@ data RenderI a where
   -- Figure
   FillRect :: Point Int -> Size Int -> RenderI ()
   DrawRect :: Point Int -> Size Int -> RenderI ()
+  --
+  RenderText :: Point Int -> T.Text -> RenderI ()
 
 type RenderP m a = ProgramT RenderI m a
 
@@ -32,3 +35,6 @@ fillRect p s = singleton $ FillRect p s
 
 drawRect :: Point Int -> Size Int -> RenderP m ()
 drawRect p s = singleton $ DrawRect p s
+
+renderText :: Point Int -> T.Text -> RenderP m ()
+renderText p t = singleton $ RenderText p t
