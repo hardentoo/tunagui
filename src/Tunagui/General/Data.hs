@@ -13,6 +13,7 @@ module Tunagui.General.Data
   , testOverwriteTree
   ) where
 
+import           Control.Monad         (void)
 import           Control.Exception     (bracket)
 import qualified Data.Text             as T
 import           FRP.Sodium
@@ -31,9 +32,9 @@ data TunaContents = TunaContents
 
 data TunaState = TunaState
 
--- TODO: Click event must have window ID
 data FrameEvents = FrameEvents
   { behQuit :: Behavior Bool
+  , eWinClosed :: Event SDL.Window
   , ePML  :: Event (SDL.Window, T.Point Int) -- Press Mouse Left
   , eRML  :: Event (SDL.Window, T.Point Int) -- Release Mouse Left
   }
@@ -43,37 +44,40 @@ data Settings = Settings -- dummy
 -- TWindow
 data TWindow = TWindow
   { twWindow     :: SDL.Window
+  , twEvents     :: WinEvents
   , twRenderer   :: SDL.Renderer
   , twWidgetTree :: TVar WidgetTree
-  , twEvents     :: WinEvents
   }
 
 -- | Events of each TWindow
 data WinEvents = WinEvents
-  { wePML :: Event (T.Point Int)
+  { weClosed :: Event ()
+  , wePML :: Event (T.Point Int)
   , weRML :: Event (T.Point Int)
   }
 
--- TODO: Config with initial position
--- TODO: Config with initial size
--- TODO: Config with scalability
+-- TODO: Config with initial position, sizse, scalability
 newTWindow :: FrameEvents -> IO TWindow
 newTWindow es = do
   w <- SDL.createWindow (T.pack "title") temporalWinConf
-  TWindow w <$> SDL.createRenderer w (-1) SDL.defaultRenderer
-            <*> atomically (newTVar (Container DirV []))
-            <*> pure (mkEvents w)
+  let es = mkEvents w
+  tw <- TWindow w es
+          <$> SDL.createRenderer w (-1) SDL.defaultRenderer
+          <*> atomically (newTVar (Container DirV []))
+  _unlisten <- sync $ listen (weClosed es) $ \_ -> freeTWindow tw -- TODO: Thread leak!?
+  return tw
   where
     temporalWinConf = SDL.defaultWindow
       { SDL.windowResizable = True
       , SDL.windowInitialSize = V2 300 300
       }
     mkEvents win = WinEvents
-        { wePML = matchWindow $ ePML es
-        , weRML = matchWindow $ eRML es
+        { weClosed = void $ matchWindow id $ eWinClosed es
+        , wePML = snd <$> matchWindow fst (ePML es)
+        , weRML = snd <$> matchWindow fst (eRML es)
         }
       where
-        matchWindow = fmap snd . filterE ((==win) . fst)
+        matchWindow f = filterE ((==win) . f)
 
 freeTWindow :: TWindow -> IO ()
 freeTWindow twin = do

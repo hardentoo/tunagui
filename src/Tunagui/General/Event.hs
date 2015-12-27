@@ -17,15 +17,17 @@ type EventPusher = SDL.Event -> Reactive ()
 listenAllEvents :: IO FrameEvents
 listenAllEvents = do
   (ps, events) <- sync $ do
-    (eQuit', pQuit) <- quitEvent
-    (ePML', pPML) <- mouseEvent SDL.Pressed  SDL.ButtonLeft
-    (eRML', pRML) <- mouseEvent SDL.Released SDL.ButtonLeft
+    (eQuit', pQuit) <- mkQuitEvent
+    (eWinClosed', pWinClosed) <- mkWinClosedEvent
+    (ePML', pPML) <- mkMouseEvent SDL.Pressed  SDL.ButtonLeft
+    (eRML', pRML) <- mkMouseEvent SDL.Released SDL.ButtonLeft
     --
     behQuit' <- hold False eQuit'
     --
-    let ps = [pQuit, pPML, pRML]
+    let ps = [pQuit, pPML, pRML, pWinClosed]
         events = FrameEvents
           { behQuit = behQuit'
+          , eWinClosed = eWinClosed'
           , ePML = ePML'
           , eRML = eRML'
           }
@@ -45,14 +47,21 @@ listenAllEvents = do
 
 type EventPair a = (Event a, EventPusher)
 
--- | TODO: Each window should have quit event
-quitEvent :: Reactive (EventPair Bool)
-quitEvent = fmap work <$> newEvent
+mkQuitEvent :: Reactive (EventPair Bool)
+mkQuitEvent = fmap work <$> newEvent
   where
     work push e = when (SDL.eventPayload e == SDL.QuitEvent) $ push True
 
-mouseEvent :: SDL.InputMotion -> SDL.MouseButton -> Reactive (EventPair (SDL.Window, T.Point Int))
-mouseEvent motion button = fmap work <$> newEvent
+mkWinClosedEvent :: Reactive (EventPair SDL.Window)
+mkWinClosedEvent = fmap work <$> newEvent
+  where
+    work push e =
+      case SDL.eventPayload e of
+        SDL.WindowClosedEvent (SDL.WindowClosedEventData win) -> push win
+        _ -> return ()
+
+mkMouseEvent :: SDL.InputMotion -> SDL.MouseButton -> Reactive (EventPair (SDL.Window, T.Point Int))
+mkMouseEvent motion button = fmap work <$> newEvent
   where
     work push e =
       case SDL.eventPayload e of
