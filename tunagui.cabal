@@ -32,6 +32,12 @@ library
                      , Tunagui.Widget.Component
                      , Tunagui.Widget.Prim.Button
 
+                     -- git@github.com:sbidin/sdl2-ttf.git
+                     , SDL.Font
+                     , SDL.Raw.Font
+                     , SDL.ExceptionHelper
+                     , SDL.Raw.Helper
+
   -- other-extensions:
   build-depends:       base
                      , mtl
@@ -41,6 +47,9 @@ library
                      , sodium
                      , sdl2 >= 2
                      , linear
+                     -- For sdl2-ttf
+                     , bytestring >= 0.10.4.0
+                     , template-haskell
   default-language:    Haskell2010
 
 executable tunagui-exe

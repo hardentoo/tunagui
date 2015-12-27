@@ -17,6 +17,8 @@ cabal.sandbox.config
 stack.yaml
 .stack-work/
 
+src/SDL/
+
 ### OSX ###
 .DS_Store
 .AppleDouble
