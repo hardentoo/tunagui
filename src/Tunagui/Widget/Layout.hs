@@ -6,6 +6,7 @@ module Tunagui.Widget.Layout
   , Direction (..)
   , locateWT
   , renderWT
+  , DimSize (..)
   ) where
 
 import           Control.Monad           (foldM, void)

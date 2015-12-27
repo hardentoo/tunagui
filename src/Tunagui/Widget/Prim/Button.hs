@@ -17,6 +17,7 @@ import           Tunagui.Widget.Features  (Clickable,
                                           onClick, render,
                                           locate)
 import qualified Tunagui.Widget.Component as CMP
+import           Tunagui.Widget.Layout    (DimSize (..))
 
 -- TODO: Hide 'newButton' from user
 
@@ -30,8 +31,8 @@ data Button = Button
   }
 
 data ButtonConfig = ButtonConfig
-  { btnWidth  :: Int
-  , btnHeight :: Int
+  { btnWidth  :: DimSize Int
+  , btnHeight :: DimSize Int
   }
 
 instance Show Button where
@@ -47,9 +48,16 @@ instance Renderable Button where
 newButton :: ButtonConfig -> D.WinEvents -> IO Button
 newButton cfg es =
   sync $ do
+    (behW,_) <- case btnWidth cfg of
+      Absolute x -> newBehavior x
+      RelContent -> newBehavior 100 -- TODO: change to behavior accordings to contents
+    (behH,_) <- case btnHeight cfg of
+      Absolute x -> newBehavior x
+      RelContent -> newBehavior 100
+    let behSize = T.S <$> (V2 <$> behW <*> behH)
+        behShape = T.Rect <$> behSize
+    --
     (behPos, pushPos) <- newBehavior $ T.P (V2 0 0)
-    (behSize, _)      <- newBehavior iniSize
-    let behShape = T.Rect <$> behSize
     clk <- CMP.mkClickableArea behPos behShape (D.wePML es) (D.weRML es)
     return Button
       { btnPos = behPos
@@ -57,10 +65,6 @@ newButton cfg es =
       , setPos = pushPos
       , btnClkArea = clk
       }
-  where
-    w = btnWidth cfg
-    h = btnHeight cfg
-    iniSize = T.S (V2 w h)
 
 locateB :: Button -> T.Point Int -> Reactive (T.Range Int)
 locateB btn p = do
