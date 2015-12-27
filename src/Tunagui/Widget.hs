@@ -1,10 +1,10 @@
 module Tunagui.Widget
   (
-    ButtonConfig (..)
+    ButtonConfig (..), defaultButtonConfig
   , onClick
   , DimSize (..)
   ) where
 
-import Tunagui.Widget.Prim.Button (ButtonConfig (..))
+import Tunagui.Widget.Prim.Button (ButtonConfig (..), defaultButtonConfig)
 import Tunagui.Widget.Features (onClick)
 import Tunagui.Widget.Layout (DimSize (..))

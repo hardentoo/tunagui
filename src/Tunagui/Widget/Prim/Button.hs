@@ -1,6 +1,7 @@
 module Tunagui.Widget.Prim.Button
   (
     Button (..), ButtonConfig (..)
+  , defaultButtonConfig
   , newButton
   ) where
 
@@ -33,6 +34,20 @@ data Button = Button
 data ButtonConfig = ButtonConfig
   { btnWidth  :: DimSize Int
   , btnHeight :: DimSize Int
+  , btnMinWidth :: Maybe Int
+  , btnMaxWidth :: Maybe Int
+  , btnMinHeight :: Maybe Int
+  , btnMaxHeight :: Maybe Int
+  } deriving Show
+
+defaultButtonConfig :: ButtonConfig
+defaultButtonConfig = ButtonConfig
+  { btnWidth = RelContent
+  , btnHeight = RelContent
+  , btnMinWidth = Nothing
+  , btnMaxWidth = Nothing
+  , btnMinHeight = Nothing
+  , btnMaxHeight = Nothing
   }
 
 instance Show Button where
@@ -46,15 +61,17 @@ instance Renderable Button where
   locate = locateB
 
 newButton :: ButtonConfig -> D.WinEvents -> IO Button
-newButton cfg es =
+newButton cnf es =
   sync $ do
-    (behW,_) <- case btnWidth cfg of
+    (behW,_) <- case btnWidth cnf of
       Absolute x -> newBehavior x
       RelContent -> newBehavior 100 -- TODO: change to behavior accordings to contents
-    (behH,_) <- case btnHeight cfg of
+    (behH,_) <- case btnHeight cnf of
       Absolute x -> newBehavior x
       RelContent -> newBehavior 100
-    let behSize = T.S <$> (V2 <$> behW <*> behH)
+    let behW' = minW . maxW <$> behW
+        behH' = minH . maxH <$> behH
+    let behSize = T.S <$> (V2 <$> behW' <*> behH')
         behShape = T.Rect <$> behSize
     --
     (behPos, pushPos) <- newBehavior $ T.P (V2 0 0)
@@ -65,6 +82,19 @@ newButton cfg es =
       , setPos = pushPos
       , btnClkArea = clk
       }
+    where
+      minW = case btnMinWidth cnf of
+        Just x -> min x
+        Nothing -> id
+      maxW = case btnMaxWidth cnf of
+        Just x -> max x
+        Nothing -> id
+      minH = case btnMinHeight cnf of
+        Just x -> min x
+        Nothing -> id
+      maxH = case btnMaxHeight cnf of
+        Just x -> max x
+        Nothing -> id
 
 locateB :: Button -> T.Point Int -> Reactive (T.Range Int)
 locateB btn p = do
