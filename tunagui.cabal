@@ -51,6 +51,7 @@ library
                      , sodium
                      , sdl2 >= 2
                      , linear
+                     , managed
                      -- For sdl2-ttf
                      , bytestring >= 0.10.4.0
                      , template-haskell
