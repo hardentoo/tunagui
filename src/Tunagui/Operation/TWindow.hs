@@ -2,7 +2,7 @@
 
 -- Users can use these operations.
 
-module Tunagui.Operation where
+module Tunagui.Operation.TWindow where
 
 import           Control.Monad.IO.Class      (MonadIO, liftIO)
 import           Control.Monad.Operational

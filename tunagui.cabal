@@ -28,6 +28,7 @@ library
                     --  , Tunagui.Internal.Base
                      , Tunagui.Internal.Render
                      , Tunagui.Internal.Render.SDL
+                     , Tunagui.Operation.TWindow
                      , Tunagui.Widget.Layout
                      , Tunagui.Widget.Component
 
