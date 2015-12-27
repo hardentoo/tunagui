@@ -8,6 +8,7 @@ module Tunagui.General.Data
   --
   , TWindow (..)
   , WinEvents (..)
+  , WinConfig (..)
   , withTWindow, newTWindow, freeTWindow
   --
   , testOverwriteTree
@@ -59,10 +60,17 @@ data WinEvents = WinEvents
   , weRML :: Event (T.Point Int)
   }
 
+data WinConfig = WinConfig
+  {
+    winTitle :: T.Text
+  , winResizable :: Bool
+  , winInitialSize :: V2 Int
+  }
+
 -- TODO: Config with initial position, sizse, scalability
-newTWindow :: FrameEvents -> IO TWindow
-newTWindow es = do
-  w <- SDL.createWindow (T.pack "title") temporalWinConf
+newTWindow :: WinConfig -> FrameEvents -> IO TWindow
+newTWindow cnf es = do
+  w <- SDL.createWindow (winTitle cnf) winConf
   let es = mkEvents w
   tw <- TWindow w es
           <$> SDL.createRenderer w (-1) SDL.defaultRenderer
@@ -70,15 +78,15 @@ newTWindow es = do
   _unlisten <- sync $ listen (weClosed es) $ \_ -> freeTWindow tw -- TODO: Thread leak!?
   return tw
   where
-    temporalWinConf = SDL.defaultWindow
-      { SDL.windowResizable = True
-      , SDL.windowInitialSize = V2 300 300
+    winConf = SDL.defaultWindow
+      { SDL.windowResizable = winResizable cnf
+      , SDL.windowInitialSize = fromIntegral <$> winInitialSize cnf
       }
     mkEvents win = WinEvents
-        { weClosed = void $ matchWindow id $ eWinClosed es
-        , wePML = snd <$> matchWindow fst (ePML es)
-        , weRML = snd <$> matchWindow fst (eRML es)
-        }
+      { weClosed = void $ matchWindow id $ eWinClosed es
+      , wePML = snd <$> matchWindow fst (ePML es)
+      , weRML = snd <$> matchWindow fst (eRML es)
+      }
       where
         matchWindow f = filterE ((==win) . f)
 
@@ -87,8 +95,8 @@ freeTWindow twin = do
   SDL.destroyRenderer $ twRenderer twin
   SDL.destroyWindow $ twWindow twin
 
-withTWindow :: Tunagui -> (TWindow -> IO a) -> IO a
-withTWindow t = bracket (newTWindow es) freeTWindow
+withTWindow :: WinConfig -> Tunagui -> (TWindow -> IO a) -> IO a
+withTWindow cnf t = bracket (newTWindow cnf es) freeTWindow
   where
     es = cntEvents . tunaContents $ t
 
