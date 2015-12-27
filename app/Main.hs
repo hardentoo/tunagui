@@ -1,30 +1,27 @@
 module Main where
 
-import           Control.Concurrent         (threadDelay)
-import           Control.Monad.IO.Class     (liftIO)
+import           Control.Concurrent     (threadDelay)
+import           Control.Monad.IO.Class (liftIO)
 import           FRP.Sodium
 
-import qualified Tunagui                    as GUI
-import           Tunagui                    (WidgetTree (..), Direction (..))
+import qualified Tunagui                as GUI
+import           Tunagui                (WidgetTree (..), Direction (..)
+                                        , ButtonConfig (..), onClick
+                                        , withTWindow)
 import           Tunagui.Operation
-import           Tunagui.Widget.Features    (onClick)
-import           Tunagui.Widget.Prim.Button
-
--- test
-import Tunagui.General.Data
 
 main :: IO ()
 main =
-  GUI.withTunagui GUI.Settings $ \(Tunagui cnt _) ->
+  GUI.withTunagui GUI.Settings $ \tng ->
     -- 1st window
-    withTWindow (cntEvents cnt) $ \tw1 -> do
+    withTWindow tng $ \tw1 -> do
       _ <- runTWin tw1 $ do
         (btn1, w1) <- mkButton (ButtonConfig 100 30)
         testOverwriteTreeOP (Container DirV [w1])
         testRenderTree
         liftIO . sync $ listen (onClick btn1) $ \p -> putStrLn $ "click (1): " ++ show p
       -- 2nd window
-      withTWindow (cntEvents cnt) $ \tw2 -> do
+      withTWindow tng $ \tw2 -> do
         _ <- runTWin tw2 $ do
           (btn2, w2) <- mkButton (ButtonConfig 30 100)
           testOverwriteTreeOP (Container DirV [w2])

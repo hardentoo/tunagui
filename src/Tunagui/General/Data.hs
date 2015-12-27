@@ -24,7 +24,10 @@ import qualified SDL
 import qualified Tunagui.General.Types as T
 import           Tunagui.Widget.Layout (WidgetTree (..), Direction (..))
 
-data Tunagui = Tunagui TunaContents TunaState
+data Tunagui = Tunagui
+  { tunaContents :: TunaContents
+  , tunaState :: TunaState
+  }
 
 data TunaContents = TunaContents
   { cntEvents  :: FrameEvents
@@ -84,8 +87,10 @@ freeTWindow twin = do
   SDL.destroyRenderer $ twRenderer twin
   SDL.destroyWindow $ twWindow twin
 
-withTWindow :: FrameEvents -> (TWindow -> IO a) -> IO a
-withTWindow fe = bracket (newTWindow fe) freeTWindow
+withTWindow :: Tunagui -> (TWindow -> IO a) -> IO a
+withTWindow t = bracket (newTWindow es) freeTWindow
+  where
+    es = cntEvents . tunaContents $ t
 
 testOverwriteTree :: WidgetTree -> TWindow -> IO ()
 testOverwriteTree tree tw =

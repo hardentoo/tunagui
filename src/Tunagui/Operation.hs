@@ -1,6 +1,6 @@
 module Tunagui.Operation
   (
-  -- * TWindow
+  -- * TWindowP
     TWindowP, runTWin
   , testOverwriteTreeOP
   , testRenderTree

@@ -19,10 +19,9 @@ library
                      , Tunagui.Operation
                      , Tunagui.Widget.Features
                      , Tunagui.Widget.Prim.Button
-                     --
-                     , Tunagui.General.Data
   other-modules:
-                       Tunagui.General.Types
+                       Tunagui.General.Data
+                     , Tunagui.General.Types
                      , Tunagui.General.Event
                      , Tunagui.General.Initialize
                     --  , Tunagui.Internal.Base
