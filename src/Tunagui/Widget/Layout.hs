@@ -71,3 +71,11 @@ locateWT widgetTree = void . sync $ go widgetTree (T.P (V2 0 0))
 renderWT :: MonadIO m => WidgetTree -> RenderP m ()
 renderWT (Widget a)       = render a
 renderWT (Container _ ws) = mapM_ renderWT ws
+
+-- *****************************************************************************
+
+-- | One dimensional size
+data DimSize a
+  = Absolute a
+  | RelContent
+  deriving (Eq, Show)
