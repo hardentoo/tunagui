@@ -51,8 +51,9 @@ eval r (DrawRect p s :>>= is) = do
 
 -- Text
 eval r (RenderText (T.P p) text :>>= is) = do
+  -- TODO: Memory should be allocated once
   runManaged $ do
-    font <- managed $ bracket (TTF.load "data/sample.ttf" 14) TTF.free
+    font    <- managed $ bracket (TTF.load "data/sample.ttf" 14) TTF.free
     surface <- managed $ bracket (TTF.blended font (V4 0 0 0 255) text) SDL.freeSurface
     texture <- managed $ bracket (SDL.createTextureFromSurface r surface) SDL.destroyTexture
     (w, h) <- TTF.size font text
