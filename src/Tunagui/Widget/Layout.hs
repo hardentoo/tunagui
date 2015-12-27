@@ -8,15 +8,15 @@ module Tunagui.Widget.Layout
   , renderWT
   ) where
 
-import           Control.Monad                     (foldM, void)
-import           Control.Monad.IO.Class            (MonadIO)
-import           Data.Foldable                     (foldl')
+import           Control.Monad           (foldM, void)
+import           Control.Monad.IO.Class  (MonadIO)
+import           Data.Foldable           (foldl')
 import           FRP.Sodium
 import           Linear.V2
 
-import qualified Tunagui.General.Types             as T
-import           Tunagui.Internal.Operation.Render (RenderP)
-import           Tunagui.Widget.Features           (Renderable, locate, render)
+import qualified Tunagui.General.Types   as T
+import           Tunagui.Internal.Render (RenderP)
+import           Tunagui.Widget.Features (Renderable, locate, render)
 
 data WidgetTree =
   forall a. (Show a, Renderable a)

@@ -4,19 +4,19 @@ module Tunagui.Widget.Prim.Button
   , newButton
   ) where
 
-import           Control.Monad.IO.Class                      (MonadIO, liftIO)
+import           Control.Monad.IO.Class   (MonadIO, liftIO)
 import           FRP.Sodium
 import           Linear.V2
 import           Linear.V4
 
-import qualified Tunagui.General.Data              as D
-import qualified Tunagui.General.Types             as T
-import           Tunagui.Internal.Operation.Render as R
-import           Tunagui.Widget.Features           (Clickable,
-                                                   Renderable,
-                                                   onClick, render,
-                                                   locate)
-import qualified Tunagui.Widget.Component          as CMP
+import qualified Tunagui.General.Data     as D
+import qualified Tunagui.General.Types    as T
+import           Tunagui.Internal.Render  as R
+import           Tunagui.Widget.Features  (Clickable,
+                                          Renderable,
+                                          onClick, render,
+                                          locate)
+import qualified Tunagui.Widget.Component as CMP
 
 -- TODO: Hide 'newButton' from user
 

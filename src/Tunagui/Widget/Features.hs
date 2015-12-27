@@ -1,10 +1,10 @@
 module Tunagui.Widget.Features where
 
-import           Control.Monad.IO.Class            (MonadIO)
+import           Control.Monad.IO.Class  (MonadIO)
 import           FRP.Sodium
 
-import qualified Tunagui.General.Types             as T
-import           Tunagui.Internal.Operation.Render
+import qualified Tunagui.General.Types   as T
+import           Tunagui.Internal.Render (RenderP)
 
 class Renderable a where
   render :: MonadIO m => a -> RenderP m ()

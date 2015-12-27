@@ -4,22 +4,22 @@
 
 module Tunagui.Operation where
 
-import           Control.Monad.IO.Class                (MonadIO, liftIO)
+import           Control.Monad.IO.Class      (MonadIO, liftIO)
 import           Control.Monad.Operational
-import           Control.Monad.Reader                  (asks)
+import           Control.Monad.Reader        (asks)
 import           FRP.Sodium
 import           GHC.Conc.Sync
-import           Linear.V2                             (V2 (..))
-import           Linear.V4                             (V4 (..))
+import           Linear.V2                   (V2 (..))
+import           Linear.V4                   (V4 (..))
 
-import qualified Tunagui.General.Data                  as D
-import qualified Tunagui.General.Types                 as T
-import           Tunagui.Internal.Operation.Render.SDL (runRender)
-import qualified Tunagui.Internal.Operation.Render     as R
+import qualified Tunagui.General.Data        as D
+import qualified Tunagui.General.Types       as T
+import           Tunagui.Internal.Render.SDL (runRender)
+import qualified Tunagui.Internal.Render     as R
 
 import           Tunagui.Widget.Features
 import           Tunagui.Widget.Layout
-import qualified Tunagui.Widget.Prim.Button            as Button
+import qualified Tunagui.Widget.Prim.Button  as Button
 
 data TWindowI a where
   TestOverwriteTree :: WidgetTree -> TWindowI ()

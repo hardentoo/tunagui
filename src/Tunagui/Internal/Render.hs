@@ -1,5 +1,5 @@
 {-# LANGUAGE GADTs #-}
-module Tunagui.Internal.Operation.Render where
+module Tunagui.Internal.Render where
 
 import           Data.Word                 (Word8)
 import           Linear                    (V4 (..))

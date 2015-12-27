@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 
-module Tunagui.Internal.Operation.Render.SDL
+module Tunagui.Internal.Render.SDL
   (
     runRender
   ) where
@@ -13,7 +13,7 @@ import           SDL                             (($=))
 import qualified SDL
 
 import qualified Tunagui.General.Types as T
-import           Tunagui.Internal.Operation.Render
+import           Tunagui.Internal.Render
 
 runRender :: SDL.Renderer -> RenderP IO a -> IO ()
 runRender = interpret

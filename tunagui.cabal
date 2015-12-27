@@ -26,8 +26,8 @@ library
                      , Tunagui.General.Event
                      , Tunagui.General.Initialize
                     --  , Tunagui.Internal.Base
-                     , Tunagui.Internal.Operation.Render
-                     , Tunagui.Internal.Operation.Render.SDL
+                     , Tunagui.Internal.Render
+                     , Tunagui.Internal.Render.SDL
                      , Tunagui.Widget.Layout
                      , Tunagui.Widget.Component
 
