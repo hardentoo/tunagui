@@ -34,23 +34,23 @@ data Button = Button
   }
 
 data ButtonConfig = ButtonConfig
-  { btnWidth  :: DimSize Int
-  , btnHeight :: DimSize Int
-  , btnMinWidth :: Maybe Int
-  , btnMaxWidth :: Maybe Int
-  , btnMinHeight :: Maybe Int
-  , btnMaxHeight :: Maybe Int
+  { bcWidth  :: DimSize Int
+  , bcHeight :: DimSize Int
+  , bcMinWidth :: Maybe Int
+  , bcMaxWidth :: Maybe Int
+  , bcMinHeight :: Maybe Int
+  , bcMaxHeight :: Maybe Int
   , bcText :: Maybe T.Text
   } deriving Show
 
 defaultButtonConfig :: ButtonConfig
 defaultButtonConfig = ButtonConfig
-  { btnWidth = RelContent
-  , btnHeight = RelContent
-  , btnMinWidth = Nothing
-  , btnMaxWidth = Nothing
-  , btnMinHeight = Nothing
-  , btnMaxHeight = Nothing
+  { bcWidth = RelContent
+  , bcHeight = RelContent
+  , bcMinWidth = Nothing
+  , bcMaxWidth = Nothing
+  , bcMinHeight = Nothing
+  , bcMaxHeight = Nothing
   , bcText = Nothing
   }
 
@@ -66,15 +66,16 @@ instance Renderable Button where
 
 newButton :: ButtonConfig -> D.TWindow -> TunaguiT Button
 newButton cnf twin = do
+  -- Text size
   (T.S (V2 relW relH)) <- case bcText cnf of
     Just text -> runRender renderer (R.textSize text)
-    Nothing   -> return (T.S (V2 100 100))
-  ---
+    Nothing   -> return (T.S (V2 defWidth defHeight))
+  --- Events
   liftIO . sync $ do
-    (behW,_) <- case btnWidth cnf of
+    (behW,_) <- case bcWidth cnf of
       Absolute w -> newBehavior w
       RelContent -> newBehavior relW
-    (behH,_) <- case btnHeight cnf of
+    (behH,_) <- case bcHeight cnf of
       Absolute h -> newBehavior h
       RelContent -> newBehavior relH
     let behW' = minW . maxW <$> behW
@@ -92,21 +93,18 @@ newButton cnf twin = do
       , btnText = bcText cnf
       }
   where
+    defWidth = 10
+    defHeight = 10
     events = D.twEvents twin
     renderer = D.twRenderer twin
     --
-    minW = case btnMinWidth cnf of
-      Just x -> min x
+    bound f item = case item cnf of
+      Just x  -> f x
       Nothing -> id
-    maxW = case btnMaxWidth cnf of
-      Just x -> max x
-      Nothing -> id
-    minH = case btnMinHeight cnf of
-      Just x -> min x
-      Nothing -> id
-    maxH = case btnMaxHeight cnf of
-      Just x -> max x
-      Nothing -> id
+    minW = bound min bcMinWidth
+    maxW = bound max bcMaxWidth
+    minH = bound min bcMinHeight
+    maxH = bound max bcMaxHeight
 
 locateB :: Button -> T.Point Int -> Reactive (T.Range Int)
 locateB btn p = do
