@@ -1,14 +1,9 @@
 module Tunagui.General.Data
   (
-    Tunagui (..)
-  , FrameEvents (..)
-  --
-  , TWindow (..)
+    TWindow (..)
   , WinEvents (..)
   , WinConfig (..)
   , withTWindow, newTWindow, freeTWindow
-  --
-  , testOverwriteTree
   ) where
 
 import           Control.Monad         (void)
@@ -18,22 +13,10 @@ import           FRP.Sodium
 import           GHC.Conc.Sync         (TVar, atomically, newTVar, writeTVar)
 import           Linear                (V2 (..))
 import qualified SDL
-import qualified SDL.Font              as TTF
 
+import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..))
 import qualified Tunagui.General.Types as T
 import           Tunagui.Widget.Layout (WidgetTree (..), Direction (..))
-
-data Tunagui = Tunagui
-  { cntEvents  :: FrameEvents
-  , cntFont :: TTF.Font
-  }
-
-data FrameEvents = FrameEvents
-  { behQuit :: Behavior Bool
-  , eWinClosed :: Event SDL.Window
-  , ePML  :: Event (SDL.Window, T.Point Int) -- Press Mouse Left
-  , eRML  :: Event (SDL.Window, T.Point Int) -- Release Mouse Left
-  }
 
 -- TWindow
 data TWindow = TWindow
@@ -89,7 +72,3 @@ withTWindow :: WinConfig -> Tunagui -> (TWindow -> IO a) -> IO a
 withTWindow cnf t = bracket (newTWindow cnf events) freeTWindow
   where
     events = cntEvents t
-
-testOverwriteTree :: WidgetTree -> TWindow -> IO ()
-testOverwriteTree tree tw =
-  atomically $ writeTVar (twWidgetTree tw) tree

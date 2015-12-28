@@ -7,11 +7,12 @@ import           Control.Exception
 import qualified SDL
 import qualified SDL.Font as TTF
 
-import           Tunagui.General.Data  (Tunagui (..))
+import           Tunagui.General.Base  (Tunagui (..))
 import           Tunagui.General.Event (listenAllEvents)
 
 withTunagui :: (Tunagui -> IO a) -> IO a
 withTunagui work = bracket_ init quit go
+-- TODO: use with
   where
     init = do
       SDL.initializeAll

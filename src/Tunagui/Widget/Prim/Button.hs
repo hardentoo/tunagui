@@ -13,6 +13,7 @@ import qualified Data.Text                as T
 
 import qualified Tunagui.General.Data     as D
 import qualified Tunagui.General.Types    as T
+import           Tunagui.General.Base     (TunaguiT)
 import           Tunagui.Internal.Render  as R
 import           Tunagui.Widget.Features  (Clickable,
                                           Renderable,
@@ -108,7 +109,7 @@ locateB btn p = do
   size <- sample (btnSize btn)
   return $ T.R pos (pos `T.plusPS` size)
 
-renderB :: MonadIO m => Button -> R.RenderP m ()
+renderB :: Button -> R.RenderP TunaguiT ()
 renderB btn = do
   (p,s) <- liftIO . sync $ (,) <$> sample (btnPos btn) <*> sample (btnSize btn)
   R.setColor $ V4 255 255 255 255

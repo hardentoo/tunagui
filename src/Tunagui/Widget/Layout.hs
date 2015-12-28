@@ -16,6 +16,7 @@ import           FRP.Sodium
 import           Linear.V2
 
 import qualified Tunagui.General.Types   as T
+import           Tunagui.General.Base    (TunaguiT)
 import           Tunagui.Internal.Render (RenderP)
 import           Tunagui.Widget.Features (Renderable, locate, render)
 
@@ -69,7 +70,7 @@ locateWT widgetTree = void . sync $ go widgetTree (T.P (V2 0 0))
 
 -- |
 -- Render all widgets in WidgetTree.
-renderWT :: MonadIO m => WidgetTree -> RenderP m ()
+renderWT :: WidgetTree -> RenderP TunaguiT ()
 renderWT (Widget a)       = render a
 renderWT (Container _ ws) = mapM_ renderWT ws
 

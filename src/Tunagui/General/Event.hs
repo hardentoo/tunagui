@@ -9,7 +9,7 @@ import qualified Linear.Affine         as A
 
 import qualified SDL
 
-import           Tunagui.General.Data  (FrameEvents (..))
+import           Tunagui.General.Base  (FrameEvents (..))
 import qualified Tunagui.General.Types as T
 
 type EventPusher = SDL.Event -> Reactive ()

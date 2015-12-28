@@ -1,14 +1,32 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Tunagui.General.Base
-  ( TunaguiT
-  , runTuna
+  (
+    Tunagui (..)
+  , FrameEvents (..)
+  , TunaguiT, runTuna
   ) where
 
 import           Control.Monad.Reader
 import           Control.Monad.State
+import           FRP.Sodium
 
-import           Tunagui.General.Data (Tunagui)
+import qualified SDL
+import qualified SDL.Font              as TTF
+
+import qualified Tunagui.General.Types as T
+
+data Tunagui = Tunagui
+  { cntEvents  :: FrameEvents
+  , cntFont :: TTF.Font
+  }
+
+data FrameEvents = FrameEvents
+  { behQuit :: Behavior Bool
+  , eWinClosed :: Event SDL.Window
+  , ePML  :: Event (SDL.Window, T.Point Int) -- Press Mouse Left
+  , eRML  :: Event (SDL.Window, T.Point Int) -- Release Mouse Left
+  }
 
 newtype TunaguiT a = TunaguiT {
     runT :: ReaderT Tunagui IO a
