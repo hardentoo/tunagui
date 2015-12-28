@@ -11,16 +11,9 @@ import           Tunagui.General.Base  (Tunagui (..))
 import           Tunagui.General.Event (listenAllEvents)
 
 withTunagui :: (Tunagui -> IO a) -> IO a
-withTunagui work = bracket_ init quit go
--- TODO: use with
-  where
-    init = do
-      SDL.initializeAll
-      TTF.initialize
-    quit = do
-      TTF.quit
-      SDL.quit
-    go =
+withTunagui work =
+  bracket_ SDL.initializeAll SDL.quit $
+    bracket_ TTF.initialize TTF.quit $
       bracket (TTF.load "data/sample.ttf" 14) TTF.free $ \font -> do
         events <- listenAllEvents
         work $ Tunagui events font
