@@ -22,8 +22,6 @@ import           Tunagui.Widget.Features  (Clickable,
 import qualified Tunagui.Widget.Component as CMP
 import           Tunagui.Widget.Layout    (DimSize (..))
 
--- TODO: Hide 'newButton' from user
-
 data Button = Button
   { btnPos     :: Behavior (T.Point Int)
   , btnSize    :: Behavior (T.Size Int)

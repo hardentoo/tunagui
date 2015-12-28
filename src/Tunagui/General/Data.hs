@@ -48,7 +48,7 @@ newTWindow cnf es = do
   tw <- TWindow w es
           <$> SDL.createRenderer w (-1) SDL.defaultRenderer
           <*> atomically (newTVar (Container DirV []))
-  _unlisten <- sync $ listen (weClosed es) $ \_ -> freeTWindow tw -- TODO: Thread leak!?
+  _unlisten <- sync $ listen (weClosed es) $ \_ -> freeTWindow tw -- TODO: Check if thread leak occurs
   return tw
   where
     winConf = SDL.defaultWindow

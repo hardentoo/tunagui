@@ -56,7 +56,6 @@ eval r (DrawRect p s :>>= is) = do
 eval r (RenderText (T.P p) text :>>= is) = do
   font <- asks cntFont
   liftIO . runManaged $ do
-    -- TODO: Allocate global
     surface <- managed $ bracket (TTF.blended font (V4 0 0 0 255) text) SDL.freeSurface
     texture <- managed $ bracket (SDL.createTextureFromSurface r surface) SDL.destroyTexture
     (w, h) <- TTF.size font text
