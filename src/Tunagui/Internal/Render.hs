@@ -17,6 +17,7 @@ data RenderI a where
   FillRect :: Point Int -> Size Int -> RenderI ()
   DrawRect :: Point Int -> Size Int -> RenderI ()
   --
+  TextSize :: T.Text -> RenderI (Size Int)
   RenderText :: Point Int -> T.Text -> RenderI ()
 
 type RenderP m a = ProgramT RenderI m a
@@ -35,6 +36,9 @@ fillRect p s = singleton $ FillRect p s
 
 drawRect :: Point Int -> Size Int -> RenderP m ()
 drawRect p s = singleton $ DrawRect p s
+
+textSize :: T.Text -> RenderP m (Size Int)
+textSize = singleton . TextSize
 
 renderText :: Point Int -> T.Text -> RenderP m ()
 renderText p t = singleton $ RenderText p t

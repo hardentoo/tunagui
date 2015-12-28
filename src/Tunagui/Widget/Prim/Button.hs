@@ -15,6 +15,7 @@ import qualified Tunagui.General.Data     as D
 import qualified Tunagui.General.Types    as T
 import           Tunagui.General.Base     (TunaguiT)
 import           Tunagui.Internal.Render  as R
+import           Tunagui.Internal.Render.SDL (runRender)
 import           Tunagui.Widget.Features  (Clickable,
                                           Renderable,
                                           onClick, render,
@@ -63,22 +64,26 @@ instance Renderable Button where
   render = renderB
   locate = locateB
 
-newButton :: ButtonConfig -> D.WinEvents -> IO Button
-newButton cnf es =
-  sync $ do
+newButton :: ButtonConfig -> D.TWindow -> TunaguiT Button
+newButton cnf twin = do
+  (T.S (V2 relW relH)) <- case bcText cnf of
+    Just text -> runRender renderer (R.textSize text)
+    Nothing   -> return (T.S (V2 100 100))
+  ---
+  liftIO . sync $ do
     (behW,_) <- case btnWidth cnf of
-      Absolute x -> newBehavior x
-      RelContent -> newBehavior 100 -- TODO: change to behavior accordings to contents
+      Absolute w -> newBehavior w
+      RelContent -> newBehavior relW
     (behH,_) <- case btnHeight cnf of
-      Absolute x -> newBehavior x
-      RelContent -> newBehavior 100
+      Absolute h -> newBehavior h
+      RelContent -> newBehavior relH
     let behW' = minW . maxW <$> behW
         behH' = minH . maxH <$> behH
     let behSize = T.S <$> (V2 <$> behW' <*> behH')
         behShape = T.Rect <$> behSize
     --
     (behPos, pushPos) <- newBehavior $ T.P (V2 0 0)
-    clk <- CMP.mkClickableArea behPos behShape (D.wePML es) (D.weRML es)
+    clk <- CMP.mkClickableArea behPos behShape (D.wePML events) (D.weRML events)
     return Button
       { btnPos = behPos
       , btnSize = behSize
@@ -86,19 +91,22 @@ newButton cnf es =
       , btnClkArea = clk
       , btnText = bcText cnf
       }
-    where
-      minW = case btnMinWidth cnf of
-        Just x -> min x
-        Nothing -> id
-      maxW = case btnMaxWidth cnf of
-        Just x -> max x
-        Nothing -> id
-      minH = case btnMinHeight cnf of
-        Just x -> min x
-        Nothing -> id
-      maxH = case btnMaxHeight cnf of
-        Just x -> max x
-        Nothing -> id
+  where
+    events = D.twEvents twin
+    renderer = D.twRenderer twin
+    --
+    minW = case btnMinWidth cnf of
+      Just x -> min x
+      Nothing -> id
+    maxW = case btnMaxWidth cnf of
+      Just x -> max x
+      Nothing -> id
+    minH = case btnMinHeight cnf of
+      Just x -> min x
+      Nothing -> id
+    maxH = case btnMaxHeight cnf of
+      Just x -> max x
+      Nothing -> id
 
 locateB :: Button -> T.Point Int -> Reactive (T.Range Int)
 locateB btn p = do

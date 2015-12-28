@@ -62,8 +62,8 @@ runTWin = interpret
       interpret twin (is ())
 
     eval twin (MkButton cfg :>>= is) = do
-      r <- genWT <$> liftIO (Button.newButton cfg (D.twEvents twin))
-      interpret twin (is r)
+      ret <- genWT <$> Button.newButton cfg twin
+      interpret twin (is ret)
 
 -- *****************************************************************************
 -- utilities
