@@ -1,10 +1,7 @@
 module Tunagui.General.Data
   (
     Tunagui (..)
-  , TunaContents (..)
-  , TunaState (..)
   , FrameEvents (..)
-  , Settings (..)
   --
   , TWindow (..)
   , WinEvents (..)
@@ -21,20 +18,15 @@ import           FRP.Sodium
 import           GHC.Conc.Sync         (TVar, atomically, newTVar, writeTVar)
 import           Linear                (V2 (..))
 import qualified SDL
+import qualified SDL.Font              as TTF
 
 import qualified Tunagui.General.Types as T
 import           Tunagui.Widget.Layout (WidgetTree (..), Direction (..))
 
 data Tunagui = Tunagui
-  { tunaContents :: TunaContents
-  , tunaState :: TunaState
-  }
-
-data TunaContents = TunaContents
   { cntEvents  :: FrameEvents
+  , cntFont :: TTF.Font
   }
-
-data TunaState = TunaState
 
 data FrameEvents = FrameEvents
   { behQuit :: Behavior Bool
@@ -42,8 +34,6 @@ data FrameEvents = FrameEvents
   , ePML  :: Event (SDL.Window, T.Point Int) -- Press Mouse Left
   , eRML  :: Event (SDL.Window, T.Point Int) -- Release Mouse Left
   }
-
-data Settings = Settings -- dummy
 
 -- TWindow
 data TWindow = TWindow
@@ -96,9 +86,9 @@ freeTWindow twin = do
   SDL.destroyWindow $ twWindow twin
 
 withTWindow :: WinConfig -> Tunagui -> (TWindow -> IO a) -> IO a
-withTWindow cnf t = bracket (newTWindow cnf es) freeTWindow
+withTWindow cnf t = bracket (newTWindow cnf events) freeTWindow
   where
-    es = cntEvents . tunaContents $ t
+    events = cntEvents t
 
 testOverwriteTree :: WidgetTree -> TWindow -> IO ()
 testOverwriteTree tree tw =

@@ -21,6 +21,7 @@ library
   other-modules:
                        Tunagui.General.Data
                      , Tunagui.General.Types
+                     , Tunagui.General.Base
                      , Tunagui.General.Event
                      , Tunagui.General.Initialize
                      , Tunagui.Internal.Render

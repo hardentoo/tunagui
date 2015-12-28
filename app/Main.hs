@@ -8,7 +8,7 @@ import           FRP.Sodium
 import           Linear.V2
 
 import qualified Tunagui                as GUI
-import           Tunagui                (WidgetTree (..), Direction (..)
+import           Tunagui                (runTuna, WidgetTree (..), Direction (..)
                                         ,withTWindow, WinConfig (..))
 import           Tunagui.Widget         (ButtonConfig (..), defaultButtonConfig
                                         ,onClick)
@@ -16,10 +16,10 @@ import           Tunagui.Operation
 
 main :: IO ()
 main =
-  GUI.withTunagui GUI.Settings $ \tng ->
+  GUI.withTunagui $ \tuna ->
     -- 1st window
-    withTWindow (WinConfig "main" True (V2 600 400)) tng $ \tw1 -> do
-      _ <- runTWin tw1 $ do
+    withTWindow (WinConfig "main" True (V2 600 400)) tuna $ \tw1 -> do
+      _ <- runTuna tuna $ runTWin tw1 $ do
         (btn1, w1) <- mkButton (defaultButtonConfig
           { btnMinWidth = Just 100
           , btnMinHeight = Just 50
@@ -28,9 +28,9 @@ main =
         testOverwriteTreeOP (Container DirV [w1])
         testRenderTree
         liftIO . sync $ listen (onClick btn1) $ \p -> putStrLn $ "click (1): " ++ show p
-      -- 2nd window
-      withTWindow (WinConfig "sub" False (V2 200 200)) tng $ \tw2 -> do
-        _ <- runTWin tw2 $ do
+      -- -- 2nd window
+      withTWindow (WinConfig "sub" False (V2 200 200)) tuna $ \tw2 -> do
+        _ <- runTuna tuna $ runTWin tw2 $ do
           (btn2, w2) <- mkButton (defaultButtonConfig
             { btnMinWidth = Just 50
             , btnMinHeight = Just 100

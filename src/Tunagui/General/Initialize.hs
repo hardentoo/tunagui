@@ -7,15 +7,11 @@ import           Control.Exception
 import qualified SDL
 import qualified SDL.Font as TTF
 
-import           Tunagui.General.Data  (Settings, TunaContents (..),
-                                        TunaState (..), Tunagui (..))
+import           Tunagui.General.Data  (Tunagui (..))
 import           Tunagui.General.Event (listenAllEvents)
 
-withTunagui :: Settings -> (Tunagui -> IO a) -> IO a
-withTunagui _stg work =
-  bracket_ init
-           quit
-           (work =<< Tunagui <$> (TunaContents <$> listenAllEvents) <*> pure TunaState)
+withTunagui :: (Tunagui -> IO a) -> IO a
+withTunagui work = bracket_ init quit go
   where
     init = do
       SDL.initializeAll
@@ -23,3 +19,7 @@ withTunagui _stg work =
     quit = do
       TTF.quit
       SDL.quit
+    go =
+      bracket (TTF.load "data/sample.ttf" 14) TTF.free $ \font -> do
+        events <- listenAllEvents
+        work $ Tunagui events font
