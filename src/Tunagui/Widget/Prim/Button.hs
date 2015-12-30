@@ -72,7 +72,7 @@ newButton c w = do
     Nothing   -> return (T.S (V2 10 10))
 
   liftIO . sync $ do
-    (behCW, _changeCW) <- newBehavior contW -- TODO: Do changeCW when content was changed
+    (behCW, _changeCW) <- newBehavior contW -- TODO: Call changeCW when content was changed
     (behCH, _changeCH) <- newBehavior contH
     behW <- mkSizeBehav (bcWidth c) (bcMinWidth c) (bcMaxWidth c) behCW
     behH <- mkSizeBehav (bcHeight c) (bcMinHeight c) (bcMaxHeight c) behCH
