@@ -20,7 +20,7 @@ import           Linear.V2
 import qualified Tunagui.General.Types   as T
 import           Tunagui.General.Base    (TunaguiT)
 import           Tunagui.Internal.Render (RenderP)
-import           Tunagui.Widget.Features (Renderable, locate, render)
+import           Tunagui.Widget.Component.Features (Renderable, locate, render)
 
 data WidgetTree =
   forall a. (Show a, Renderable a)

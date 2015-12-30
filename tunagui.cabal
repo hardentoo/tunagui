@@ -28,8 +28,8 @@ library
                      , Tunagui.Internal.Render
                      , Tunagui.Internal.Render.SDL
                      , Tunagui.Operation.Window
-                     , Tunagui.Widget.Features
-                     , Tunagui.Widget.Part
+                     , Tunagui.Widget.Component.Features
+                     , Tunagui.Widget.Component.Part
                      , Tunagui.Widget.Prim.Button
                      , Tunagui.Widget.Prim.Label
 

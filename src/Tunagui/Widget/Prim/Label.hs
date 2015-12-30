@@ -15,7 +15,7 @@ import Tunagui.General.Types (Point(..), Size(..), Range(..), plusPS)
 import Tunagui.General.Base (TunaguiT)
 import Tunagui.Internal.Render as R
 import Tunagui.Internal.Render.SDL (runRender)
-import Tunagui.Widget.Features (Renderable, render, locate)
+import Tunagui.Widget.Component.Features (Renderable, render, locate)
 import Tunagui.General.Layout (DimSize (..), mkSizeBehav)
 
 data Label = Label

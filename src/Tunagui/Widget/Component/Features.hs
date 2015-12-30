@@ -1,4 +1,4 @@
-module Tunagui.Widget.Features where
+module Tunagui.Widget.Component.Features where
 
 import           Control.Monad.IO.Class  (MonadIO)
 import           FRP.Sodium

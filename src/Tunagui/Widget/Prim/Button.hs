@@ -16,11 +16,11 @@ import qualified Tunagui.General.Types    as T -- TODO: stop qualified
 import           Tunagui.General.Base     (TunaguiT)
 import           Tunagui.Internal.Render  as R
 import           Tunagui.Internal.Render.SDL (runRender)
-import           Tunagui.Widget.Features  (Clickable,
+import           Tunagui.Widget.Component.Features  (Clickable,
                                           Renderable,
                                           onClick, render,
                                           locate)
-import qualified Tunagui.Widget.Part as PRT
+import qualified Tunagui.Widget.Component.Part as PRT
 import           Tunagui.General.Layout    (DimSize (..), mkSizeBehav)
 
 data Button = Button

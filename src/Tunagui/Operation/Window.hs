@@ -20,7 +20,7 @@ import           Tunagui.General.Base        (TunaguiT)
 import           Tunagui.Internal.Render.SDL (runRender)
 import qualified Tunagui.Internal.Render     as R
 
-import           Tunagui.Widget.Features
+import           Tunagui.Widget.Component.Features
 import           Tunagui.General.Layout
 
 import qualified Tunagui.Widget.Prim.Button  as Button
