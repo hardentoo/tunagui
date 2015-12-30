@@ -20,7 +20,7 @@ import           Tunagui.Widget.Features  (Clickable,
                                           Renderable,
                                           onClick, render,
                                           locate)
-import qualified Tunagui.Widget.Component as CMP
+import qualified Tunagui.Widget.Part as PRT
 import           Tunagui.General.Layout    (DimSize (..), mkSizeBehav)
 
 data Button = Button
@@ -29,7 +29,7 @@ data Button = Button
   -- Setter of attributes
   , setPos     :: T.Point Int -> Reactive ()
   -- Features
-  , btnClkArea :: CMP.ClickableArea
+  , btnClkArea :: PRT.ClickableArea
   , btnText :: Maybe T.Text -- TODO: Behavior Text
   }
 
@@ -58,7 +58,7 @@ instance Show Button where
   show _ = "< Button >"
 
 instance Clickable Button where
-  onClick = CMP.clickEvent . btnClkArea
+  onClick = PRT.clickEvent . btnClkArea
 
 instance Renderable Button where
   render = renderB
@@ -80,7 +80,7 @@ newButton c win = do
         behShape = T.Rect <$> behSize
     --
     (behPos, pushPos) <- newBehavior $ T.P (V2 0 0)
-    clk <- CMP.mkClickableArea behPos behShape (D.wePML events) (D.weRML events)
+    clk <- PRT.mkClickableArea behPos behShape (D.wePML events) (D.weRML events)
     return Button
       { btnPos = behPos
       , btnSize = behSize

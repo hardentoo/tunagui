@@ -29,7 +29,7 @@ library
                      , Tunagui.Internal.Render.SDL
                      , Tunagui.Operation.Window
                      , Tunagui.Widget.Features
-                     , Tunagui.Widget.Component
+                     , Tunagui.Widget.Part
                      , Tunagui.Widget.Prim.Button
                      , Tunagui.Widget.Prim.Label
 
