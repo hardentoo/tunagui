@@ -23,12 +23,12 @@ library
                      , Tunagui.General.Types
                      , Tunagui.General.Base
                      , Tunagui.General.Event
+                     , Tunagui.General.Layout
                      , Tunagui.General.Initialize
                      , Tunagui.Internal.Render
                      , Tunagui.Internal.Render.SDL
                      , Tunagui.Operation.Window
                      , Tunagui.Widget.Features
-                     , Tunagui.Widget.Layout
                      , Tunagui.Widget.Component
                      , Tunagui.Widget.Prim.Button
                      , Tunagui.Widget.Prim.Label

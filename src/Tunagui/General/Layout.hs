@@ -1,6 +1,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
-module Tunagui.Widget.Layout
+module Tunagui.General.Layout
   (
     WidgetTree (..)
   , Direction (..)

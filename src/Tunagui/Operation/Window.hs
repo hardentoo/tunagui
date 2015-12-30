@@ -21,7 +21,7 @@ import           Tunagui.Internal.Render.SDL (runRender)
 import qualified Tunagui.Internal.Render     as R
 
 import           Tunagui.Widget.Features
-import           Tunagui.Widget.Layout
+import           Tunagui.General.Layout
 
 import qualified Tunagui.Widget.Prim.Button  as Button
 import qualified Tunagui.Widget.Prim.Label   as Label

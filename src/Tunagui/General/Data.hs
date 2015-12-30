@@ -16,7 +16,7 @@ import qualified SDL
 
 import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..))
 import qualified Tunagui.General.Types as T
-import           Tunagui.Widget.Layout (WidgetTree (..), Direction (..))
+import           Tunagui.General.Layout (WidgetTree (..), Direction (..))
 
 -- Window
 data Window = Window

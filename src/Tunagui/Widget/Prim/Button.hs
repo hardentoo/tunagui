@@ -21,7 +21,7 @@ import           Tunagui.Widget.Features  (Clickable,
                                           onClick, render,
                                           locate)
 import qualified Tunagui.Widget.Component as CMP
-import           Tunagui.Widget.Layout    (DimSize (..), mkSizeBehav)
+import           Tunagui.General.Layout    (DimSize (..), mkSizeBehav)
 
 data Button = Button
   { btnPos     :: Behavior (T.Point Int)
