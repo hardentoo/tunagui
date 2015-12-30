@@ -12,6 +12,7 @@ import           FRP.Sodium
 import           GHC.Conc.Sync
 import           Linear.V2                   (V2 (..))
 import           Linear.V4                   (V4 (..))
+import Data.Text (Text)
 
 import qualified Tunagui.General.Data        as D
 import qualified Tunagui.General.Types       as T
@@ -21,12 +22,15 @@ import qualified Tunagui.Internal.Render     as R
 
 import           Tunagui.Widget.Features
 import           Tunagui.Widget.Layout
+
 import qualified Tunagui.Widget.Prim.Button  as Button
+import qualified Tunagui.Widget.Prim.Label   as Label
 
 data WindowI a where
   TestOverwriteTree :: WidgetTree -> WindowI ()
   TestRenderTree :: WindowI ()
   MkButton :: Button.ButtonConfig -> WindowI (Button.Button, WidgetTree)
+  MkLabel :: Label.LabelConfig -> Text -> WindowI (Label.Label, WidgetTree)
 
 type WindowP m a = ProgramT WindowI m a
 
@@ -36,6 +40,9 @@ testRenderTree = singleton TestRenderTree
 
 mkButton :: Button.ButtonConfig -> ProgramT WindowI m (Button.Button, WidgetTree)
 mkButton = singleton . MkButton
+
+mkLabel :: Label.LabelConfig -> Text -> ProgramT WindowI m (Label.Label, WidgetTree)
+mkLabel c t = singleton $ MkLabel c t
 
 -- *****************************************************************************
 runTWin :: D.Window -> WindowP TunaguiT a -> TunaguiT a
@@ -63,6 +70,9 @@ runTWin = interpret
 
     eval w (MkButton cfg :>>= is) = do
       ret <- genWT <$> Button.newButton cfg w
+      interpret w (is ret)
+    eval w (MkLabel cfg text :>>= is) = do
+      ret <- genWT <$> Label.newLabelT cfg w text
       interpret w (is ret)
 
 -- *****************************************************************************

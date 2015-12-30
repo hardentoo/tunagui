@@ -5,6 +5,7 @@ module Tunagui.Operation
   , testOverwriteTreeOP
   , testRenderTree
   , mkButton
+  , mkLabel
   ) where
 
 import Tunagui.Operation.Window

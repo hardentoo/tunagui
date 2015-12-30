@@ -11,6 +11,7 @@ import qualified Tunagui                as GUI
 import           Tunagui                (runTuna, WidgetTree (..), Direction (..)
                                         ,withWindow, WinConfig (..))
 import           Tunagui.Widget         (ButtonConfig (..), defaultButtonConfig
+                                        ,defaultLabelConfig
                                         ,onClick)
 import           Tunagui.Operation
 
@@ -20,8 +21,9 @@ main =
     -- 1st window
     withWindow (WinConfig "main" True (V2 600 400)) tuna $ \win1 -> do
       _ <- runTuna tuna $ runTWin win1 $ do
-        (btn1, w1) <- mkButton (defaultButtonConfig {bcText = Just "button1"})
-        testOverwriteTreeOP (Container DirV [w1])
+        (btn1, w1B) <- mkButton (defaultButtonConfig {bcText = Just "button1"})
+        (_, w1L) <- mkLabel defaultLabelConfig "Label"
+        testOverwriteTreeOP (Container DirV [w1B,w1L])
         testRenderTree
         liftIO . sync $ listen (onClick btn1) $ \p -> putStrLn $ "click (1): " ++ show p
       -- -- 2nd window

@@ -12,7 +12,7 @@ import           Linear.V4
 import qualified Data.Text                as T
 
 import qualified Tunagui.General.Data     as D
-import qualified Tunagui.General.Types    as T
+import qualified Tunagui.General.Types    as T -- TODO: stop qualified
 import           Tunagui.General.Base     (TunaguiT)
 import           Tunagui.Internal.Render  as R
 import           Tunagui.Internal.Render.SDL (runRender)
@@ -30,7 +30,7 @@ data Button = Button
   , setPos     :: T.Point Int -> Reactive ()
   -- Features
   , btnClkArea :: CMP.ClickableArea
-  , btnText :: Maybe T.Text
+  , btnText :: Maybe T.Text -- TODO: Behavior Text
   }
 
 data ButtonConfig = ButtonConfig
@@ -65,10 +65,10 @@ instance Renderable Button where
   locate = locateB
 
 newButton :: ButtonConfig -> D.Window -> TunaguiT Button
-newButton c w = do
+newButton c win = do
   -- Text size
   (T.S (V2 contW contH)) <- case bcText c of
-    Just text -> runRender (D.wRenderer w) (R.textSize text)
+    Just text -> runRender (D.wRenderer win) (R.textSize text)
     Nothing   -> return (T.S (V2 10 10))
 
   liftIO . sync $ do
@@ -89,7 +89,7 @@ newButton c w = do
       , btnText = bcText c
       }
   where
-    events = D.wEvents w
+    events = D.wEvents win
 
 locateB :: Button -> T.Point Int -> Reactive (T.Range Int)
 locateB btn p = do

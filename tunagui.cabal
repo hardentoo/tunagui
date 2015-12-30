@@ -31,6 +31,7 @@ library
                      , Tunagui.Widget.Layout
                      , Tunagui.Widget.Component
                      , Tunagui.Widget.Prim.Button
+                     , Tunagui.Widget.Prim.Label
 
                      -- git@github.com:sbidin/sdl2-ttf.git
                      , SDL.Font
