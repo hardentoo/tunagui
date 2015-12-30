@@ -2,7 +2,7 @@ module Tunagui
 (
   withTunagui
 , TunaguiT, runTuna
-, withTWindow, WinConfig (..)
+, withWindow, WinConfig (..)
 , WidgetTree (Container)
 , Direction (..)
 -- * Widgets
@@ -11,7 +11,7 @@ module Tunagui
 , onClick
 ) where
 
-import           Tunagui.General.Data       (withTWindow, WinConfig (..))
+import           Tunagui.General.Data       (withWindow, WinConfig (..))
 import           Tunagui.General.Initialize (withTunagui)
 import           Tunagui.General.Base       (TunaguiT, runTuna)
 import           Tunagui.Widget.Layout      (WidgetTree (..), Direction (..))

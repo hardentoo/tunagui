@@ -1,9 +1,9 @@
 module Tunagui.General.Data
   (
-    TWindow (..)
+    Window (..)
   , WinEvents (..)
   , WinConfig (..)
-  , withTWindow, newTWindow, freeTWindow
+  , withWindow, newWindow, freeWindow
   ) where
 
 import           Control.Monad         (void)
@@ -18,15 +18,15 @@ import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..))
 import qualified Tunagui.General.Types as T
 import           Tunagui.Widget.Layout (WidgetTree (..), Direction (..))
 
--- TWindow
-data TWindow = TWindow
-  { twWindow     :: SDL.Window
-  , twEvents     :: WinEvents
-  , twRenderer   :: SDL.Renderer
-  , twWidgetTree :: TVar WidgetTree
+-- Window
+data Window = Window
+  { wWindow     :: SDL.Window
+  , wEvents     :: WinEvents
+  , wRenderer   :: SDL.Renderer
+  , wWidgetTree :: TVar WidgetTree
   }
 
--- | Events of each TWindow
+-- | Events of each Window
 data WinEvents = WinEvents
   { weClosed :: Event ()
   , wePML :: Event (T.Point Int)
@@ -41,15 +41,15 @@ data WinConfig = WinConfig
   }
 
 -- TODO: Config with initial position, sizse, scalability
-newTWindow :: WinConfig -> FrameEvents -> IO TWindow
-newTWindow cnf es = do
-  w <- SDL.createWindow (winTitle cnf) winConf
-  let es = mkEvents w
-  tw <- TWindow w es
-          <$> SDL.createRenderer w (-1) SDL.defaultRenderer
+newWindow :: WinConfig -> FrameEvents -> IO Window
+newWindow cnf es = do
+  sWin <- SDL.createWindow (winTitle cnf) winConf
+  let es = mkEvents sWin
+  win <- Window sWin es
+          <$> SDL.createRenderer sWin (-1) SDL.defaultRenderer
           <*> atomically (newTVar (Container DirV []))
-  _unlisten <- sync $ listen (weClosed es) $ \_ -> freeTWindow tw -- TODO: Check if thread leak occurs
-  return tw
+  _unlisten <- sync $ listen (weClosed es) $ \_ -> freeWindow win -- TODO: Check if thread leak occurs
+  return win
   where
     winConf = SDL.defaultWindow
       { SDL.windowResizable = winResizable cnf
@@ -63,12 +63,12 @@ newTWindow cnf es = do
       where
         matchWindow f = filterE ((==win) . f)
 
-freeTWindow :: TWindow -> IO ()
-freeTWindow twin = do
-  SDL.destroyRenderer $ twRenderer twin
-  SDL.destroyWindow $ twWindow twin
+freeWindow :: Window -> IO ()
+freeWindow w = do
+  SDL.destroyRenderer $ wRenderer w
+  SDL.destroyWindow $ wWindow w
 
-withTWindow :: WinConfig -> Tunagui -> (TWindow -> IO a) -> IO a
-withTWindow cnf t = bracket (newTWindow cnf events) freeTWindow
+withWindow :: WinConfig -> Tunagui -> (Window -> IO a) -> IO a
+withWindow cnf t = bracket (newWindow cnf events) freeWindow
   where
     events = cntEvents t

@@ -1,10 +1,10 @@
 module Tunagui.Operation
   (
-  -- * TWindowP
-    TWindowP, runTWin
+  -- * WindowP
+    WindowP, runTWin
   , testOverwriteTreeOP
   , testRenderTree
   , mkButton
   ) where
 
-import Tunagui.Operation.TWindow
+import Tunagui.Operation.Window

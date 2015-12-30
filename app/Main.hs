@@ -9,7 +9,7 @@ import           Linear.V2
 
 import qualified Tunagui                as GUI
 import           Tunagui                (runTuna, WidgetTree (..), Direction (..)
-                                        ,withTWindow, WinConfig (..))
+                                        ,withWindow, WinConfig (..))
 import           Tunagui.Widget         (ButtonConfig (..), defaultButtonConfig
                                         ,onClick)
 import           Tunagui.Operation
@@ -18,15 +18,15 @@ main :: IO ()
 main =
   GUI.withTunagui $ \tuna ->
     -- 1st window
-    withTWindow (WinConfig "main" True (V2 600 400)) tuna $ \tw1 -> do
-      _ <- runTuna tuna $ runTWin tw1 $ do
+    withWindow (WinConfig "main" True (V2 600 400)) tuna $ \win1 -> do
+      _ <- runTuna tuna $ runTWin win1 $ do
         (btn1, w1) <- mkButton (defaultButtonConfig {bcText = Just "button1"})
         testOverwriteTreeOP (Container DirV [w1])
         testRenderTree
         liftIO . sync $ listen (onClick btn1) $ \p -> putStrLn $ "click (1): " ++ show p
       -- -- 2nd window
-      withTWindow (WinConfig "sub" False (V2 200 200)) tuna $ \tw2 -> do
-        _ <- runTuna tuna $ runTWin tw2 $ do
+      withWindow (WinConfig "sub" False (V2 200 200)) tuna $ \win2 -> do
+        _ <- runTuna tuna $ runTWin win2 $ do
           (btn2, w2) <- mkButton (defaultButtonConfig {bcText = Just "button2"})
           testOverwriteTreeOP (Container DirV [w2])
           testRenderTree

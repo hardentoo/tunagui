@@ -2,7 +2,7 @@
 
 -- Users can use these operations.
 
-module Tunagui.Operation.TWindow where
+module Tunagui.Operation.Window where
 
 import           Control.Monad.IO.Class      (MonadIO, liftIO)
 import           Control.Monad.Trans.Class   (lift)
@@ -23,47 +23,47 @@ import           Tunagui.Widget.Features
 import           Tunagui.Widget.Layout
 import qualified Tunagui.Widget.Prim.Button  as Button
 
-data TWindowI a where
-  TestOverwriteTree :: WidgetTree -> TWindowI ()
-  TestRenderTree :: TWindowI ()
-  MkButton :: Button.ButtonConfig -> TWindowI (Button.Button, WidgetTree)
+data WindowI a where
+  TestOverwriteTree :: WidgetTree -> WindowI ()
+  TestRenderTree :: WindowI ()
+  MkButton :: Button.ButtonConfig -> WindowI (Button.Button, WidgetTree)
 
-type TWindowP m a = ProgramT TWindowI m a
+type WindowP m a = ProgramT WindowI m a
 
 -- *****************************************************************************
 testOverwriteTreeOP = singleton . TestOverwriteTree
 testRenderTree = singleton TestRenderTree
 
-mkButton :: Button.ButtonConfig -> ProgramT TWindowI m (Button.Button, WidgetTree)
+mkButton :: Button.ButtonConfig -> ProgramT WindowI m (Button.Button, WidgetTree)
 mkButton = singleton . MkButton
 
 -- *****************************************************************************
-runTWin :: D.TWindow -> TWindowP TunaguiT a -> TunaguiT a
+runTWin :: D.Window -> WindowP TunaguiT a -> TunaguiT a
 runTWin = interpret
   where
-    interpret :: D.TWindow -> TWindowP TunaguiT a -> TunaguiT a
-    interpret tw is = eval tw =<< viewT is
+    interpret :: D.Window -> WindowP TunaguiT a -> TunaguiT a
+    interpret w is = eval w =<< viewT is
 
-    eval :: D.TWindow -> ProgramViewT TWindowI TunaguiT a -> TunaguiT a
+    eval :: D.Window -> ProgramViewT WindowI TunaguiT a -> TunaguiT a
     eval _  (Return a) = return a
-    eval twin (TestOverwriteTree tree :>>= is) = do
-      liftIO . atomically $ writeTVar (D.twWidgetTree twin) tree
-      interpret twin (is ())
-    eval twin (TestRenderTree :>>= is) = do
+    eval w (TestOverwriteTree tree :>>= is) = do
+      liftIO . atomically $ writeTVar (D.wWidgetTree w) tree
+      interpret w (is ())
+    eval w (TestRenderTree :>>= is) = do
       tree <- liftIO $ do
-        tree <- atomically . readTVar $ D.twWidgetTree twin
+        tree <- atomically . readTVar $ D.wWidgetTree w
         locateWT tree
         return tree
-      runRender (D.twRenderer twin) $ do
+      runRender (D.wRenderer w) $ do
         R.setColor $ V4 240 240 240 255
         R.clear
         renderWT tree
         R.flush
-      interpret twin (is ())
+      interpret w (is ())
 
-    eval twin (MkButton cfg :>>= is) = do
-      ret <- genWT <$> Button.newButton cfg twin
-      interpret twin (is ret)
+    eval w (MkButton cfg :>>= is) = do
+      ret <- genWT <$> Button.newButton cfg w
+      interpret w (is ret)
 
 -- *****************************************************************************
 -- utilities

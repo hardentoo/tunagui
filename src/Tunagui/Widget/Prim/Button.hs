@@ -64,11 +64,11 @@ instance Renderable Button where
   render = renderB
   locate = locateB
 
-newButton :: ButtonConfig -> D.TWindow -> TunaguiT Button
-newButton c twin = do
+newButton :: ButtonConfig -> D.Window -> TunaguiT Button
+newButton c w = do
   -- Text size
   (T.S (V2 contW contH)) <- case bcText c of
-    Just text -> runRender (D.twRenderer twin) (R.textSize text)
+    Just text -> runRender (D.wRenderer w) (R.textSize text)
     Nothing   -> return (T.S (V2 10 10))
 
   liftIO . sync $ do
@@ -89,7 +89,7 @@ newButton c twin = do
       , btnText = bcText c
       }
   where
-    events = D.twEvents twin
+    events = D.wEvents w
 
 locateB :: Button -> T.Point Int -> Reactive (T.Range Int)
 locateB btn p = do
