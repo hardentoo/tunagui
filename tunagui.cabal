@@ -18,6 +18,8 @@ library
   exposed-modules:     Tunagui
                      , Tunagui.Operation
                      , Tunagui.Widget
+                     , Tunagui.Widget.Button
+                     , Tunagui.Widget.Label
   other-modules:
                        Tunagui.General.Data
                      , Tunagui.General.Types

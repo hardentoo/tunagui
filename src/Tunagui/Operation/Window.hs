@@ -29,8 +29,8 @@ import qualified Tunagui.Widget.Prim.Label   as Label
 data WindowI a where
   TestOverwriteTree :: WidgetTree -> WindowI ()
   TestRenderTree :: WindowI ()
-  MkButton :: Button.ButtonConfig -> WindowI (Button.Button, WidgetTree)
-  MkLabel :: Label.LabelConfig -> Text -> WindowI (Label.Label, WidgetTree)
+  MkButton :: Button.Config -> WindowI (Button.Button, WidgetTree)
+  MkLabel :: Label.Config -> Text -> WindowI (Label.Label, WidgetTree)
 
 type WindowP m a = ProgramT WindowI m a
 
@@ -38,10 +38,10 @@ type WindowP m a = ProgramT WindowI m a
 testOverwriteTreeOP = singleton . TestOverwriteTree
 testRenderTree = singleton TestRenderTree
 
-mkButton :: Button.ButtonConfig -> ProgramT WindowI m (Button.Button, WidgetTree)
+mkButton :: Button.Config -> ProgramT WindowI m (Button.Button, WidgetTree)
 mkButton = singleton . MkButton
 
-mkLabel :: Label.LabelConfig -> Text -> ProgramT WindowI m (Label.Label, WidgetTree)
+mkLabel :: Label.Config -> Text -> ProgramT WindowI m (Label.Label, WidgetTree)
 mkLabel c t = singleton $ MkLabel c t
 
 -- *****************************************************************************

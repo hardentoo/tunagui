@@ -1,7 +1,7 @@
 module Tunagui.Widget.Prim.Label
   (
     Label (..)
-  , LabelConfig (..), defaultLabelConfig
+  , Config (..), defaultConfig
   , newLabelT, newLabelB
   ) where
 
@@ -26,7 +26,7 @@ data Label = Label
   , setPos :: Point Int -> Reactive ()
   }
 
-data LabelConfig = LabelConfig
+data Config = Config
   { width :: DimSize Int
   , height :: DimSize Int
   , minWidth :: Maybe Int
@@ -35,8 +35,8 @@ data LabelConfig = LabelConfig
   , maxHeight :: Maybe Int
   } deriving Show
 
-defaultLabelConfig :: LabelConfig
-defaultLabelConfig = LabelConfig
+defaultConfig :: Config
+defaultConfig = Config
   { width = RelContent
   , height = RelContent
   , minWidth = Nothing
@@ -52,13 +52,13 @@ instance Renderable Label where
   render = render_
   locate = locate_
 
-newLabelT :: LabelConfig -> D.Window -> T.Text -> TunaguiT Label
+newLabelT :: Config -> D.Window -> T.Text -> TunaguiT Label
 newLabelT c w t =
   newLabelB c w =<< toBeh t
   where
     toBeh = fmap fst . liftIO . sync . newBehavior
 
-newLabelB :: LabelConfig -> D.Window -> Behavior T.Text -> TunaguiT Label
+newLabelB :: Config -> D.Window -> Behavior T.Text -> TunaguiT Label
 newLabelB cnf win behText = do
   text <- liftIO . sync $ sample behText
   (S (V2 w h)) <- runRender (D.wRenderer win) (R.textSize text)

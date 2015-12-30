@@ -5,9 +5,6 @@ module Tunagui
 , withWindow, WinConfig (..)
 , WidgetTree (Container)
 , Direction (..)
--- * Widgets
-, ButtonConfig (..)
-, LabelConfig (..)
 -- * Features
 , onClick
 ) where
@@ -17,5 +14,3 @@ import           Tunagui.General.Initialize (withTunagui)
 import           Tunagui.General.Base       (TunaguiT, runTuna)
 import           Tunagui.General.Layout      (WidgetTree (..), Direction (..))
 import           Tunagui.Widget.Component.Features    (onClick)
-import           Tunagui.Widget.Prim.Button (ButtonConfig (..))
-import           Tunagui.Widget.Prim.Label  (LabelConfig (..))

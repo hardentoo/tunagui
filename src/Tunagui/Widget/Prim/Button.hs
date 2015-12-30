@@ -1,7 +1,7 @@
 module Tunagui.Widget.Prim.Button
   (
-    Button (..), ButtonConfig (..)
-  , defaultButtonConfig
+    Button (..), Config (..)
+  , defaultConfig
   , newButton
   ) where
 
@@ -33,7 +33,7 @@ data Button = Button
   , btnText :: Maybe T.Text -- TODO: Behavior Text
   }
 
-data ButtonConfig = ButtonConfig
+data Config = Config
   { bcWidth  :: DimSize Int
   , bcHeight :: DimSize Int
   , bcMinWidth :: Maybe Int
@@ -43,8 +43,8 @@ data ButtonConfig = ButtonConfig
   , bcText :: Maybe T.Text
   } deriving Show
 
-defaultButtonConfig :: ButtonConfig
-defaultButtonConfig = ButtonConfig
+defaultConfig :: Config
+defaultConfig = Config
   { bcWidth = RelContent
   , bcHeight = RelContent
   , bcMinWidth = Nothing
@@ -64,7 +64,7 @@ instance Renderable Button where
   render = renderB
   locate = locateB
 
-newButton :: ButtonConfig -> D.Window -> TunaguiT Button
+newButton :: Config -> D.Window -> TunaguiT Button
 newButton c win = do
   -- Text size
   (T.S (V2 contW contH)) <- case bcText c of
