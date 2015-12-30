@@ -21,7 +21,7 @@ import           Tunagui.Widget.Features  (Clickable,
                                           onClick, render,
                                           locate)
 import qualified Tunagui.Widget.Component as CMP
-import           Tunagui.Widget.Layout    (DimSize (..))
+import           Tunagui.Widget.Layout    (DimSize (..), mkSizeBehav)
 
 data Button = Button
   { btnPos     :: Behavior (T.Point Int)
@@ -65,22 +65,18 @@ instance Renderable Button where
   locate = locateB
 
 newButton :: ButtonConfig -> D.TWindow -> TunaguiT Button
-newButton cnf twin = do
+newButton c twin = do
   -- Text size
-  (T.S (V2 relW relH)) <- case bcText cnf of
-    Just text -> runRender renderer (R.textSize text)
-    Nothing   -> return (T.S (V2 defWidth defHeight))
-  --- Events
+  (T.S (V2 contW contH)) <- case bcText c of
+    Just text -> runRender (D.twRenderer twin) (R.textSize text)
+    Nothing   -> return (T.S (V2 10 10))
+
   liftIO . sync $ do
-    (behW,_) <- case bcWidth cnf of
-      Absolute w -> newBehavior w
-      RelContent -> newBehavior relW
-    (behH,_) <- case bcHeight cnf of
-      Absolute h -> newBehavior h
-      RelContent -> newBehavior relH
-    let behW' = minW . maxW <$> behW
-        behH' = minH . maxH <$> behH
-    let behSize = T.S <$> (V2 <$> behW' <*> behH')
+    (behCW, _changeCW) <- newBehavior contW -- TODO: Do changeCW when content was changed
+    (behCH, _changeCH) <- newBehavior contH
+    behW <- mkSizeBehav (bcWidth c) (bcMinWidth c) (bcMaxWidth c) behCW
+    behH <- mkSizeBehav (bcHeight c) (bcMinHeight c) (bcMaxHeight c) behCH
+    let behSize = T.S <$> (V2 <$> behW <*> behH)
         behShape = T.Rect <$> behSize
     --
     (behPos, pushPos) <- newBehavior $ T.P (V2 0 0)
@@ -90,21 +86,10 @@ newButton cnf twin = do
       , btnSize = behSize
       , setPos = pushPos
       , btnClkArea = clk
-      , btnText = bcText cnf
+      , btnText = bcText c
       }
   where
-    defWidth = 10
-    defHeight = 10
     events = D.twEvents twin
-    renderer = D.twRenderer twin
-    --
-    bound f item = case item cnf of
-      Just x  -> f x
-      Nothing -> id
-    minW = bound min bcMinWidth
-    maxW = bound max bcMaxWidth
-    minH = bound min bcMinHeight
-    maxH = bound max bcMaxHeight
 
 locateB :: Button -> T.Point Int -> Reactive (T.Range Int)
 locateB btn p = do

@@ -7,6 +7,8 @@ module Tunagui.Widget.Layout
   , locateWT
   , renderWT
   , DimSize (..)
+  --
+  , mkSizeBehav
   ) where
 
 import           Control.Monad           (foldM, void)
@@ -75,6 +77,16 @@ renderWT (Widget a)       = render a
 renderWT (Container _ ws) = mapM_ renderWT ws
 
 -- *****************************************************************************
+
+mkSizeBehav :: Ord a => DimSize a -> Maybe a -> Maybe a -> Behavior a -> Reactive (Behavior a)
+mkSizeBehav dimA minA maxA behContent = do
+  behA <- case dimA of
+    Absolute a -> fst <$> newBehavior a
+    RelContent -> return behContent
+  return $ conv min minA . conv max maxA <$> behA
+  where
+  conv minmax (Just x) = minmax x
+  conv _      Nothing  = id
 
 -- | One dimensional size
 data DimSize a
