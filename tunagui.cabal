@@ -69,6 +69,7 @@ executable tuna
                      , tunagui
                      , mtl
                      , transformers
+                     , text
                      , sodium
                      , linear
                      , managed

@@ -30,7 +30,8 @@ data WindowI a where
   TestOverwriteTree :: WidgetTree -> WindowI ()
   TestRenderTree :: WindowI ()
   MkButton :: Button.Config -> WindowI (Button.Button, WidgetTree)
-  MkLabel :: Label.Config -> Text -> WindowI (Label.Label, WidgetTree)
+  MkLabelT :: Label.Config -> Text -> WindowI (Label.Label, WidgetTree)
+  MkLabelB :: Label.Config -> Behavior Text -> WindowI (Label.Label, WidgetTree)
 
 type WindowP m a = ProgramT WindowI m a
 
@@ -41,8 +42,11 @@ testRenderTree = singleton TestRenderTree
 mkButton :: Button.Config -> ProgramT WindowI m (Button.Button, WidgetTree)
 mkButton = singleton . MkButton
 
-mkLabel :: Label.Config -> Text -> ProgramT WindowI m (Label.Label, WidgetTree)
-mkLabel c t = singleton $ MkLabel c t
+mkLabelT :: Label.Config -> Text -> ProgramT WindowI m (Label.Label, WidgetTree)
+mkLabelT c t = singleton $ MkLabelT c t
+
+mkLabelB :: Label.Config -> Behavior Text -> ProgramT WindowI m (Label.Label, WidgetTree)
+mkLabelB c b = singleton $ MkLabelB c b
 
 -- *****************************************************************************
 runTWin :: D.Window -> WindowP TunaguiT a -> TunaguiT a
@@ -71,8 +75,11 @@ runTWin = interpret
     eval w (MkButton cfg :>>= is) = do
       ret <- genWT <$> Button.newButton cfg w
       interpret w (is ret)
-    eval w (MkLabel cfg text :>>= is) = do
+    eval w (MkLabelT cfg text :>>= is) = do
       ret <- genWT <$> Label.newLabelT cfg w text
+      interpret w (is ret)
+    eval w (MkLabelB cfg beh :>>= is) = do
+      ret <- genWT <$> Label.newLabelB cfg w beh
       interpret w (is ret)
 
 -- *****************************************************************************

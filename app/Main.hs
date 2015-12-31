@@ -6,6 +6,7 @@ import           Control.Concurrent     (threadDelay)
 import           Control.Monad.IO.Class (liftIO)
 import           FRP.Sodium
 import           Linear.V2
+import qualified Data.Text              as T
 
 import qualified Tunagui                as GUI
 import           Tunagui                (runTuna, WidgetTree (..), Direction (..)
@@ -20,10 +21,12 @@ main =
   GUI.withTunagui $ \tuna ->
     -- 1st window
     withWindow (WinConfig "main" True (V2 600 400)) tuna $ \win1 -> do
+      (beh,push) <- liftIO (sync (newBehavior (0::Integer)))
       _ <- runTuna tuna $ runTWin win1 $ do
         (btn1, w1B) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just "button1"})
-        (_, w1L) <- Label.mkLabel Label.defaultConfig "Label"
-        testOverwriteTreeOP (Container DirV [w1B,w1L])
+        (_, w1L) <- Label.mkLabelT Label.defaultConfig "Label"
+        (_, w1L') <- Label.mkLabelB Label.defaultConfig (T.pack . show <$> beh)
+        testOverwriteTreeOP (Container DirV [w1B,w1L,w1L'])
         testRenderTree
         liftIO . sync $ listen (onClick btn1) $ \p -> putStrLn $ "click (1): " ++ show p
       -- -- 2nd window
@@ -39,5 +42,13 @@ main =
               threadDelay 1000000
               -- q <- sync $ sample quit
               -- unless q loop
+
+              -- TEST count
+              sync $ do
+                i <- sample beh
+                push $ i + 1
+              runTuna tuna $ runTWin win1 testRenderTree
+              --
+
               loop
         liftIO loop
