@@ -44,10 +44,10 @@ main =
               -- unless q loop
 
               -- TEST count
-              sync $ do
-                i <- sample beh
-                push $ i + 1
-              runTuna tuna $ runTWin win1 testRenderTree
+              -- sync $ do
+              --   i <- sample beh
+              --   push $ i + 1
+              -- runTuna tuna $ runTWin win1 testRenderTree
               --
 
               loop

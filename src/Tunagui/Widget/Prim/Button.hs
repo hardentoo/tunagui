@@ -10,6 +10,7 @@ import           FRP.Sodium
 import           Linear.V2
 import           Linear.V4
 import qualified Data.Text                as T
+import           Data.List                (foldl1')
 
 import qualified Tunagui.General.Data     as D
 import qualified Tunagui.General.Types    as T -- TODO: stop qualified
@@ -19,8 +20,9 @@ import           Tunagui.Internal.Render.SDL (runRender)
 import           Tunagui.Widget.Component.Features  (Clickable,
                                           Renderable,
                                           onClick, render,
-                                          locate)
+                                          locate, update)
 import qualified Tunagui.Widget.Component.Part as PRT
+import           Tunagui.Widget.Component.Util (up)
 import           Tunagui.General.Layout    (DimSize (..), mkSizeBehav)
 
 data Button = Button
@@ -31,6 +33,7 @@ data Button = Button
   -- Features
   , btnClkArea :: PRT.ClickableArea
   , btnText :: Maybe T.Text -- TODO: Behavior Text
+  , update_ :: Event ()
   }
 
 data Config = Config
@@ -63,6 +66,7 @@ instance Clickable Button where
 instance Renderable Button where
   render = renderB
   locate = locateB
+  update = update_
 
 newButton :: Config -> D.Window -> TunaguiT Button
 newButton c win = do
@@ -81,12 +85,15 @@ newButton c win = do
     --
     (behPos, pushPos) <- newBehavior $ T.P (V2 0 0)
     clk <- PRT.mkClickableArea behPos behShape (D.wePML events) (D.weRML events)
+    -- Update event
+    let eUpdate = foldl1' mappend [up behPos, up behSize]
     return Button
       { btnPos = behPos
       , btnSize = behSize
       , setPos = pushPos
       , btnClkArea = clk
       , btnText = bcText c
+      , update_ = eUpdate
       }
   where
     events = D.wEvents win

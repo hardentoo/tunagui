@@ -5,6 +5,7 @@ module Tunagui.Widget.Prim.Label
   , newLabelT, newLabelB
   ) where
 
+import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
 import FRP.Sodium
 import qualified Data.Text as T
@@ -15,7 +16,8 @@ import Tunagui.General.Types (Point(..), Size(..), Range(..), plusPS)
 import Tunagui.General.Base (TunaguiT)
 import Tunagui.Internal.Render as R
 import Tunagui.Internal.Render.SDL (runRender)
-import Tunagui.Widget.Component.Features (Renderable, render, locate)
+import Tunagui.Widget.Component.Features (Renderable, render, locate, update)
+import Tunagui.Widget.Component.Util (up)
 import Tunagui.General.Layout (DimSize (..), mkSizeBehav)
 
 data Label = Label
@@ -24,6 +26,7 @@ data Label = Label
   , text :: Behavior T.Text
   --
   , setPos :: Point Int -> Reactive ()
+  , update_ :: Event ()
   }
 
 data Config = Config
@@ -51,6 +54,7 @@ instance Show Label where
 instance Renderable Label where
   render = render_
   locate = locate_
+  update = update_
 
 newLabelT :: Config -> D.Window -> T.Text -> TunaguiT Label
 newLabelT c w t =
@@ -69,11 +73,14 @@ newLabelB cnf win behText = do
     behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) behCH
     let behSize = S <$> (V2 <$> behW <*> behH)
     (behPos, pushPos) <- newBehavior $ P (V2 0 0)
+    -- Make update event
+    let eUpdate = up behText
     return Label
       { pos = behPos
       , size = behSize
       , text = behText
       , setPos = pushPos
+      , update_ = eUpdate
       }
 
 locate_ :: Label -> Point Int -> Reactive (Range Int)
