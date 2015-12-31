@@ -64,11 +64,11 @@ runWin = interpret
       --
       tuna <- ask
       liftIO . sync $
-        listen (updateEventWT tree) $ \_ -> do
+        listen (updateEventWT tree) $ \str -> do
           -- render tree
-          putStrLn "update!"
+          putStrLn $ "update: " ++ str
           void . forkIO $ do
-            locateWT tree
+            locateWT tree -- TODO: Bug - fix LOOP! set position -> update fires -> render -> set position ...
             runTuna tuna $ runRender (D.wRenderer w) $ render tree
       --
       interpret w (is ())

@@ -77,9 +77,9 @@ renderWT :: WidgetTree -> RenderP TunaguiT ()
 renderWT (Widget a)       = render a
 renderWT (Container _ ws) = mapM_ renderWT ws
 
-updateEventWT :: WidgetTree -> Event ()
-updateEventWT (Widget a)       = void $ update a
-updateEventWT (Container _ ws) = foldl1' mappend $ map updateEventWT ws
+updateEventWT :: WidgetTree -> Event String
+updateEventWT (Widget a)       = update a
+updateEventWT (Container _ ws) = foldl1' (mergeWith (\a b -> a ++ "|" ++ b)) $ map updateEventWT ws
 
 -- *****************************************************************************
 

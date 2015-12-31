@@ -17,7 +17,7 @@ import Tunagui.General.Base (TunaguiT)
 import Tunagui.Internal.Render as R
 import Tunagui.Internal.Render.SDL (runRender)
 import Tunagui.Widget.Component.Features (Renderable, render, locate, update)
-import Tunagui.Widget.Component.Util (up)
+import Tunagui.Widget.Component.Util (up')
 import Tunagui.General.Layout (DimSize (..), mkSizeBehav)
 
 data Label = Label
@@ -74,7 +74,7 @@ newLabelB cnf win behText = do
     let behSize = S <$> (V2 <$> behW <*> behH)
     (behPos, pushPos) <- newBehavior $ P (V2 0 0)
     -- Make update event
-    let eUpdate = up behText
+    let eUpdate = up' "Label.behText" behText
     return Label
       { pos = behPos
       , size = behSize

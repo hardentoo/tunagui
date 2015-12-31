@@ -22,7 +22,7 @@ import           Tunagui.Widget.Component.Features  (Clickable,
                                           onClick, render,
                                           locate, update)
 import qualified Tunagui.Widget.Component.Part as PRT
-import           Tunagui.Widget.Component.Util (up)
+import           Tunagui.Widget.Component.Util (up')
 import           Tunagui.General.Layout    (DimSize (..), mkSizeBehav)
 
 data Button = Button
@@ -86,7 +86,7 @@ newButton c win = do
     (behPos, pushPos) <- newBehavior $ T.P (V2 0 0)
     clk <- PRT.mkClickableArea behPos behShape (D.wePML events) (D.weRML events)
     -- Update event
-    let eUpdate = foldl1' mappend [up behPos, up behSize]
+    let eUpdate = foldl1' mappend [up' "Button.behPos" behPos, up' "Button.behSize" behSize]
     return Button
       { btnPos = behPos
       , btnSize = behSize
