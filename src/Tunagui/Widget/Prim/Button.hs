@@ -33,7 +33,7 @@ data Button = Button
   -- Features
   , btnClkArea :: PRT.ClickableArea
   , btnText :: Maybe T.Text -- TODO: Behavior Text
-  , update_ :: Event ()
+  , update_ :: Event String
   }
 
 data Config = Config

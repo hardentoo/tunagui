@@ -1,7 +1,7 @@
 module Tunagui.Operation
   (
   -- * WindowP
-    WindowP, runTWin
+    WindowP, runWin
   , testOverwriteTreeOP
   , testRenderTree
   ) where

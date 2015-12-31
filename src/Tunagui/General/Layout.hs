@@ -6,6 +6,7 @@ module Tunagui.General.Layout
   , Direction (..)
   , locateWT
   , renderWT
+  , updateEventWT
   , DimSize (..)
   --
   , mkSizeBehav
@@ -13,14 +14,14 @@ module Tunagui.General.Layout
 
 import           Control.Monad           (foldM, void)
 import           Control.Monad.IO.Class  (MonadIO)
-import           Data.Foldable           (foldl')
+import           Data.List               (foldl', foldl1')
 import           FRP.Sodium
 import           Linear.V2
 
 import qualified Tunagui.General.Types   as T
 import           Tunagui.General.Base    (TunaguiT)
 import           Tunagui.Internal.Render (RenderP)
-import           Tunagui.Widget.Component.Features (Renderable, locate, render)
+import           Tunagui.Widget.Component.Features (Renderable, locate, render, update)
 
 data WidgetTree =
   forall a. (Show a, Renderable a)
@@ -75,6 +76,10 @@ locateWT widgetTree = void . sync $ go widgetTree (T.P (V2 0 0))
 renderWT :: WidgetTree -> RenderP TunaguiT ()
 renderWT (Widget a)       = render a
 renderWT (Container _ ws) = mapM_ renderWT ws
+
+updateEventWT :: WidgetTree -> Event ()
+updateEventWT (Widget a)       = void $ update a
+updateEventWT (Container _ ws) = foldl1' mappend $ map updateEventWT ws
 
 -- *****************************************************************************
 

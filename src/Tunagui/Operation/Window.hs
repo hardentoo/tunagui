@@ -4,10 +4,12 @@
 
 module Tunagui.Operation.Window where
 
+import           Control.Monad               (void)
 import           Control.Monad.IO.Class      (MonadIO, liftIO)
 import           Control.Monad.Trans.Class   (lift)
 import           Control.Monad.Operational
-import           Control.Monad.Reader        (asks)
+import           Control.Monad.Reader        (ask, asks)
+import           Control.Concurrent          (forkIO)
 import           FRP.Sodium
 import           GHC.Conc.Sync
 import           Linear.V2                   (V2 (..))
@@ -16,7 +18,7 @@ import Data.Text (Text)
 
 import qualified Tunagui.General.Data        as D
 import qualified Tunagui.General.Types       as T
-import           Tunagui.General.Base        (TunaguiT)
+import           Tunagui.General.Base        (TunaguiT, runTuna)
 import           Tunagui.Internal.Render.SDL (runRender)
 import qualified Tunagui.Internal.Render     as R
 
@@ -49,8 +51,8 @@ mkLabelB :: Label.Config -> Behavior Text -> ProgramT WindowI m (Label.Label, Wi
 mkLabelB c b = singleton $ MkLabelB c b
 
 -- *****************************************************************************
-runTWin :: D.Window -> WindowP TunaguiT a -> TunaguiT a
-runTWin = interpret
+runWin :: D.Window -> WindowP TunaguiT a -> TunaguiT a
+runWin = interpret
   where
     interpret :: D.Window -> WindowP TunaguiT a -> TunaguiT a
     interpret w is = eval w =<< viewT is
@@ -59,17 +61,23 @@ runTWin = interpret
     eval _  (Return a) = return a
     eval w (TestOverwriteTree tree :>>= is) = do
       liftIO . atomically $ writeTVar (D.wWidgetTree w) tree
+      --
+      tuna <- ask
+      liftIO . sync $
+        listen (updateEventWT tree) $ \_ -> do
+          -- render tree
+          putStrLn "update!"
+          void . forkIO $ do
+            locateWT tree
+            runTuna tuna $ runRender (D.wRenderer w) $ render tree
+      --
       interpret w (is ())
     eval w (TestRenderTree :>>= is) = do
       tree <- liftIO $ do
         tree <- atomically . readTVar $ D.wWidgetTree w
         locateWT tree
         return tree
-      runRender (D.wRenderer w) $ do
-        R.setColor $ V4 240 240 240 255
-        R.clear
-        renderWT tree
-        R.flush
+      runRender (D.wRenderer w) $ render tree
       interpret w (is ())
 
     eval w (MkButton cfg :>>= is) = do
@@ -81,6 +89,12 @@ runTWin = interpret
     eval w (MkLabelB cfg beh :>>= is) = do
       ret <- genWT <$> Label.newLabelB cfg w beh
       interpret w (is ret)
+
+    render tree = do
+      R.setColor $ V4 240 240 240 255
+      R.clear
+      renderWT tree
+      R.flush
 
 -- *****************************************************************************
 -- utilities

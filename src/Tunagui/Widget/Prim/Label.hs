@@ -26,7 +26,7 @@ data Label = Label
   , text :: Behavior T.Text
   --
   , setPos :: Point Int -> Reactive ()
-  , update_ :: Event ()
+  , update_ :: Event String
   }
 
 data Config = Config
