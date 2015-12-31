@@ -2,8 +2,8 @@
 
 module Main where
 
-import           Control.Concurrent     (threadDelay)
-import           Control.Monad          (forever)
+import           Control.Concurrent     (threadDelay, forkIO)
+import           Control.Monad          (forever, void)
 import           Control.Monad.IO.Class (liftIO)
 import           FRP.Sodium
 import           Linear.V2
@@ -26,12 +26,16 @@ testLabel =
     withWindow (WinConfig "main" True (V2 300 300)) tuna $ \win -> do
       (beh, push) <- liftIO . sync $ newBehavior (0 :: Integer)
       runTuna tuna $ runWin win $ do
-        (_,w) <- Label.mkLabelB Label.defaultConfig (T.pack . show <$> beh)
-        testOverwriteTreeOP (Container DirV [w])
-        liftIO . forever $ do
-          sync $ do
+        (btn,wBtn) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just "plus"})
+        (_,wLbl) <- Label.mkLabelB Label.defaultConfig (T.pack . show <$> beh)
+        testOverwriteTreeOP (Container DirV [wLbl,wBtn])
+        _ <- liftIO . sync $ listen (onClick btn) $ \_ ->
+          void . forkIO . sync $ do
             i <- sample beh
             push $ i + 1
+
+        liftIO . forever $ do
+          putStrLn "."
           threadDelay 1000000
 
 test :: IO ()
