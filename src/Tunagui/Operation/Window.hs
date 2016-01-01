@@ -97,6 +97,3 @@ runWin = interpret
 -- utilities
 genWT :: (Show a, Renderable a) => D.Window -> a -> IO (a, WidgetTree)
 genWT win a = (,) a <$> newWidget win a
-
--- newWidget :: (Show a, Renderable a) => D.Window -> a -> IO WidgetTree
--- newWidget win a = Widget <$> D.generateId win <*> pure a

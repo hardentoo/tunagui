@@ -14,7 +14,7 @@ import           Data.List                (foldl1')
 
 import qualified Tunagui.General.Data     as D
 import           Tunagui.General.Data     (DimSize (..))
-import qualified Tunagui.General.Types    as T -- TODO: stop qualified
+import           Tunagui.General.Types    (Point(..), Size(..), Range(..), Shape(..), plusPS, UpdateType)
 import           Tunagui.General.Base     (TunaguiT)
 import           Tunagui.Internal.Render  as R
 import           Tunagui.Internal.Render.SDL (runRender)
@@ -23,17 +23,17 @@ import           Tunagui.Widget.Component.Features  (Clickable,
                                           onClick, render,
                                           locate, update)
 import qualified Tunagui.Widget.Component.Part as PRT
-import           Tunagui.Widget.Component.Util (up', mkSizeBehav)
+import           Tunagui.Widget.Component.Util (upS, mkSizeBehav)
 
 data Button = Button
-  { btnPos     :: Behavior (T.Point Int)
-  , btnSize    :: Behavior (T.Size Int)
+  { btnPos     :: Behavior (Point Int)
+  , btnSize    :: Behavior (Size Int)
   -- Setter of attributes
-  , setPos     :: T.Point Int -> Reactive ()
+  , setPos     :: Point Int -> Reactive ()
   -- Features
   , btnClkArea :: PRT.ClickableArea
   , btnText :: Maybe T.Text -- TODO: Behavior Text
-  , update_ :: Event String
+  , update_ :: Event UpdateType
   }
 
 data Config = Config
@@ -71,22 +71,22 @@ instance Renderable Button where
 newButton :: Config -> D.Window -> TunaguiT Button
 newButton c win = do
   -- Text size
-  (T.S (V2 contW contH)) <- case bcText c of
+  (S (V2 contW contH)) <- case bcText c of
     Just text -> runRender (D.wRenderer win) (R.textSize text)
-    Nothing   -> return (T.S (V2 10 10))
+    Nothing   -> return (S (V2 10 10))
 
   liftIO . sync $ do
     (behCW, _changeCW) <- newBehavior contW -- TODO: Call changeCW when content was changed
     (behCH, _changeCH) <- newBehavior contH
     behW <- mkSizeBehav (bcWidth c) (bcMinWidth c) (bcMaxWidth c) behCW
     behH <- mkSizeBehav (bcHeight c) (bcMinHeight c) (bcMaxHeight c) behCH
-    let behSize = T.S <$> (V2 <$> behW <*> behH)
-        behShape = T.Rect <$> behSize
+    let behSize = S <$> (V2 <$> behW <*> behH)
+        behShape = Rect <$> behSize
     --
-    (behPos, pushPos) <- newBehavior $ T.P (V2 0 0)
+    (behPos, pushPos) <- newBehavior $ P (V2 0 0)
     clk <- PRT.mkClickableArea behPos behShape (D.wePML events) (D.weRML events)
     -- Update event
-    let eUpdate = foldl1' mappend [up' "Button.behPos" behPos, up' "Button.behSize" behSize]
+    let eUpdate = foldl1' mappend [upS behPos, upS behSize]
     return Button
       { btnPos = behPos
       , btnSize = behSize
@@ -98,12 +98,12 @@ newButton c win = do
   where
     events = D.wEvents win
 
-locateB :: Button -> T.Point Int -> Reactive (T.Range Int)
+locateB :: Button -> Point Int -> Reactive (Range Int)
 locateB btn p = do
   setPos btn p
   pos <- sample (btnPos btn)
   size <- sample (btnSize btn)
-  return $ T.R pos (pos `T.plusPS` size)
+  return $ R pos (pos `plusPS` size)
 
 renderB :: Button -> R.RenderP TunaguiT ()
 renderB btn = do

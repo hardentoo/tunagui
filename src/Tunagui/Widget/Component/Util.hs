@@ -1,18 +1,19 @@
 module Tunagui.Widget.Component.Util
-  ( up, up'
+  ( upD, upS
   , mkSizeBehav
   ) where
 
 import Control.Monad (void)
 import FRP.Sodium
 
+import Tunagui.General.Types (UpdateType (..))
 import Tunagui.General.Data (DimSize (..))
 
-up :: Behavior a -> Event String
-up = up' ""
+upD :: Behavior a -> Event UpdateType
+upD beh = const Redraw <$> updates beh
 
-up' :: String -> Behavior a -> Event String
-up' str beh = const str <$> updates beh
+upS :: Behavior a -> Event UpdateType
+upS beh = const Reshape <$> updates beh
 
 mkSizeBehav :: Ord a => DimSize a -> Maybe a -> Maybe a -> Behavior a -> Reactive (Behavior a)
 mkSizeBehav dimA minA maxA behContent = do
