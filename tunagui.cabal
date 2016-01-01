@@ -25,7 +25,6 @@ library
                      , Tunagui.General.Types
                      , Tunagui.General.Base
                      , Tunagui.General.Event
-                     , Tunagui.General.Layout
                      , Tunagui.General.Initialize
                      , Tunagui.Internal.Render
                      , Tunagui.Internal.Render.SDL

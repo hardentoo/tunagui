@@ -17,13 +17,13 @@ import           Linear.V4                   (V4 (..))
 import Data.Text (Text)
 
 import qualified Tunagui.General.Data        as D
+import           Tunagui.General.Data        (WidgetTree, updateEventWT, locateWT, renderWT, newWidget)
 import qualified Tunagui.General.Types       as T
 import           Tunagui.General.Base        (TunaguiT, runTuna)
 import           Tunagui.Internal.Render.SDL (runRender)
 import qualified Tunagui.Internal.Render     as R
 
 import           Tunagui.Widget.Component.Features
-import           Tunagui.General.Layout
 
 import qualified Tunagui.Widget.Prim.Button  as Button
 import qualified Tunagui.Widget.Prim.Label   as Label
@@ -95,9 +95,8 @@ runWin = interpret
 
 -- *****************************************************************************
 -- utilities
--- TODO: These functions should be moved to Data.hs
 genWT :: (Show a, Renderable a) => D.Window -> a -> IO (a, WidgetTree)
 genWT win a = (,) a <$> newWidget win a
 
-newWidget :: (Show a, Renderable a) => D.Window -> a -> IO WidgetTree
-newWidget win a = Widget <$> D.generateId win <*> pure a
+-- newWidget :: (Show a, Renderable a) => D.Window -> a -> IO WidgetTree
+-- newWidget win a = Widget <$> D.generateId win <*> pure a

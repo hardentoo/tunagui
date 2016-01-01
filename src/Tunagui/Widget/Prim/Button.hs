@@ -13,6 +13,7 @@ import qualified Data.Text                as T
 import           Data.List                (foldl1')
 
 import qualified Tunagui.General.Data     as D
+import           Tunagui.General.Data     (DimSize (..))
 import qualified Tunagui.General.Types    as T -- TODO: stop qualified
 import           Tunagui.General.Base     (TunaguiT)
 import           Tunagui.Internal.Render  as R
@@ -22,8 +23,7 @@ import           Tunagui.Widget.Component.Features  (Clickable,
                                           onClick, render,
                                           locate, update)
 import qualified Tunagui.Widget.Component.Part as PRT
-import           Tunagui.Widget.Component.Util (up')
-import           Tunagui.General.Layout    (DimSize (..), mkSizeBehav)
+import           Tunagui.Widget.Component.Util (up', mkSizeBehav)
 
 data Button = Button
   { btnPos     :: Behavior (T.Point Int)

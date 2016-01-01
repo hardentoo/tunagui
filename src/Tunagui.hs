@@ -9,8 +9,7 @@ module Tunagui
 , onClick
 ) where
 
-import           Tunagui.General.Data       (withWindow, WinConfig (..))
+import           Tunagui.General.Data       (withWindow, WinConfig (..), WidgetTree (..), Direction (..))
 import           Tunagui.General.Initialize (withTunagui)
 import           Tunagui.General.Base       (TunaguiT, runTuna)
-import           Tunagui.General.Layout      (WidgetTree (..), Direction (..))
 import           Tunagui.Widget.Component.Features    (onClick)

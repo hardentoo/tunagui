@@ -12,13 +12,13 @@ import qualified Data.Text as T
 import Linear.V2
 
 import qualified Tunagui.General.Data as D
+import Tunagui.General.Data (DimSize(..))
 import Tunagui.General.Types (Point(..), Size(..), Range(..), plusPS)
 import Tunagui.General.Base (TunaguiT)
 import Tunagui.Internal.Render as R
 import Tunagui.Internal.Render.SDL (runRender)
 import Tunagui.Widget.Component.Features (Renderable, render, locate, update)
-import Tunagui.Widget.Component.Util (up')
-import Tunagui.General.Layout (DimSize (..), mkSizeBehav)
+import Tunagui.Widget.Component.Util (up', mkSizeBehav)
 
 data Label = Label
   { pos :: Behavior (Point Int)
@@ -30,8 +30,8 @@ data Label = Label
   }
 
 data Config = Config
-  { width :: DimSize Int
-  , height :: DimSize Int
+  { width :: D.DimSize Int
+  , height :: D.DimSize Int
   , minWidth :: Maybe Int
   , maxWidth :: Maybe Int
   , minHeight :: Maybe Int
