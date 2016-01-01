@@ -11,7 +11,6 @@ import           Control.Monad         (void)
 import           Control.Exception     (bracket)
 import qualified Data.Text             as T
 import           FRP.Sodium
--- import           GHC.Conc.Sync         (TVar, atomically, newTVar, writeTVar)
 import           Control.Concurrent.MVar (MVar, newMVar, modifyMVarMasked)
 import           Linear                (V2 (..))
 import qualified SDL

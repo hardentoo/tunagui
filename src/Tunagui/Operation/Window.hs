@@ -11,7 +11,6 @@ import           Control.Monad.Operational
 import           Control.Monad.Reader        (ask, asks)
 import           Control.Concurrent          (forkIO)
 import           FRP.Sodium
--- import           GHC.Conc.Sync
 import           Control.Concurrent.MVar     (MVar, swapMVar, readMVar, withMVar)
 import           Linear.V2                   (V2 (..))
 import           Linear.V4                   (V4 (..))
@@ -96,7 +95,9 @@ runWin = interpret
 
 -- *****************************************************************************
 -- utilities
+-- TODO: These functions should be moved to Data.hs
 genWT :: (Show a, Renderable a) => D.Window -> a -> IO (a, WidgetTree)
-genWT win a = do
-  i <- D.generateId win
-  return (a, Widget i a)
+genWT win a = (,) a <$> newWidget win a
+
+newWidget :: (Show a, Renderable a) => D.Window -> a -> IO WidgetTree
+newWidget win a = Widget <$> D.generateId win <*> pure a
