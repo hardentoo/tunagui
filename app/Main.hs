@@ -26,14 +26,21 @@ testLabel =
     withWindow (WinConfig "main" True (V2 300 300)) tuna $ \win -> do
       (beh, push) <- liftIO . sync $ newBehavior (0 :: Integer)
       _ <- runTuna tuna $ runWin win $ do
-        (btn,wBtn) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just " plus "})
+        (btnP,wBtnP) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just " + "})
+        (btnM,wBtnM) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just " - "})
         (_,wLbl) <- Label.mkLabelB Label.defaultConfig (T.pack . show <$> beh)
-        testOverwriteTreeOP (Container DirV [wLbl,wBtn])
+        testOverwriteTreeOP (Container DirH [wBtnP,wBtnM,wLbl])
         testRenderTree
-        liftIO . sync $ listen (onClick btn) $ \_ -> void $
-          forkIO . sync $ do
-            i <- sample beh
-            push $ i + 1
+        liftIO . sync $ do
+          _ <- listen (onClick btnP) $ \_ -> void $
+            forkIO . sync $ do
+              i <- sample beh
+              push $ i + 1
+          _ <- listen (onClick btnM) $ \_ -> void $
+            forkIO . sync $ do
+              i <- sample beh
+              push $ i - 1
+          return ()
 
       liftIO . forever $ do
         putStrLn "."
