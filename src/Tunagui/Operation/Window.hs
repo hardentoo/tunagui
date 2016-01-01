@@ -60,6 +60,7 @@ runWin = interpret
     eval :: D.Window -> ProgramViewT WindowI TunaguiT a -> TunaguiT a
     eval _  (Return a) = return a
     eval w (TestOverwriteTree tree :>>= is) = do
+      liftIO $ print tree
       liftIO . atomically $ writeTVar (D.wWidgetTree w) tree
       --
       tuna <- ask
@@ -80,15 +81,12 @@ runWin = interpret
       runRender (D.wRenderer w) $ render tree
       interpret w (is ())
 
-    eval w (MkButton cfg :>>= is) = do
-      ret <- genWT <$> Button.newButton cfg w
-      interpret w (is ret)
-    eval w (MkLabelT cfg text :>>= is) = do
-      ret <- genWT <$> Label.newLabelT cfg w text
-      interpret w (is ret)
-    eval w (MkLabelB cfg beh :>>= is) = do
-      ret <- genWT <$> Label.newLabelB cfg w beh
-      interpret w (is ret)
+    eval w (MkButton cfg :>>= is) =
+      (interpret w . is) =<< (liftIO . genWT w) =<< Button.newButton cfg w
+    eval w (MkLabelT cfg text :>>= is) =
+      (interpret w . is) =<< (liftIO . genWT w) =<< Label.newLabelT cfg w text
+    eval w (MkLabelB cfg beh :>>= is) =
+      (interpret w . is) =<< (liftIO . genWT w) =<< Label.newLabelB cfg w beh
 
     render tree = do
       R.setColor $ V4 240 240 240 255
@@ -98,5 +96,7 @@ runWin = interpret
 
 -- *****************************************************************************
 -- utilities
-genWT :: (Show a, Renderable a) => a -> (a, WidgetTree)
-genWT a = (a, Widget a)
+genWT :: (Show a, Renderable a) => D.Window -> a -> IO (a, WidgetTree)
+genWT win a = do
+  i <- D.generateId win
+  return (a, Widget i a)

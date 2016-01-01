@@ -25,7 +25,7 @@ import           Tunagui.Widget.Component.Features (Renderable, locate, render, 
 
 data WidgetTree =
   forall a. (Show a, Renderable a)
-  => Widget a | Container Direction [WidgetTree]
+  => Widget T.WidgetId a | Container Direction [WidgetTree]
 
 data Direction
   = DirH -- Horizontal
@@ -33,7 +33,7 @@ data Direction
   deriving Show
 
 instance Show WidgetTree where
-  show (Widget a) = "Widget " ++ show a
+  show (Widget i a) = "Widget#" ++ show i ++ " " ++ show a
   show (Container dir ws) = "Container " ++ show dir ++ " " ++ show ws
 
 -- |
@@ -42,7 +42,7 @@ locateWT :: WidgetTree -> IO ()
 locateWT widgetTree = void . sync $ go widgetTree (T.P (V2 0 0))
   where
     go :: WidgetTree -> T.Point Int -> Reactive (T.Range Int)
-    go (Widget a)         p0 = locate a p0
+    go (Widget _ a)         p0 = locate a p0
     go (Container dir ws) p0 = do
       ranges <- foldM locate' [T.R p0 p0] ws
       return $ T.R (foldl' leftTop p0 ranges) (foldl' rightBottom p0 ranges)
@@ -51,7 +51,7 @@ locateWT widgetTree = void . sync $ go widgetTree (T.P (V2 0 0))
         locate' []       _    = undefined
         locate' rs@(r:_) tree = (:rs) <$> work tree (nextFrom r)
           where
-            work (Widget a)          = locate a
+            work (Widget _ a)        = locate a
             work cnt@(Container _ _) = go cnt
 
         leftTop :: Ord a => T.Point a -> T.Range a -> T.Point a
@@ -74,11 +74,11 @@ locateWT widgetTree = void . sync $ go widgetTree (T.P (V2 0 0))
 -- |
 -- Render all widgets in WidgetTree.
 renderWT :: WidgetTree -> RenderP TunaguiT ()
-renderWT (Widget a)       = render a
+renderWT (Widget _ a)       = render a
 renderWT (Container _ ws) = mapM_ renderWT ws
 
 updateEventWT :: WidgetTree -> Event String
-updateEventWT (Widget a)       = update a
+updateEventWT (Widget _ a)       = update a
 updateEventWT (Container _ ws) = foldl1' (mergeWith (\a b -> a ++ "|" ++ b)) $ map updateEventWT ws
 
 -- *****************************************************************************

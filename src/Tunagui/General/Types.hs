@@ -6,6 +6,7 @@ module Tunagui.General.Types
   , plusPS
   , Range(..)
   , Shape(..), within
+  , WidgetId
   ) where
 
 import           Linear (V2 (..))
@@ -40,3 +41,5 @@ within (P (V2 x y)) (P (V2 x0 y0), Circle r) =
     dx = (x0 + r) - x
     dy = (y0 + r) - y
     distSqr = dx * dx + dy * dy
+
+type WidgetId = Integer
