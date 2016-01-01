@@ -59,7 +59,6 @@ data WinConfig = WinConfig
   , winInitialSize :: V2 Int
   }
 
--- TODO: Config with initial position, sizse, scalability
 newWindow :: WinConfig -> FrameEvents -> IO Window
 newWindow cnf es = do
   sWin <- SDL.createWindow (winTitle cnf) winConf
@@ -165,7 +164,7 @@ locateWT w =
 -- |
 -- Render all widgets in WidgetTree.
 renderWT :: WidgetTree -> RenderP TunaguiT ()
-renderWT (Widget _ a)       = render a
+renderWT (Widget _ a)     = render a
 renderWT (Container _ ws) = mapM_ renderWT ws
 
 mkUpdateEventWT :: Window -> IO (Event [(T.WidgetId, T.UpdateType)])

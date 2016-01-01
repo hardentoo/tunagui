@@ -10,7 +10,7 @@ module Tunagui.General.Types
   , UpdateType (..)
   ) where
 
-import           Linear (V2 (..))
+import           Linear.V2
 
 newtype Point a = P (V2 a)
   deriving (Show, Eq, Functor)
@@ -47,5 +47,5 @@ type WidgetId = Integer
 
 data UpdateType
   = Reshape -- Widget is reshaped. It affects other widgets.
-  | Redraw   -- Widget requires only drawing. It doesn't affect other widgets.
+  | Redraw  -- Widget requires only drawing. It doesn't affect other widgets.
   deriving (Eq, Show)

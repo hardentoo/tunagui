@@ -64,8 +64,8 @@ instance Clickable Button where
   onClick = PRT.clickEvent . btnClkArea
 
 instance Renderable Button where
-  render = renderB
-  locate = locateB
+  render = render_
+  locate = locate_
   update = update_
 
 newButton :: Config -> D.Window -> TunaguiT Button
@@ -98,17 +98,17 @@ newButton c win = do
   where
     events = D.wEvents win
 
-locateB :: Button -> Point Int -> Reactive (Range Int)
-locateB btn p = do
+locate_ :: Button -> Point Int -> Reactive (Range Int)
+locate_ btn p = do
   setPos btn p
   pos <- sample (btnPos btn)
   size <- sample (btnSize btn)
   return $ R pos (pos `plusPS` size)
 
-renderB :: Button -> R.RenderP TunaguiT ()
-renderB btn = do
+render_ :: Button -> R.RenderP TunaguiT ()
+render_ btn = do
   (p,s) <- liftIO . sync $ (,) <$> sample (btnPos btn) <*> sample (btnSize btn)
-  R.setColor $ V4 255 255 255 255
+  R.setColor $ V4 255 255 255 255 -- TODO: Add color data type
   R.fillRect p s
   R.setColor $ V4 137 140 149 255
   R.drawRect p s

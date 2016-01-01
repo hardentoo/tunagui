@@ -16,11 +16,12 @@ upS :: Behavior a -> Event UpdateType
 upS beh = const Reshape <$> updates beh
 
 mkSizeBehav :: Ord a => DimSize a -> Maybe a -> Maybe a -> Behavior a -> Reactive (Behavior a)
-mkSizeBehav dimA minA maxA behContent = do
-  behA <- case dimA of
+mkSizeBehav dimA minA maxA behContent =
+  fmap work <$> case dimA of
     Absolute a -> fst <$> newBehavior a
     RelContent -> return behContent
-  return $ conv min minA . conv max maxA <$> behA
   where
-  conv minmax (Just x) = minmax x
-  conv _      Nothing  = id
+    conv f (Just x) = f x
+    conv _ Nothing  = id
+    --
+    work = conv min minA . conv max maxA

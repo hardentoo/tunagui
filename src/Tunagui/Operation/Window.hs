@@ -28,6 +28,8 @@ import           Tunagui.Widget.Component.Features
 import qualified Tunagui.Widget.Prim.Button  as Button
 import qualified Tunagui.Widget.Prim.Label   as Label
 
+-- TODO: Function inserting WidgetTree to Window
+
 data WindowI a where
   TestOverwriteTree :: WidgetTree -> WindowI ()
   TestRenderTree :: WindowI ()
