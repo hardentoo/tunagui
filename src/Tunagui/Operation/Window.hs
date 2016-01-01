@@ -70,8 +70,9 @@ runWin = interpret
         sync $
           listen eUpdate $ \idUptype -> do
             -- Render tree
-            putStrLn $ "update: " ++ show idUptype
+            putStrLn $ "update: " ++ show idUptype -- TODO: From content of 'idUptype', events about button don't fire. It's not supposed behavior.
             void . forkIO $ do
+              -- TODO: Collect updated widgets id from 'idUptype' and reflect it in locateWT and render
               locateWT w
               withMVar (D.wWidgetTree w) $ \t ->
                 runTuna tuna $ runRender (D.wRenderer w) $ render t
