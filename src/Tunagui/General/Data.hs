@@ -13,17 +13,17 @@ module Tunagui.General.Data
   , newWidget
   , locateWT
   , renderWT
-  , updateEventWT
+  , mkUpdateEventWT
   , DimSize (..)
   ) where
 
 import           Control.Monad         (void, foldM)
 import           Control.Monad.IO.Class  (MonadIO)
 import           Data.List               (foldl', foldl1')
-import           Control.Exception     (bracket)
+import           Control.Exception     (bracket, bracket_)
 import qualified Data.Text             as T
 import           FRP.Sodium
-import           Control.Concurrent.MVar (MVar, newMVar, modifyMVarMasked)
+import           Control.Concurrent.MVar (MVar, newMVar, withMVar, modifyMVarMasked)
 import           Linear.V2
 import qualified SDL
 import           Data.Set              (Set)
@@ -41,6 +41,8 @@ data Window = Window
   , wRenderer   :: SDL.Renderer
   , wWidgetTree :: MVar WidgetTree
   , idSet       :: MVar (Set T.WidgetId)
+  , updatable   :: Behavior Bool
+  , withUpdatable :: IO () -> IO ()
   }
 
 -- | Events of each Window
@@ -62,10 +64,14 @@ newWindow :: WinConfig -> FrameEvents -> IO Window
 newWindow cnf es = do
   sWin <- SDL.createWindow (winTitle cnf) winConf
   let es = mkEvents sWin
+  (behUp, pushUp) <- sync $ newBehavior True
+  let withUp = bracket_ (sync $ pushUp False) (sync $ pushUp True)
   win <- Window sWin es
           <$> SDL.createRenderer sWin (-1) SDL.defaultRenderer
           <*> newMVar (Container DirV [])
           <*> newMVar Set.empty -- TODO: outside atomicatty
+          <*> pure behUp
+          <*> pure withUp
   _unlisten <- sync $ listen (weClosed es) $ \_ -> freeWindow win -- TODO: Check if thread leak occurs
   return win
   where
@@ -120,8 +126,11 @@ instance Show WidgetTree where
 
 -- |
 -- Fix the location of WidgetTree
-locateWT :: WidgetTree -> IO ()
-locateWT widgetTree = void . sync $ go widgetTree (T.P (V2 0 0))
+locateWT :: Window -> IO ()
+locateWT w =
+  withMVar (wWidgetTree w) $ \tree ->
+    withUpdatable w $
+      void . sync $ go tree (T.P (V2 0 0))
   where
     go :: WidgetTree -> T.Point Int -> Reactive (T.Range Int)
     go (Widget _ a)         p0 = locate a p0
@@ -159,9 +168,14 @@ renderWT :: WidgetTree -> RenderP TunaguiT ()
 renderWT (Widget _ a)       = render a
 renderWT (Container _ ws) = mapM_ renderWT ws
 
-updateEventWT :: WidgetTree -> Event [(T.WidgetId, T.UpdateType)]
-updateEventWT (Widget wid a)   = (\t -> [(wid,t)]) <$> update a
-updateEventWT (Container _ ws) = foldl1' (mergeWith (++)) $ map updateEventWT ws
+mkUpdateEventWT :: Window -> IO (Event [(T.WidgetId, T.UpdateType)])
+mkUpdateEventWT win = withMVar (wWidgetTree win) (return . go)
+  where
+    behUp = updatable win
+    --
+    go :: WidgetTree -> Event [(T.WidgetId, T.UpdateType)]
+    go (Widget wid a)   = (\t -> [(wid,t)]) <$> gate (update a) behUp
+    go (Container _ ws) = foldl1' (mergeWith (++)) $ map go ws
 
 -- *****************************************************************************
 

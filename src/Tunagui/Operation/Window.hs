@@ -17,7 +17,7 @@ import           Linear.V4                   (V4 (..))
 import Data.Text (Text)
 
 import qualified Tunagui.General.Data        as D
-import           Tunagui.General.Data        (WidgetTree, updateEventWT, locateWT, renderWT, newWidget)
+import           Tunagui.General.Data        (WidgetTree, mkUpdateEventWT, locateWT, renderWT, newWidget)
 import qualified Tunagui.General.Types       as T
 import           Tunagui.General.Base        (TunaguiT, runTuna)
 import           Tunagui.Internal.Render.SDL (runRender)
@@ -60,23 +60,23 @@ runWin = interpret
     eval :: D.Window -> ProgramViewT WindowI TunaguiT a -> TunaguiT a
     eval _  (Return a) = return a
     eval w (TestOverwriteTree tree :>>= is) = do
-      liftIO $ print tree
-      _ <- liftIO $ swapMVar (D.wWidgetTree w) tree
-      --
+      liftIO $ print tree -- test
       tuna <- ask
-      liftIO . sync $
-        listen (updateEventWT tree) $ \a -> do
-          -- render tree
-          putStrLn $ "update: " ++ show a
-          void . forkIO $ do
-            locateWT tree -- TODO: Bug - fix LOOP! set position -> update fires -> render -> set position ...
-            runTuna tuna $ runRender (D.wRenderer w) $ render tree
-      --
+      liftIO $ do
+        swapMVar (D.wWidgetTree w) tree
+        eUpdate <- mkUpdateEventWT w -- TODO: Listen it again when WidgetTree is updated
+        sync $
+          listen eUpdate $ \idUptype -> do
+            -- Render tree
+            putStrLn $ "update: " ++ show idUptype
+            void . forkIO $ do
+              locateWT w
+              withMVar (D.wWidgetTree w) $ \t ->
+                runTuna tuna $ runRender (D.wRenderer w) $ render t
       interpret w (is ())
     eval w (TestRenderTree :>>= is) = do
-      let mt = D.wWidgetTree w
-      liftIO $ withMVar mt locateWT
-      tree <- liftIO $ readMVar mt
+      liftIO $ locateWT w
+      tree <- liftIO . readMVar . D.wWidgetTree $ w
       runRender (D.wRenderer w) $ render tree
       interpret w (is ())
 
