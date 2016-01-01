@@ -11,7 +11,7 @@ import           Control.Monad         (void)
 import           Control.Exception     (bracket)
 import qualified Data.Text             as T
 import           FRP.Sodium
-import           GHC.Conc.Sync         (TVar, atomically, newTVar, writeTVar)
+-- import           GHC.Conc.Sync         (TVar, atomically, newTVar, writeTVar)
 import           Control.Concurrent.MVar (MVar, newMVar, modifyMVarMasked)
 import           Linear                (V2 (..))
 import qualified SDL
@@ -27,7 +27,7 @@ data Window = Window
   { wWindow     :: SDL.Window
   , wEvents     :: WinEvents
   , wRenderer   :: SDL.Renderer
-  , wWidgetTree :: TVar WidgetTree
+  , wWidgetTree :: MVar WidgetTree
   , idSet       :: MVar (Set T.WidgetId)
   }
 
@@ -52,7 +52,7 @@ newWindow cnf es = do
   let es = mkEvents sWin
   win <- Window sWin es
           <$> SDL.createRenderer sWin (-1) SDL.defaultRenderer
-          <*> atomically (newTVar (Container DirV []))
+          <*> newMVar (Container DirV [])
           <*> newMVar Set.empty -- TODO: outside atomicatty
   _unlisten <- sync $ listen (weClosed es) $ \_ -> freeWindow win -- TODO: Check if thread leak occurs
   return win

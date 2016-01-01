@@ -11,7 +11,8 @@ import           Control.Monad.Operational
 import           Control.Monad.Reader        (ask, asks)
 import           Control.Concurrent          (forkIO)
 import           FRP.Sodium
-import           GHC.Conc.Sync
+-- import           GHC.Conc.Sync
+import           Control.Concurrent.MVar     (MVar, swapMVar, readMVar, withMVar)
 import           Linear.V2                   (V2 (..))
 import           Linear.V4                   (V4 (..))
 import Data.Text (Text)
@@ -61,7 +62,7 @@ runWin = interpret
     eval _  (Return a) = return a
     eval w (TestOverwriteTree tree :>>= is) = do
       liftIO $ print tree
-      liftIO . atomically $ writeTVar (D.wWidgetTree w) tree
+      _ <- liftIO $ swapMVar (D.wWidgetTree w) tree
       --
       tuna <- ask
       liftIO . sync $
@@ -74,10 +75,9 @@ runWin = interpret
       --
       interpret w (is ())
     eval w (TestRenderTree :>>= is) = do
-      tree <- liftIO $ do
-        tree <- atomically . readTVar $ D.wWidgetTree w
-        locateWT tree
-        return tree
+      let mt = D.wWidgetTree w
+      liftIO $ withMVar mt locateWT
+      tree <- liftIO $ readMVar mt
       runRender (D.wRenderer w) $ render tree
       interpret w (is ())
 
