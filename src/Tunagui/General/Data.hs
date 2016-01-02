@@ -24,6 +24,8 @@ import           Control.Exception     (bracket, bracket_)
 import qualified Data.Text             as T
 import           FRP.Sodium
 import           Control.Concurrent.MVar (MVar, newMVar, withMVar, modifyMVarMasked)
+import           Control.Concurrent.STM.TMVar
+import           GHC.Conc.Sync
 import           Linear.V2
 import qualified SDL
 import           Data.Set              (Set)
@@ -39,7 +41,7 @@ data Window = Window
   { wWindow     :: SDL.Window
   , wEvents     :: WinEvents
   , wRenderer   :: SDL.Renderer
-  , wWidgetTree :: MVar WidgetTree
+  , wWidgetTree :: TMVar WidgetTree
   , idSet       :: MVar (Set T.WidgetId)
   , updatable   :: Behavior Bool
   , withUpdatable :: IO () -> IO ()
@@ -67,7 +69,7 @@ newWindow cnf es = do
   let withUp = bracket_ (sync $ pushUp False) (sync $ pushUp True)
   win <- Window sWin es
           <$> SDL.createRenderer sWin (-1) SDL.defaultRenderer
-          <*> newMVar (Container DirV [])
+          <*> atomically (newTMVar (Container DirV []))
           <*> newMVar Set.empty -- TODO: outside atomicatty
           <*> pure behUp
           <*> pure withUp
@@ -126,10 +128,11 @@ instance Show WidgetTree where
 -- |
 -- Fix the location of WidgetTree
 locateWT :: Window -> IO ()
-locateWT w =
-  withMVar (wWidgetTree w) $ \tree ->
-    withUpdatable w $
-      void . sync $ go tree (T.P (V2 0 0))
+locateWT w = do
+  tree <- atomically . readTMVar . wWidgetTree $ w
+  -- withMVar (wWidgetTree w) $ \tree ->
+  withUpdatable w $
+    void . sync $ go tree (T.P (V2 0 0))
   where
     go :: WidgetTree -> T.Point Int -> Reactive (T.Range Int)
     go (Widget _ a)         p0 = locate a p0
@@ -168,7 +171,9 @@ renderWT (Widget _ a)     = render a
 renderWT (Container _ ws) = mapM_ renderWT ws
 
 mkUpdateEventWT :: Window -> IO (Event [(T.WidgetId, T.UpdateType)])
-mkUpdateEventWT win = withMVar (wWidgetTree win) (return . go)
+mkUpdateEventWT win = do -- withMVar (wWidgetTree win) (return . go)
+  t <- atomically . readTMVar . wWidgetTree $ win
+  return $ go t
   where
     behUp = updatable win
     --

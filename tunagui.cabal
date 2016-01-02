@@ -50,6 +50,7 @@ library
   build-depends:       base
                      , mtl
                      , transformers
+                     , stm
                      , text
                      , operational
                      , sodium

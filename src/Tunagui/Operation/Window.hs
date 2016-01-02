@@ -12,6 +12,8 @@ import           Control.Monad.Reader        (ask, asks)
 import           Control.Concurrent          (forkIO)
 import           FRP.Sodium
 import           Control.Concurrent.MVar     (MVar, swapMVar, readMVar, withMVar)
+import           GHC.Conc.Sync
+import           Control.Concurrent.STM.TMVar
 import           Linear.V2                   (V2 (..))
 import           Linear.V4                   (V4 (..))
 import Data.Text (Text)
@@ -65,7 +67,7 @@ runWin = interpret
       liftIO $ print tree -- test
       tuna <- ask
       liftIO $ do
-        swapMVar (D.wWidgetTree w) tree
+        _ <- atomically $ swapTMVar (D.wWidgetTree w) tree
         eUpdate <- mkUpdateEventWT w -- TODO: Listen it again when WidgetTree is updated
         sync $
           listen eUpdate $ \idUptype -> do
@@ -74,12 +76,13 @@ runWin = interpret
             void . forkIO $ do
               -- TODO: Collect updated widgets id from 'idUptype' and reflect it in locateWT and render
               locateWT w
-              withMVar (D.wWidgetTree w) $ \t ->
-                runTuna tuna $ runRender (D.wRenderer w) $ render t
+              t <- atomically $ readTMVar $ D.wWidgetTree w
+              runTuna tuna $ runRender (D.wRenderer w) $ render t
+
       interpret w (is ())
     eval w (TestRenderTree :>>= is) = do
       liftIO $ locateWT w
-      tree <- liftIO . readMVar . D.wWidgetTree $ w
+      tree <- liftIO . atomically . readTMVar . D.wWidgetTree $ w
       runRender (D.wRenderer w) $ render tree
       interpret w (is ())
 
