@@ -70,11 +70,11 @@ runWin = interpret
         _ <- atomically $ swapTMVar (D.wWidgetTree w) tree
         eUpdate <- mkUpdateEventWT w -- TODO: Listen it again when WidgetTree is updated
         sync $
-          listen eUpdate $ \idUptype -> do
+          listen eUpdate $ \idUptypes -> do
             -- Render tree
-            putStrLn $ "update: " ++ show idUptype -- TODO: From content of 'idUptype', events about button don't fire. It's not supposed behavior.
+            putStrLn $ "update: " ++ show idUptypes
             void . forkIO $ do
-              -- TODO: Collect updated widgets id from 'idUptype' and reflect it in locateWT and render
+              -- TODO: Collect updated widgets id from 'idUptypes' and reflect it in locateWT and render
               locateWT w
               t <- atomically $ readTMVar $ D.wWidgetTree w
               runTuna tuna $ runRender (D.wRenderer w) $ render t
