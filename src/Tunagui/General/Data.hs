@@ -6,7 +6,6 @@ module Tunagui.General.Data
   , WinEvents (..)
   , WinConfig (..)
   , withWindow, newWindow, freeWindow
-  , generateId
   -- *Layout
   , WidgetTree (..)
   , Direction (..)
@@ -42,7 +41,7 @@ data Window = Window
   , wEvents     :: WinEvents
   , wRenderer   :: SDL.Renderer
   , wWidgetTree :: TMVar WidgetTree
-  , idSet       :: MVar (Set T.WidgetId)
+  , idSet       :: TMVar (Set T.WidgetId)
   , updatable   :: Behavior Bool
   , withUpdatable :: IO () -> IO ()
   }
@@ -70,7 +69,7 @@ newWindow cnf es = do
   win <- Window sWin es
           <$> SDL.createRenderer sWin (-1) SDL.defaultRenderer
           <*> atomically (newTMVar (Container DirV []))
-          <*> newMVar Set.empty -- TODO: outside atomicatty
+          <*> atomically (newTMVar Set.empty)
           <*> pure behUp
           <*> pure withUp
   _unlisten <- sync $ listen (weClosed es) $ \_ -> freeWindow win -- TODO: Check if thread leak occurs
@@ -98,14 +97,17 @@ withWindow cnf t = bracket (newWindow cnf events) freeWindow
   where
     events = cntEvents t
 
-generateId :: Window -> IO T.WidgetId
-generateId win = modifyMVarMasked (idSet win) work
+generateWidId :: Window -> STM T.WidgetId
+generateWidId win = do
+  (is, v) <- work <$> takeTMVar t
+  putTMVar t is
+  return v
   where
-    work a = return $
-      if Set.null a
-        then (Set.singleton 0, 0)
-        else let v = Set.findMax a + 1
-             in (Set.insert v a, v)
+    t = idSet win
+    work a = if Set.null a
+                then (Set.singleton 0, 0)
+                else let v = Set.findMax a + 1
+                     in (Set.insert v a, v)
 
 -- Layout **********************************************************************
 
@@ -113,8 +115,8 @@ data WidgetTree =
   forall a. (Show a, Renderable a)
   => Widget T.WidgetId a | Container Direction [WidgetTree]
 
-newWidget :: (Show a, Renderable a) => Window -> a -> IO WidgetTree
-newWidget win a = Widget <$> generateId win <*> pure a
+newWidget :: (Show a, Renderable a) => Window -> a -> STM WidgetTree
+newWidget win a = Widget <$> generateWidId win <*> pure a
 
 data Direction
   = DirH -- Horizontal

@@ -87,11 +87,11 @@ runWin = interpret
       interpret w (is ())
 
     eval w (MkButton cfg :>>= is) =
-      (interpret w . is) =<< (liftIO . genWT w) =<< Button.newButton cfg w
+      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Button.newButton cfg w
     eval w (MkLabelT cfg text :>>= is) =
-      (interpret w . is) =<< (liftIO . genWT w) =<< Label.newLabelT cfg w text
+      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Label.newLabelT cfg w text
     eval w (MkLabelB cfg beh :>>= is) =
-      (interpret w . is) =<< (liftIO . genWT w) =<< Label.newLabelB cfg w beh
+      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Label.newLabelB cfg w beh
 
     render tree = do
       R.setColor $ V4 240 240 240 255
@@ -101,5 +101,5 @@ runWin = interpret
 
 -- *****************************************************************************
 -- utilities
-genWT :: (Show a, Renderable a) => D.Window -> a -> IO (a, WidgetTree)
+genWT :: (Show a, Renderable a) => D.Window -> a -> STM (a, WidgetTree)
 genWT win a = (,) a <$> newWidget win a
