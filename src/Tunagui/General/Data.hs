@@ -132,12 +132,11 @@ instance Show WidgetTree where
 locateWT :: Window -> IO ()
 locateWT w = do
   tree <- atomically . readTMVar . wWidgetTree $ w
-  -- withMVar (wWidgetTree w) $ \tree ->
   withUpdatable w $
     void . sync $ go tree (T.P (V2 0 0))
   where
     go :: WidgetTree -> T.Point Int -> Reactive (T.Range Int)
-    go (Widget _ a)         p0 = locate a p0
+    go (Widget _ a)       p0 = locate a p0
     go (Container dir ws) p0 = do
       ranges <- foldM locate' [T.R p0 p0] ws
       return $ T.R (foldl' leftTop p0 ranges) (foldl' rightBottom p0 ranges)
