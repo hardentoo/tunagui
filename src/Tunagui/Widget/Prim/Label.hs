@@ -7,6 +7,8 @@ module Tunagui.Widget.Prim.Label
 
 import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Reader (ask)
+import Control.Concurrent (forkIO)
 import FRP.Sodium
 import qualified Data.Text as T
 import Linear.V2
@@ -14,7 +16,7 @@ import Linear.V2
 import qualified Tunagui.General.Data as D
 import Tunagui.General.Data (DimSize(..))
 import Tunagui.General.Types (Point(..), Size(..), Range(..), plusPS, UpdateType)
-import Tunagui.General.Base (TunaguiT)
+import Tunagui.General.Base (TunaguiT, runTuna)
 import Tunagui.Internal.Render as R
 import Tunagui.Internal.Render.SDL (runRender)
 import Tunagui.Widget.Component.Features (Renderable, render, locate, update)
@@ -64,11 +66,16 @@ newLabelT c w t =
 
 newLabelB :: Config -> D.Window -> Behavior T.Text -> TunaguiT Label
 newLabelB cnf win behText = do
-  text <- liftIO . sync $ sample behText
-  (S (V2 w h)) <- runRender (D.wRenderer win) (R.textSize text)
+  tuna <- ask
+  (behCW, pushCW) <- liftIO . sync . newBehavior $ 0
+  (behCH, pushCH) <- liftIO . sync . newBehavior $ 0
   liftIO . sync $ do
-    (behCW, _) <- newBehavior w
-    (behCH, _) <- newBehavior h
+    listen (value behText) $ \text -> -- TODO: unlisten
+      void . forkIO $ do
+        (S (V2 w h)) <- runTuna tuna $ runRender (D.wRenderer win) (R.textSize text)
+        sync $ do
+          pushCW w
+          pushCH h
     behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) behCW
     behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) behCH
     let behSize = S <$> (V2 <$> behW <*> behH)
