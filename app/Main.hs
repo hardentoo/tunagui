@@ -18,7 +18,7 @@ import qualified Tunagui.Widget.Label   as Label
 import           Tunagui.Operation
 
 main :: IO ()
-main = testButton
+main = testLabel
 
 testButton :: IO ()
 testButton =
