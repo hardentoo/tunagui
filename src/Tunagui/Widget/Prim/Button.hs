@@ -21,7 +21,7 @@ import           Tunagui.Internal.Render.SDL (runRender)
 import           Tunagui.Widget.Component.Features  (Clickable,
                                           Renderable,
                                           clickEvent, render,
-                                          locate, update)
+                                          locate, range, update)
 import qualified Tunagui.Widget.Component.Part as PRT
 import           Tunagui.Widget.Component.Util (upS, mkSizeBehav)
 
@@ -66,6 +66,7 @@ instance Clickable Button where
 instance Renderable Button where
   render = render_
   locate = locate_
+  range  = range_
   update = update_
 
 newButton :: Config -> D.Window -> TunaguiT Button
@@ -98,9 +99,11 @@ newButton c win = do
   where
     events = D.wEvents win
 
-locate_ :: Button -> Point Int -> Reactive (Range Int)
-locate_ btn p = do
-  setPos btn p
+locate_ :: Button -> Point Int -> IO ()
+locate_ btn = sync . setPos btn
+
+range_ :: Button -> IO (Range Int)
+range_ btn = sync $ do
   pos <- sample (btnPos btn)
   size <- sample (btnSize btn)
   return $ R pos (pos `plusPS` size)

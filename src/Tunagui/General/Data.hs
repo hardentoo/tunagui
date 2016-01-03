@@ -32,7 +32,7 @@ import qualified Data.Set              as Set
 
 import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..), TunaguiT)
 import qualified Tunagui.General.Types as T
-import           Tunagui.Widget.Component.Features (Renderable, locate, render, update)
+import           Tunagui.Widget.Component.Features (Renderable, locate, range, render, update)
 import           Tunagui.Internal.Render (RenderP)
 
 -- Window
@@ -133,20 +133,22 @@ locateWT :: Window -> IO ()
 locateWT w = do
   tree <- atomically . readTMVar . wWidgetTree $ w
   withUpdatable w $
-    void . sync $ go tree (T.P (V2 0 0))
+    void $ go tree (T.P (V2 0 0))
   where
-    go :: WidgetTree -> T.Point Int -> Reactive (T.Range Int)
-    go (Widget _ a)       p0 = locate a p0
+    go :: WidgetTree -> T.Point Int -> IO (T.Range Int)
+    go (Widget _ a)       p0 = do
+      locate a p0
+      range a
     go (Container dir ws) p0 = do
       ranges <- foldM locate' [T.R p0 p0] ws
       return $ T.R (foldl' leftTop p0 ranges) (foldl' rightBottom p0 ranges)
       where
-        locate' :: [T.Range Int] -> WidgetTree -> Reactive [T.Range Int]
+        locate' :: [T.Range Int] -> WidgetTree -> IO [T.Range Int]
         locate' []       _    = undefined
         locate' rs@(r:_) tree = (:rs) <$> work tree (nextFrom r)
           where
-            work (Widget _ a)        = locate a
-            work cnt@(Container _ _) = go cnt
+            work (Widget _ a)        p = locate a p >> range a
+            work cnt@(Container _ _) p = go cnt p
 
         leftTop :: Ord a => T.Point a -> T.Range a -> T.Point a
         leftTop point range =

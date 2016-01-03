@@ -9,7 +9,8 @@ import           Tunagui.Internal.Render (RenderP)
 
 class Renderable a where
   render :: a -> RenderP TunaguiT ()
-  locate :: a -> Point Int -> Reactive (Range Int)
+  locate :: a -> Point Int -> IO ()
+  range  :: a -> IO (Range Int)
   update :: a -> Event UpdateType
 
 class Clickable a where

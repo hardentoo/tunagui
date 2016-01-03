@@ -19,7 +19,7 @@ import Tunagui.General.Types (Point(..), Size(..), Range(..), plusPS, UpdateType
 import Tunagui.General.Base (TunaguiT, runTuna)
 import Tunagui.Internal.Render as R
 import Tunagui.Internal.Render.SDL (runRender)
-import Tunagui.Widget.Component.Features (Renderable, render, locate, update)
+import Tunagui.Widget.Component.Features (Renderable, render, locate, range, update)
 import Tunagui.Widget.Component.Util (upS, mkSizeBehav)
 
 data Label = Label
@@ -56,6 +56,7 @@ instance Show Label where
 instance Renderable Label where
   render = render_
   locate = locate_
+  range  = range_
   update = update_
 
 newLabelT :: Config -> D.Window -> T.Text -> TunaguiT Label
@@ -90,9 +91,11 @@ newLabelB cnf win behText = do
       , update_ = eUpdate
       }
 
-locate_ :: Label -> Point Int -> Reactive (Range Int)
-locate_ label p = do
-  setPos label p
+locate_ :: Label -> Point Int -> IO ()
+locate_ label = sync . setPos label
+
+range_ :: Label -> IO (Range Int)
+range_ label = sync $ do
   pos <- sample $ pos label
   size <- sample $ size label
   return $ R pos (pos `plusPS` size)
