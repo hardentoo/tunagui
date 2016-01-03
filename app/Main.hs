@@ -18,23 +18,32 @@ import qualified Tunagui.Widget.Label   as Label
 import           Tunagui.Operation
 
 main :: IO ()
-main = testLabel
+main = testButton
 
 testButton :: IO ()
 testButton =
   GUI.withTunagui $ \tuna ->
-    withWindow (WinConfig "main" True (V2 300 300)) tuna $ \win ->
-      runTuna tuna $
-        runWin win $ do
-          let mkbtn i =
-                let text = Just $ T.pack $ show i
-                in snd <$> Button.mkButton (Button.defaultConfig {Button.bcText = text})
-          ws <- mapM mkbtn [1..(5::Int)]
-          testOverwriteTreeOP $ Container DirV ws
-          testRenderTree
-          liftIO . forever $ do
-            putStrLn "."
-            threadDelay 1000000
+    withWindow (WinConfig "main" True (V2 300 300)) tuna $ \win -> do
+      runTuna tuna $ runWin win $ do
+        ws1 <- Container DirV <$> mapM mkBtn [1..(5::Int)]
+        ws2 <- Container DirH <$> mapM mkBtn [6..(10::Int)]
+        testOverwriteTreeOP $ Container DirV [ws1,ws2]
+        testRenderTree
+        --
+      forever $ do
+        putStrLn "."
+        threadDelay 1000000
+  where
+    mkBtn i = do
+      (btn,w) <- Button.mkButton $ Button.defaultConfig
+        { Button.bcText = text
+        , Button.bcMinWidth = Just 20
+        }
+      liftIO $ btn `onClick` work
+      return w
+      where
+        text = Just $ T.pack $ show i
+        work = putStrLn $ "click: " ++ show i
 
 testLabel :: IO ()
 testLabel =
