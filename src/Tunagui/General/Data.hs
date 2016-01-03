@@ -17,7 +17,8 @@ module Tunagui.General.Data
   ) where
 
 import           Control.Monad         (void, foldM)
-import           Control.Monad.IO.Class  (MonadIO)
+import           Control.Monad.IO.Class  (MonadIO, liftIO)
+import           Control.Monad.Trans.State
 import           Data.List               (foldl', foldl1')
 import           Control.Exception     (bracket, bracket_)
 import qualified Data.Text             as T
@@ -136,33 +137,28 @@ locateWT w = do
     void $ go tree (T.P (V2 0 0))
   where
     go :: WidgetTree -> T.Point Int -> IO (T.Range Int)
-    go (Widget _ a)       p0 = do
-      locate a p0
-      range a
-    go (Container dir ws) p0 = do
-      ranges <- foldM locate' [T.R p0 p0] ws
-      return $ T.R (foldl' leftTop p0 ranges) (foldl' rightBottom p0 ranges)
+    go (Widget _ a)       p0 = locate a p0 >> range a
+    go (Container dir ws) p0 = snd <$> runStateT (locateList ws p0) (T.R p0 p0)
       where
-        locate' :: [T.Range Int] -> WidgetTree -> IO [T.Range Int]
-        locate' []       _    = undefined
-        locate' rs@(r:_) tree = (:rs) <$> work tree (nextFrom r)
+        locateList :: [WidgetTree] -> T.Point Int -> StateT (T.Range Int) IO ()
+        locateList []     _ = return ()
+        locateList (a:as) p = do
+          r <- liftIO $ work a p
+          modify (expand r)
+          locPrims as (nextPt r)
           where
-            work (Widget _ a)        p = locate a p >> range a
-            work cnt@(Container _ _) p = go cnt p
+            work (Widget _ a) p      = locate a p >> range a
+            work c@(Container _ _) p = go c p
 
-        leftTop :: Ord a => T.Point a -> T.Range a -> T.Point a
-        leftTop point range =
-          let (T.P (V2 x y)) = point
-              (T.R (T.P (V2 x' y')) _) = range
-          in T.P (V2 (min x x') (min y y'))
+        expand :: T.Range Int -> T.Range Int -> T.Range Int
+        expand ra rb =
+          T.R (T.P (V2 (ax0 `min` bx0) (ay0 `min` by0))) (T.P (V2 (ax1 `max` bx1) (ay1 `max` by1)))
+          where
+            (T.R (T.P (V2 ax0 ay0)) (T.P (V2 ax1 ay1))) = ra
+            (T.R (T.P (V2 bx0 by0)) (T.P (V2 bx1 by1))) = rb
 
-        rightBottom :: Ord a => T.Point a -> T.Range a -> T.Point a
-        rightBottom point range =
-          let (T.P (V2 x y)) = point
-              (T.R _ (T.P (V2 x' y'))) = range
-          in T.P (V2 (max x x') (max y y'))
-
-        nextFrom (T.R (T.P (V2 x0 y0)) (T.P (V2 x1 y1))) =
+        nextPt :: T.Range Int -> T.Point Int
+        nextPt (T.R (T.P (V2 x0 y0)) (T.P (V2 x1 y1))) =
           case dir of
             DirH -> T.P (V2 x1 y0)
             DirV -> T.P (V2 x0 y1)
