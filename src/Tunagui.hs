@@ -12,4 +12,4 @@ module Tunagui
 import           Tunagui.General.Data       (withWindow, WinConfig (..), WidgetTree (..), Direction (..))
 import           Tunagui.General.Initialize (withTunagui)
 import           Tunagui.General.Base       (TunaguiT, runTuna)
-import           Tunagui.Widget.Component.Features    (onClick)
+import           Tunagui.Widget             (onClick)

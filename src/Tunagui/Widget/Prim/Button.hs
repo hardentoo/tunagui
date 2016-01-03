@@ -20,7 +20,7 @@ import           Tunagui.Internal.Render  as R
 import           Tunagui.Internal.Render.SDL (runRender)
 import           Tunagui.Widget.Component.Features  (Clickable,
                                           Renderable,
-                                          onClick, render,
+                                          clickEvent, render,
                                           locate, update)
 import qualified Tunagui.Widget.Component.Part as PRT
 import           Tunagui.Widget.Component.Util (upS, mkSizeBehav)
@@ -61,7 +61,7 @@ instance Show Button where
   show _ = "< Button >"
 
 instance Clickable Button where
-  onClick = PRT.clickEvent . btnClkArea
+  clickEvent = PRT.clickEvent . btnClkArea
 
 instance Renderable Button where
   render = render_

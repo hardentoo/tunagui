@@ -13,4 +13,4 @@ class Renderable a where
   update :: a -> Event UpdateType
 
 class Clickable a where
-  onClick :: a -> Event (Point Int)
+  clickEvent :: a -> Event (Point Int)

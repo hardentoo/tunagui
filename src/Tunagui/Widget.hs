@@ -3,4 +3,16 @@ module Tunagui.Widget
     onClick
   ) where
 
-import Tunagui.Widget.Component.Features (onClick)
+import Control.Monad (void)
+import Control.Concurrent (forkIO)
+import FRP.Sodium
+
+import Tunagui.Widget.Component.Features (Clickable, clickEvent)
+
+-- TODO: unlisten
+onClick :: Clickable a => a -> IO () -> IO ()
+onClick a f = sync $
+  void $ listen e go
+  where
+    e = clickEvent a
+    go _ = void . forkIO $ f
