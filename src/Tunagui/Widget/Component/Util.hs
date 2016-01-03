@@ -24,4 +24,4 @@ mkSizeBehav dimA minA maxA behContent =
     conv f (Just x) = f x
     conv _ Nothing  = id
     --
-    work = conv min minA . conv max maxA
+    work = conv max minA . conv min maxA
