@@ -18,7 +18,7 @@ import qualified Tunagui.Widget.Label   as Label
 import           Tunagui.Operation
 
 main :: IO ()
-main = testButton
+main = testLabel
 
 testButton :: IO ()
 testButton =
@@ -54,7 +54,7 @@ testLabel =
         (btnP,wBtnP) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just " + "})
         (btnM,wBtnM) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just " - "})
         (_,wLbl) <- Label.mkLabelB Label.defaultConfig (T.pack . show <$> beh)
-        testOverwriteTreeOP (Container DirH [wBtnP,wBtnM,wLbl])
+        testOverwriteTreeOP (Container DirH [wBtnP,wLbl,wBtnM])
         testRenderTree
         --
         liftIO $ do

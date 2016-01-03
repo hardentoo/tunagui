@@ -70,26 +70,28 @@ newLabelB cnf win behText = do
   tuna <- ask
   (behCW, pushCW) <- liftIO . sync . newBehavior $ 0
   (behCH, pushCH) <- liftIO . sync . newBehavior $ 0
-  liftIO . sync $ do
-    listen (value behText) $ \text -> -- TODO: unlisten
-      void . forkIO $ do
+  let setCW text = void . forkIO $ do
         (S (V2 w h)) <- runTuna tuna $ runRender (D.wRenderer win) (R.textSize text)
         sync $ do
           pushCW w
           pushCH h
-    behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) behCW
-    behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) behCH
-    let behSize = S <$> (V2 <$> behW <*> behH)
-    (behPos, pushPos) <- newBehavior $ P (V2 0 0)
-    -- Make update event
-    let eUpdate = upS behText
-    return Label
-      { pos = behPos
-      , size = behSize
-      , text = behText
-      , setPos = pushPos
-      , update_ = eUpdate
-      }
+  liftIO $ do
+    setCW =<< (sync . sample) behText
+    sync $ do
+      listen (updates behText) setCW -- TODO: unlisten
+      behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) behCW
+      behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) behCH
+      let behSize = S <$> (V2 <$> behW <*> behH)
+      (behPos, pushPos) <- newBehavior $ P (V2 0 0)
+      -- Make update event
+      let eUpdate = upS behText
+      return Label
+        { pos = behPos
+        , size = behSize
+        , text = behText
+        , setPos = pushPos
+        , update_ = eUpdate
+        }
 
 locate_ :: Label -> Point Int -> IO ()
 locate_ label = sync . setPos label

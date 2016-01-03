@@ -16,7 +16,7 @@ module Tunagui.General.Data
   , DimSize (..)
   ) where
 
-import           Control.Monad         (void, foldM)
+import           Control.Monad         (void, foldM, when)
 import           Control.Monad.IO.Class  (MonadIO, liftIO)
 import           Control.Monad.Trans.State
 import           Data.List               (foldl', foldl1')
@@ -130,25 +130,25 @@ instance Show WidgetTree where
 
 -- |
 -- Fix the location of WidgetTree
-locateWT :: Window -> IO ()
-locateWT w = do
+locateWT :: Window -> Set T.WidgetId -> IO ()
+locateWT w reshapeIds = do
   tree <- atomically . readTMVar . wWidgetTree $ w
   withUpdatable w $
-    void $ go tree (T.P (V2 0 0))
+    void $ go tree (T.P (V2 0 0)) False
   where
-    go :: WidgetTree -> T.Point Int -> IO (T.Range Int)
-    go (Widget _ a)       p0 = locate a p0 >> range a
-    go (Container dir ws) p0 = snd <$> runStateT (locateList ws p0) (T.R p0 p0)
+    go :: WidgetTree -> T.Point Int -> Bool -> IO (Bool, T.Range Int)
+    go (Widget wid a)     p0 pre = do
+      let update = pre || Set.member wid reshapeIds
+      when update $ locate a p0
+      (,) update <$> range a
+    go (Container dir ws) p0 pre = runStateT (locateList ws p0 pre) (T.R p0 p0)
       where
-        locateList :: [WidgetTree] -> T.Point Int -> StateT (T.Range Int) IO ()
-        locateList []     _ = return ()
-        locateList (a:as) p = do
-          r <- liftIO $ work a p
+        locateList :: [WidgetTree] -> T.Point Int -> Bool -> StateT (T.Range Int) IO Bool
+        locateList []     _ pre' = return pre'
+        locateList (a:as) p pre' = do
+          (b,r) <- liftIO $ go a p pre'
           modify (expand r)
-          locPrims as (nextPt r)
-          where
-            work (Widget _ a) p      = locate a p >> range a
-            work c@(Container _ _) p = go c p
+          locateList as (nextPt r) b
 
         expand :: T.Range Int -> T.Range Int -> T.Range Int
         expand ra rb =
