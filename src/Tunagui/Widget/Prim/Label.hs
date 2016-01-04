@@ -78,7 +78,7 @@ newLabelB cnf win behText = do
   liftIO $ do
     setCW =<< (sync . sample) behText
     sync $ do
-      listen (updates behText) setCW -- TODO: unlisten
+      listen (updates behText) setCW
       behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) behCW
       behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) behCH
       let behSize = S <$> (V2 <$> behW <*> behH)

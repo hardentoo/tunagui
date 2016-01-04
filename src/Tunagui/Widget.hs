@@ -9,7 +9,6 @@ import FRP.Sodium
 
 import Tunagui.Widget.Component.Features (Clickable, clickEvent)
 
--- TODO: unlisten
 onClick :: Clickable a => a -> IO () -> IO ()
 onClick a f = sync $
   void $ listen e go
