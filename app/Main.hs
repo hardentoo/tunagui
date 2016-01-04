@@ -59,13 +59,9 @@ testLabel =
         testRenderTree
         --
         liftIO $ do
-          onClick btnP $ sync $ do
-            i <- sample beh
-            push $ i + 1
-          onClick btnM $ sync $ do
-            i <- sample beh
-            push $ i - 1
-          onClick btnC . sync $ push 0
+          btnP `onClick` sync (push . (+ 1) =<< sample beh)
+          btnM `onClick` sync (push . (+ (-1)) =<< sample beh)
+          btnC `onClick` sync (push 0)
 
       liftIO . forever $ do
         putStrLn "."
