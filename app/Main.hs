@@ -53,8 +53,9 @@ testLabel =
       _ <- runTuna tuna $ runWin win $ do
         (btnP,wBtnP) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just " + "})
         (btnM,wBtnM) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just " - "})
+        (btnC,wBtnC) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just " CLEAR "})
         (_,wLbl) <- Label.mkLabelB Label.defaultConfig (T.pack . show <$> beh)
-        testOverwriteTreeOP (Container DirH [wBtnP,wLbl,wBtnM])
+        testOverwriteTreeOP (Container DirV [wBtnP,wBtnM,wLbl,wBtnC])
         testRenderTree
         --
         liftIO $ do
@@ -64,6 +65,7 @@ testLabel =
           onClick btnM $ sync $ do
             i <- sample beh
             push $ i - 1
+          onClick btnC . sync $ push 0
 
       liftIO . forever $ do
         putStrLn "."
