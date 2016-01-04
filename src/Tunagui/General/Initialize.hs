@@ -14,6 +14,6 @@ withTunagui :: (Tunagui -> IO a) -> IO a
 withTunagui work =
   bracket_ SDL.initializeAll SDL.quit $
     bracket_ TTF.initialize TTF.quit $
-      bracket (TTF.load "data/sample.ttf" 18) TTF.free $ \font -> do
+      bracket (TTF.load "data/sample.ttf" 16) TTF.free $ \font -> do
         events <- listenAllEvents
         work $ Tunagui events font

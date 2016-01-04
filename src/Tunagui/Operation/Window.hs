@@ -101,7 +101,7 @@ runWin = interpret
       (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Label.newLabelB cfg w beh
 
     render tree = do
-      R.setColor $ V4 240 240 240 255
+      R.setColor $ V4 45 45 45 255
       R.clear
       renderWT tree
       R.flush

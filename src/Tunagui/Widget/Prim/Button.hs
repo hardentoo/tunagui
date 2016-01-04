@@ -111,9 +111,9 @@ range_ btn = sync $ do
 render_ :: Button -> R.RenderP TunaguiT ()
 render_ btn = do
   (p,s) <- liftIO . sync $ (,) <$> sample (btnPos btn) <*> sample (btnSize btn)
-  R.setColor $ V4 255 255 255 255 -- TODO: Add color data type
+  R.setColor $ V4 70 70 70 255 -- TODO: Add color data type
   R.fillRect p s
-  R.setColor $ V4 137 140 149 255
+  R.setColor $ V4 120 120 120 255
   R.drawRect p s
   --
   case btnText btn of
