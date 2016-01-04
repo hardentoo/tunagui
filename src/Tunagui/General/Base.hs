@@ -26,6 +26,7 @@ data FrameEvents = FrameEvents
   , eWinClosed :: Event SDL.Window
   , ePML  :: Event (SDL.Window, T.Point Int) -- Press Mouse Left
   , eRML  :: Event (SDL.Window, T.Point Int) -- Release Mouse Left
+  , eMMPos :: Event (SDL.Window, T.Point Int) -- Mouse motion
   }
 
 newtype TunaguiT a = TunaguiT {

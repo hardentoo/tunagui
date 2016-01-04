@@ -19,17 +19,18 @@ listenAllEvents = do
   (ps, events) <- sync $ do
     (eQuit', pQuit) <- mkQuitEvent
     (eWinClosed', pWinClosed) <- mkWinClosedEvent
-    (ePML', pPML) <- mkMouseEvent SDL.Pressed  SDL.ButtonLeft
-    (eRML', pRML) <- mkMouseEvent SDL.Released SDL.ButtonLeft
+    (ePML', pPML) <- mkMouseButtonEvent SDL.Pressed  SDL.ButtonLeft
+    (eRML', pRML) <- mkMouseButtonEvent SDL.Released SDL.ButtonLeft
+    (eMMPos', pMMPos) <- mkMouseMotionEvent
     --
     behQuit' <- hold False eQuit'
-    --
-    let ps = [pQuit, pPML, pRML, pWinClosed]
+    let ps = [pQuit, pPML, pRML, pWinClosed, pMMPos]
         events = FrameEvents
           { behQuit = behQuit'
           , eWinClosed = eWinClosed'
           , ePML = ePML'
           , eRML = eRML'
+          , eMMPos = eMMPos'
           }
     return (ps, events)
   _ <- forkIO $ eventLoop ps
@@ -60,8 +61,8 @@ mkWinClosedEvent = fmap work <$> newEvent
         SDL.WindowClosedEvent (SDL.WindowClosedEventData win) -> push win
         _ -> return ()
 
-mkMouseEvent :: SDL.InputMotion -> SDL.MouseButton -> Reactive (EventPair (SDL.Window, T.Point Int))
-mkMouseEvent motion button = fmap work <$> newEvent
+mkMouseButtonEvent :: SDL.InputMotion -> SDL.MouseButton -> Reactive (EventPair (SDL.Window, T.Point Int))
+mkMouseButtonEvent motion button = fmap work <$> newEvent
   where
     work push e =
       case SDL.eventPayload e of
@@ -72,4 +73,16 @@ mkMouseEvent motion button = fmap work <$> newEvent
               (A.P p) = SDL.mouseButtonEventPos dat
               point = fromIntegral <$> T.P p
           when (isM && isB) $ push (win, point)
+        _ -> return ()
+
+mkMouseMotionEvent :: Reactive (EventPair (SDL.Window, T.Point Int))
+mkMouseMotionEvent = fmap work <$> newEvent
+  where
+    work push e =
+      case SDL.eventPayload e of
+        SDL.MouseMotionEvent dat -> do
+          let win = SDL.mouseMotionEventWindow dat
+              (A.P p) = SDL.mouseMotionEventPos dat
+              point = fromIntegral <$> T.P p
+          push (win, point)
         _ -> return ()

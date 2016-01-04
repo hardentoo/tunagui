@@ -52,6 +52,7 @@ data WinEvents = WinEvents
   { weClosed :: Event ()
   , wePML :: Event (T.Point Int)
   , weRML :: Event (T.Point Int)
+  , weMMPos :: Event (T.Point Int) -- Mouse motiong
   }
 
 data WinConfig = WinConfig
@@ -84,6 +85,7 @@ newWindow cnf es = do
       { weClosed = void $ matchWindow id $ eWinClosed es
       , wePML = snd <$> matchWindow fst (ePML es)
       , weRML = snd <$> matchWindow fst (eRML es)
+      , weMMPos = snd <$> matchWindow fst (eMMPos es)
       }
       where
         matchWindow f = filterE ((==win) . f)

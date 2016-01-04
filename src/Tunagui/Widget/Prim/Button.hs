@@ -105,6 +105,8 @@ newButton c win = do
     --
     (behPos, pushPos) <- newBehavior $ P (V2 0 0)
     clk <- PRT.mkClickableArea behPos behShape (D.wePML events) (D.weRML events)
+    -- Hover
+    listen (D.weMMPos events) $ \p -> putStrLn $ "move " ++ show p -- for check
     -- Update event
     let eUpdate = foldl1' mappend [upS behPos, upS behSize]
     return Button
