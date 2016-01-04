@@ -25,6 +25,7 @@ import Tunagui.Widget.Component.Util (upS, mkSizeBehav)
 data Label = Label
   { pos :: Behavior (Point Int)
   , size :: Behavior (Size Int)
+  , padding :: Behavior (Size Int)
   , text :: Behavior T.Text
   --
   , setPos :: Point Int -> Reactive ()
@@ -34,20 +35,32 @@ data Label = Label
 data Config = Config
   { width :: D.DimSize Int
   , height :: D.DimSize Int
+  -- Boundary
   , minWidth :: Maybe Int
   , maxWidth :: Maybe Int
   , minHeight :: Maybe Int
   , maxHeight :: Maybe Int
+  -- Padding
+  , paddingLeft :: Int
+  , paddingRight :: Int
+  , paddingTop :: Int
+  , paddingBottom :: Int
   } deriving Show
 
 defaultConfig :: Config
 defaultConfig = Config
   { width = RelContent
   , height = RelContent
+  --
   , minWidth = Nothing
   , maxWidth = Nothing
   , minHeight = Nothing
   , maxHeight = Nothing
+  --
+  , paddingLeft   = 10
+  , paddingRight  = 10
+  , paddingTop    = 10
+  , paddingBottom = 10
   }
 
 instance Show Label where
@@ -79,15 +92,20 @@ newLabelB cnf win behText = do
     setCW =<< (sync . sample) behText
     sync $ do
       listen (updates behText) setCW
-      behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) 0 0 behCW
-      behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) 0 0 behCH
+      behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) (paddingLeft cnf) (paddingRight cnf) behCW
+      behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) (paddingTop cnf) (paddingBottom cnf) behCH
       let behSize = S <$> (V2 <$> behW <*> behH)
       (behPos, pushPos) <- newBehavior $ P (V2 0 0)
+      -- Padding
+      behPaddingLeft <- fst <$> newBehavior (paddingLeft cnf)
+      behPaddingRight <- fst <$> newBehavior (paddingRight cnf)
+      let behPadding = S <$> (V2 <$> behPaddingLeft <*> behPaddingRight)
       -- Make update event
       let eUpdate = upS behText
       return Label
         { pos = behPos
         , size = behSize
+        , padding = behPadding
         , text = behText
         , setPos = pushPos
         , update_ = eUpdate
@@ -104,7 +122,9 @@ range_ label = sync $ do
 
 render_ :: Label -> R.RenderP TunaguiT ()
 render_ label = do
-  (p,t) <- liftIO . sync $
-              (,) <$> sample (pos label)
-                  <*> sample (text label)
+  (p, t) <- liftIO . sync $ do
+    p <- sample (pos label)
+    t <- sample (text label)
+    pd <- sample (padding label)
+    return (p `plusPS` pd, t)
   R.renderText p t
