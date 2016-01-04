@@ -4,7 +4,7 @@
 
 module Tunagui.Operation.Window where
 
-import           Control.Monad               (void)
+import           Control.Monad               (void, unless)
 import           Control.Monad.IO.Class      (MonadIO, liftIO)
 import           Control.Monad.Trans.RWS.Lazy (RWST, runRWST)
 import           Control.Monad.Trans.Class   (lift)
@@ -80,13 +80,15 @@ runWin = interpret
                 redrawIds = Set.fromList $ map fst $ filter ((== T.Redraw) . snd) idUptypes
             void . forkIO $ do
               locateWT w reshapeIds
-              t <- atomically $ readTMVar $ D.wWidgetTree w
-              runTuna tuna $ runRender (D.wRenderer w) $ render t
+              unless (Set.null reshapeIds && Set.null redrawIds) $ do
+                t <- atomically $ readTMVar $ D.wWidgetTree w
+                runTuna tuna $ runRender (D.wRenderer w) $ render t
 
       interpret w (is ())
     eval w (TestRenderTree :>>= is) = do
+      allIds <- liftIO . atomically . readTMVar . D.idSet $ w
       tree <- liftIO $ do
-        locateWT w =<< (atomically . readTMVar . D.idSet $ w)
+        locateWT w allIds
         atomically . readTMVar . D.wWidgetTree $ w
       runRender (D.wRenderer w) $ render tree
       interpret w (is ())
@@ -108,11 +110,3 @@ runWin = interpret
 -- utilities
 genWT :: (Show a, Renderable a) => D.Window -> a -> STM (a, WidgetTree)
 genWT win a = (,) a <$> newWidget win a
-
--- renderWindow :: Tunagui -> D.Window -> [(T.WidgetId, T.UpdateType)] -> IO ()
--- renderWindow tuna win as = do
---   (_,redrawIds',_) <- runRWST (locateWT win) reshapeIds redrawIds
---   return ()
---   where
---     reshapeIds = Set.fromList $ map fst $ filter ((== T.Reshape) . snd) as
---     redrawIds = Set.fromList $ map fst $ filter ((== T.Redraw) . snd) as

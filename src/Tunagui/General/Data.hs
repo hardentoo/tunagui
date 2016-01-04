@@ -130,7 +130,6 @@ instance Show WidgetTree where
 
 -- |
 -- Fix the location of WidgetTree
--- TODO: return Set WidgetId requiring redraw
 locateWT :: Window -> Set T.WidgetId -> IO ()
 locateWT w reshapeIds = do
   tree <- atomically . readTMVar . wWidgetTree $ w
@@ -138,13 +137,13 @@ locateWT w reshapeIds = do
     void $ go tree (T.P (V2 0 0)) False
   where
     go :: WidgetTree -> T.Point Int -> Bool -> IO (Bool, T.Range Int)
-    go (Widget wid a)     p0 pre = do
-      let update = pre || Set.member wid reshapeIds
-      when update $ locate a p0
-      (,) update <$> range a
+    go (Widget wid a) p0 pre = do
+      let isUpdated = pre || Set.member wid reshapeIds
+      when isUpdated $ locate a p0
+      (,) isUpdated <$> range a
     go (Container dir ws) p0 pre = runStateT (locateList ws p0 pre) (T.R p0 p0)
       where
-        locateList :: [WidgetTree] -> T.Point Int -> Bool -> StateT (T.Range Int) IO Bool
+        locateList :: MonadIO m => [WidgetTree] -> T.Point Int -> Bool -> StateT (T.Range Int) m Bool
         locateList []     _ pre' = return pre'
         locateList (a:as) p pre' = do
           (b,r) <- liftIO $ go a p pre'
