@@ -130,16 +130,16 @@ range_ btn = sync $ do
 
 render_ :: Button -> R.RenderP TunaguiT ()
 render_ btn = do
-  (p, s, pPadding) <- liftIO . sync $ do
+  (p, s, pWithPad) <- liftIO . sync $ do
     p <- sample $ btnPos btn
     s <- sample $ btnSize btn
-    m <- sample $ btnPadding btn
-    return (p, s, p `plusPS` m)
+    pd <- sample $ btnPadding btn
+    return (p, s, p `plusPS` pd)
   R.setColor $ V4 70 70 70 255 -- TODO: Add color data type
   R.fillRect p s
   R.setColor $ V4 120 120 120 255
   R.drawRect p s
   --
   case btnText btn of
-    Just text -> R.renderText pPadding text
+    Just text -> R.renderText pWithPad text
     Nothing   -> return ()
