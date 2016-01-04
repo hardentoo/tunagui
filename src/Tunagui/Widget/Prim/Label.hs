@@ -79,8 +79,8 @@ newLabelB cnf win behText = do
     setCW =<< (sync . sample) behText
     sync $ do
       listen (updates behText) setCW
-      behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) behCW
-      behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) behCH
+      behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) 0 0 behCW
+      behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) 0 0 behCH
       let behSize = S <$> (V2 <$> behW <*> behH)
       (behPos, pushPos) <- newBehavior $ P (V2 0 0)
       -- Make update event
