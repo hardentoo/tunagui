@@ -130,6 +130,7 @@ instance Show WidgetTree where
 
 -- |
 -- Fix the location of WidgetTree
+-- TODO: return Set WidgetId requiring redraw
 locateWT :: Window -> Set T.WidgetId -> IO ()
 locateWT w reshapeIds = do
   tree <- atomically . readTMVar . wWidgetTree $ w
