@@ -6,16 +6,20 @@ module Tunagui.Widget.Prim.Button
   ) where
 
 import           Control.Monad.IO.Class   (MonadIO, liftIO)
+import           Control.Monad.Reader     (ask)
+import           Control.Monad            (void)
+import           Control.Concurrent       (forkIO)
 import           FRP.Sodium
 import           Linear.V2
 import           Linear.V4
 import qualified Data.Text                as T
 import           Data.List                (foldl1')
+import           Data.Maybe               (fromMaybe)
 
 import qualified Tunagui.General.Data     as D
 import           Tunagui.General.Data     (DimSize (..))
 import           Tunagui.General.Types    (Point(..), Size(..), Range(..), Shape(..), plusPS, UpdateType)
-import           Tunagui.General.Base     (TunaguiT)
+import           Tunagui.General.Base     (TunaguiT, runTuna)
 import           Tunagui.Internal.Render  as R
 import           Tunagui.Internal.Render.SDL (runRender)
 import           Tunagui.Widget.Component.Features  (Clickable,
@@ -31,11 +35,12 @@ data Button = Button
   , btnSize    :: Behavior (Size Int)
   , btnPadding  :: Behavior (Size Int)
   , btnColor   :: Behavior COL.ShapeColor
-  -- Setter of attributes
-  , locate_     :: Point Int -> IO ()
+  -- Text
+  , text :: Behavior T.Text
+  , setText :: T.Text -> Reactive ()
   -- Features
   , btnClkArea :: PRT.ClickableArea
-  , btnText :: Maybe T.Text -- TODO: Behavior Text
+  , locate_     :: Point Int -> IO ()
   , update_ :: Event UpdateType
   }
 
@@ -88,14 +93,22 @@ instance Renderable Button where
 
 newButton :: Config -> D.Window -> TunaguiT Button
 newButton c win = do
-  -- Text size
-  (S (V2 contW contH)) <- case bcText c of
-    Just text -> runRender (D.wRenderer win) (R.textSize text)
-    Nothing   -> return (S (V2 10 10))
-
+  tuna <- ask
   liftIO . sync $ do
-    (behCW, _changeCW) <- newBehavior contW -- TODO: Call changeCW when content was changed
-    (behCH, _changeCH) <- newBehavior contH
+
+    -- Text
+    (behCW, pushCW) <- newBehavior 0
+    (behCH, pushCH) <- newBehavior 0
+    (behText, pushText) <- newBehavior $ T.pack ""
+    listen (updates behText) $ \text ->
+      void . forkIO . runTuna tuna $ do
+        (S (V2 w h)) <- runRender (D.wRenderer win) (R.textSize text)
+        liftIO . sync $ do
+          pushCW w
+          pushCH h
+    pushText $ fromMaybe (T.pack "") $ bcText c
+
+    --
     behW <- mkSizeBehav (bcWidth c) (bcMinWidth c) (bcMaxWidth c) (bcPaddingLeft c) (bcPaddingRight c) behCW
     behH <- mkSizeBehav (bcHeight c) (bcMinHeight c) (bcMaxHeight c) (bcPaddingTop c) (bcPaddingBottom c) behCH
     let behSize = S <$> (V2 <$> behW <*> behH)
@@ -116,9 +129,12 @@ newButton c win = do
       , btnSize = behSize
       , btnPadding = behPadding
       , btnColor = behShapeColor
-      , locate_ = sync . pushPos
       , btnClkArea = clk
-      , btnText = bcText c
+      -- Text
+      , text = behText
+      , setText = pushText
+      --
+      , locate_ = sync . pushPos
       , update_ = eUpdate
       }
   where
@@ -135,17 +151,16 @@ range_ btn = sync $ do
 
 render_ :: Button -> R.RenderP TunaguiT ()
 render_ btn = do
-  (p, s, pWithPad, color) <- liftIO . sync $ do
+  (p, s, pWithPad, color, t) <- liftIO . sync $ do
     p <- sample $ btnPos btn
     s <- sample $ btnSize btn
     pd <- sample $ btnPadding btn
     color <- sample $ btnColor btn
-    return (p, s, p `plusPS` pd, color)
-  R.setColor $ COL.fill color -- V4 70 70 70 255 -- TODO: Add color data type
+    t <- sample $ text btn
+    return (p, s, p `plusPS` pd, color, t)
+  R.setColor $ COL.fill color
   R.fillRect p s
-  R.setColor $ COL.border color -- V4 120 120 120 255
+  R.setColor $ COL.border color
   R.drawRect p s
-  --
-  case btnText btn of
-    Just text -> R.renderText pWithPad text
-    Nothing   -> return ()
+  -- Text
+  R.renderText pWithPad t
