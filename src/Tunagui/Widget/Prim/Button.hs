@@ -32,7 +32,7 @@ data Button = Button
   , btnPadding  :: Behavior (Size Int)
   , btnColor   :: Behavior COL.ShapeColor
   -- Setter of attributes
-  , setPos     :: Point Int -> Reactive ()
+  , locate_     :: Point Int -> IO ()
   -- Features
   , btnClkArea :: PRT.ClickableArea
   , btnText :: Maybe T.Text -- TODO: Behavior Text
@@ -116,7 +116,7 @@ newButton c win = do
       , btnSize = behSize
       , btnPadding = behPadding
       , btnColor = behShapeColor
-      , setPos = pushPos
+      , locate_ = sync . pushPos
       , btnClkArea = clk
       , btnText = bcText c
       , update_ = eUpdate
@@ -126,9 +126,6 @@ newButton c win = do
     toShapeColor :: Bool -> COL.ShapeColor
     toShapeColor True  = COL.hoverShapeColor
     toShapeColor False = COL.planeShapeColor
-
-locate_ :: Button -> Point Int -> IO ()
-locate_ btn = sync . setPos btn
 
 range_ :: Button -> IO (Range Int)
 range_ btn = sync $ do

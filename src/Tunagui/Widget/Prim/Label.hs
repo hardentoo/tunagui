@@ -28,7 +28,7 @@ data Label = Label
   , padding :: Behavior (Size Int)
   , text :: Behavior T.Text
   --
-  , setPos :: Point Int -> Reactive ()
+  , locate_ :: Point Int -> IO ()
   , update_ :: Event UpdateType
   }
 
@@ -107,12 +107,9 @@ newLabelB cnf win behText = do
         , size = behSize
         , padding = behPadding
         , text = behText
-        , setPos = pushPos
+        , locate_ = sync . pushPos
         , update_ = eUpdate
         }
-
-locate_ :: Label -> Point Int -> IO ()
-locate_ label = sync . setPos label
 
 range_ :: Label -> IO (Range Int)
 range_ label = sync $ do
