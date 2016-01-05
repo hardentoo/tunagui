@@ -94,14 +94,12 @@ newLabelB cnf win behText = do
     setCW =<< (sync . sample) behText
     sync $ do
       listen (updates behText) setCW
-      behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) (paddingLeft cnf) (paddingRight cnf) behCW
-      behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) (paddingTop cnf) (paddingBottom cnf) behCH
-      let behSize = S <$> (V2 <$> behW <*> behH)
+      -- Position
       (behPos, pushPos) <- newBehavior $ P (V2 0 0)
+      -- Size
+      behSize <- mkSize cnf behCW behCH
       -- Padding
-      behPaddingLeft <- fst <$> newBehavior (paddingLeft cnf)
-      behPaddingRight <- fst <$> newBehavior (paddingRight cnf)
-      let behPadding = S <$> (V2 <$> behPaddingLeft <*> behPaddingRight)
+      behPadding <- mkPadding cnf
       -- Make update event
       let eUpdate = upS behText
       return Label
@@ -111,8 +109,18 @@ newLabelB cnf win behText = do
         , text = behText
         , locate_ = sync . pushPos
         , update_ = eUpdate
-        , free_ = putStrLn "free Label"
+        , free_ = putStrLn "free Label" -- test
         }
+  where
+    mkSize cnf behCW behCH = do
+      behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) (paddingLeft cnf) (paddingRight cnf) behCW
+      behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) (paddingTop cnf) (paddingBottom cnf) behCH
+      return $ S <$> (V2 <$> behW <*> behH)
+
+    mkPadding cnf = do
+      behPaddingLeft <- fst <$> newBehavior (paddingLeft cnf)
+      behPaddingRight <- fst <$> newBehavior (paddingRight cnf)
+      return $ S <$> (V2 <$> behPaddingLeft <*> behPaddingRight)
 
 range_ :: Label -> IO (Range Int)
 range_ label = sync $ do
