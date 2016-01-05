@@ -23,12 +23,14 @@ import           Tunagui.Widget.Component.Features  (Clickable,
                                           clickEvent, render,
                                           locate, range, update)
 import qualified Tunagui.Widget.Component.Part as PRT
-import           Tunagui.Widget.Component.Util (upS, mkSizeBehav)
+import           Tunagui.Widget.Component.Util (upS, upD, mkSizeBehav)
+import           Tunagui.Widget.Component.Color as COL
 
 data Button = Button
   { btnPos     :: Behavior (Point Int)
   , btnSize    :: Behavior (Size Int)
   , btnPadding  :: Behavior (Size Int)
+  , btnColor   :: Behavior COL.ShapeColor
   -- Setter of attributes
   , setPos     :: Point Int -> Reactive ()
   -- Features
@@ -106,13 +108,14 @@ newButton c win = do
     (behPos, pushPos) <- newBehavior $ P (V2 0 0)
     clk <- PRT.mkClickableArea behPos behShape (D.wePML events) (D.weRML events) (D.weMMPos events)
     -- Hover
-    listen (PRT.crossBoundary clk) $ \b -> putStrLn $ "move " ++ show b
+    behShapeColor <- hold COL.planeShapeColor $ toShapeColor <$> PRT.crossBoundary clk
     -- Update event
-    let eUpdate = foldl1' mappend [upS behPos, upS behSize]
+    let eUpdate = foldl1' mappend [upS behPos, upS behSize, upD behShapeColor]
     return Button
       { btnPos = behPos
       , btnSize = behSize
       , btnPadding = behPadding
+      , btnColor = behShapeColor
       , setPos = pushPos
       , btnClkArea = clk
       , btnText = bcText c
@@ -120,6 +123,9 @@ newButton c win = do
       }
   where
     events = D.wEvents win
+    toShapeColor :: Bool -> COL.ShapeColor
+    toShapeColor True  = COL.hoverShapeColor
+    toShapeColor False = COL.planeShapeColor
 
 locate_ :: Button -> Point Int -> IO ()
 locate_ btn = sync . setPos btn
@@ -132,14 +138,15 @@ range_ btn = sync $ do
 
 render_ :: Button -> R.RenderP TunaguiT ()
 render_ btn = do
-  (p, s, pWithPad) <- liftIO . sync $ do
+  (p, s, pWithPad, color) <- liftIO . sync $ do
     p <- sample $ btnPos btn
     s <- sample $ btnSize btn
     pd <- sample $ btnPadding btn
-    return (p, s, p `plusPS` pd)
-  R.setColor $ V4 70 70 70 255 -- TODO: Add color data type
+    color <- sample $ btnColor btn
+    return (p, s, p `plusPS` pd, color)
+  R.setColor $ COL.fill color -- V4 70 70 70 255 -- TODO: Add color data type
   R.fillRect p s
-  R.setColor $ V4 120 120 120 255
+  R.setColor $ COL.border color -- V4 120 120 120 255
   R.drawRect p s
   --
   case btnText btn of
