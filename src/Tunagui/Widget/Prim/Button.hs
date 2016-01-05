@@ -94,29 +94,14 @@ newButton :: Config -> D.Window -> TunaguiT Button
 newButton c win = do
   tuna <- ask
   liftIO . sync $ do
-
     -- Text
-    (behCW, pushCW) <- newBehavior 0
-    (behCH, pushCH) <- newBehavior 0
-    (behText, pushText) <- newBehavior $ T.pack ""
-    listen (updates behText) $ \text ->
-      void . forkIO . runTuna tuna $ do
-        (S (V2 w h)) <- runRender (D.wRenderer win) (R.textSize text)
-        liftIO . sync $ do
-          pushCW w
-          pushCH h
-    pushText $ fromMaybe (T.pack "") $ bcText c
-
+    (behCW, behCH, behText, pushText) <- mkText tuna $ bcText c
     -- Position
     (behPos, pushPos) <- newBehavior $ P (V2 0 0)
     -- Size
-    behW <- mkSizeBehav (bcWidth c) (bcMinWidth c) (bcMaxWidth c) (bcPaddingLeft c) (bcPaddingRight c) behCW
-    behH <- mkSizeBehav (bcHeight c) (bcMinHeight c) (bcMaxHeight c) (bcPaddingTop c) (bcPaddingBottom c) behCH
-    let behSize = S <$> (V2 <$> behW <*> behH)
+    behSize <- mkSize c behCW behCH
     -- Padding
-    behPaddingLeft <- fst <$> newBehavior (bcPaddingLeft c)
-    behPaddingTop <- fst <$> newBehavior (bcPaddingTop c)
-    let behPadding = S <$> (V2 <$> behPaddingLeft <*> behPaddingTop)
+    behPadding <- mkPadding c
     -- Make parts
     clk <- PRT.mkClickableArea behPos (Rect <$> behSize) (D.wePML events) (D.weRML events) (D.weMMPos events)
     -- Hover
@@ -135,13 +120,36 @@ newButton c win = do
       --
       , locate_ = sync . pushPos
       , update_ = eUpdate
-      , free_ = putStrLn "free Button" -- temp
+      , free_ = putStrLn "free Button" -- test
       }
   where
     events = D.wEvents win
     toShapeColor :: Bool -> COL.ShapeColor
     toShapeColor True  = COL.hoverShapeColor
     toShapeColor False = COL.planeShapeColor
+
+    mkText tuna mt = do
+      (behCW, pushCW) <- newBehavior 0
+      (behCH, pushCH) <- newBehavior 0
+      (behText, pushText) <- newBehavior $ T.pack ""
+      listen (updates behText) $ \text ->
+        void . forkIO . runTuna tuna $ do
+          (S (V2 w h)) <- runRender (D.wRenderer win) (R.textSize text)
+          liftIO . sync $ do
+            pushCW w
+            pushCH h
+      pushText $ fromMaybe (T.pack "") mt
+      return (behCW, behCH, behText, pushText)
+
+    mkSize c behCW behCH = do
+      behW <- mkSizeBehav (bcWidth c) (bcMinWidth c) (bcMaxWidth c) (bcPaddingLeft c) (bcPaddingRight c) behCW
+      behH <- mkSizeBehav (bcHeight c) (bcMinHeight c) (bcMaxHeight c) (bcPaddingTop c) (bcPaddingBottom c) behCH
+      return $ S <$> (V2 <$> behW <*> behH)
+
+    mkPadding c = do
+      behPaddingLeft <- fst <$> newBehavior (bcPaddingLeft c)
+      behPaddingTop <- fst <$> newBehavior (bcPaddingTop c)
+      return $ S <$> (V2 <$> behPaddingLeft <*> behPaddingTop)
 
 range_ :: Button -> IO (Range Int)
 range_ btn = sync $ do
