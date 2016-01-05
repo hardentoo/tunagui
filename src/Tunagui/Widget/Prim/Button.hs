@@ -104,9 +104,9 @@ newButton c win = do
     let behPadding = S <$> (V2 <$> behPaddingLeft <*> behPaddingTop)
     --
     (behPos, pushPos) <- newBehavior $ P (V2 0 0)
-    clk <- PRT.mkClickableArea behPos behShape (D.wePML events) (D.weRML events)
+    clk <- PRT.mkClickableArea behPos behShape (D.wePML events) (D.weRML events) (D.weMMPos events)
     -- Hover
-    listen (D.weMMPos events) $ \p -> putStrLn $ "move " ++ show p -- for check
+    listen (PRT.crossBoundary clk) $ \b -> putStrLn $ "move " ++ show b
     -- Update event
     let eUpdate = foldl1' mappend [upS behPos, upS behSize]
     return Button
