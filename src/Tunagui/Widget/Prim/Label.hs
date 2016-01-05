@@ -19,7 +19,7 @@ import Tunagui.General.Types (Point(..), Size(..), Range(..), plusPS, UpdateType
 import Tunagui.General.Base (TunaguiT, runTuna)
 import Tunagui.Internal.Render as R
 import Tunagui.Internal.Render.SDL (runRender)
-import Tunagui.Widget.Component.Features (Renderable, render, locate, range, update)
+import Tunagui.Widget.Component.Features
 import Tunagui.Widget.Component.Util (upS, mkSizeBehav)
 
 data Label = Label
@@ -30,6 +30,7 @@ data Label = Label
   --
   , locate_ :: Point Int -> IO ()
   , update_ :: Event UpdateType
+  , free_ :: IO ()
   }
 
 data Config = Config
@@ -71,6 +72,7 @@ instance Renderable Label where
   locate = locate_
   range  = range_
   update = update_
+  free   = free_
 
 newLabelT :: Config -> D.Window -> T.Text -> TunaguiT Label
 newLabelT c w t =
@@ -109,6 +111,7 @@ newLabelB cnf win behText = do
         , text = behText
         , locate_ = sync . pushPos
         , update_ = eUpdate
+        , free_ = putStrLn "free Label"
         }
 
 range_ :: Label -> IO (Range Int)

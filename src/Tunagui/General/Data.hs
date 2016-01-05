@@ -33,7 +33,7 @@ import qualified Data.Set              as Set
 
 import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..), TunaguiT)
 import qualified Tunagui.General.Types as T
-import           Tunagui.Widget.Component.Features (Renderable, locate, range, render, update)
+import           Tunagui.Widget.Component.Features (Renderable, locate, range, render, update, free)
 import           Tunagui.Internal.Render (RenderP)
 
 -- Window
@@ -92,8 +92,12 @@ newWindow cnf es = do
 
 freeWindow :: Window -> IO ()
 freeWindow w = do
+  freeWT =<< (atomically . readTMVar . wWidgetTree $ w)
   SDL.destroyRenderer $ wRenderer w
   SDL.destroyWindow $ wWindow w
+  where
+    freeWT (Widget _ a) = free a
+    freeWT (Container _ ws) = mapM_ freeWT ws
 
 withWindow :: WinConfig -> Tunagui -> (Window -> IO a) -> IO a
 withWindow cnf t = bracket (newWindow cnf events) freeWindow

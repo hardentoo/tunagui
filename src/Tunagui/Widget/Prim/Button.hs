@@ -22,10 +22,7 @@ import           Tunagui.General.Types    (Point(..), Size(..), Range(..), Shape
 import           Tunagui.General.Base     (TunaguiT, runTuna)
 import           Tunagui.Internal.Render  as R
 import           Tunagui.Internal.Render.SDL (runRender)
-import           Tunagui.Widget.Component.Features  (Clickable,
-                                          Renderable,
-                                          clickEvent, render,
-                                          locate, range, update)
+import           Tunagui.Widget.Component.Features
 import qualified Tunagui.Widget.Component.Part as PRT
 import           Tunagui.Widget.Component.Util (upS, upD, mkSizeBehav)
 import           Tunagui.Widget.Component.Color as COL
@@ -42,6 +39,7 @@ data Button = Button
   , btnClkArea :: PRT.ClickableArea
   , locate_     :: Point Int -> IO ()
   , update_ :: Event UpdateType
+  , free_ :: IO ()
   }
 
 data Config = Config
@@ -90,6 +88,7 @@ instance Renderable Button where
   locate = locate_
   range  = range_
   update = update_
+  free   = free_
 
 newButton :: Config -> D.Window -> TunaguiT Button
 newButton c win = do
@@ -136,6 +135,7 @@ newButton c win = do
       --
       , locate_ = sync . pushPos
       , update_ = eUpdate
+      , free_ = putStrLn "free Button" -- temp
       }
   where
     events = D.wEvents win

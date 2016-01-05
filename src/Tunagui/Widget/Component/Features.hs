@@ -12,6 +12,7 @@ class Renderable a where
   locate :: a -> Point Int -> IO ()
   range  :: a -> IO (Range Int)
   update :: a -> Event UpdateType
+  free   :: a -> IO ()
 
 class Clickable a where
   clickEvent :: a -> Event (Point Int)
