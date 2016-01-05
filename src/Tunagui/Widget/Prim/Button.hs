@@ -108,18 +108,18 @@ newButton c win = do
           pushCH h
     pushText $ fromMaybe (T.pack "") $ bcText c
 
-    --
+    -- Position
+    (behPos, pushPos) <- newBehavior $ P (V2 0 0)
+    -- Size
     behW <- mkSizeBehav (bcWidth c) (bcMinWidth c) (bcMaxWidth c) (bcPaddingLeft c) (bcPaddingRight c) behCW
     behH <- mkSizeBehav (bcHeight c) (bcMinHeight c) (bcMaxHeight c) (bcPaddingTop c) (bcPaddingBottom c) behCH
     let behSize = S <$> (V2 <$> behW <*> behH)
-        behShape = Rect <$> behSize
-    -- padding
+    -- Padding
     behPaddingLeft <- fst <$> newBehavior (bcPaddingLeft c)
     behPaddingTop <- fst <$> newBehavior (bcPaddingTop c)
     let behPadding = S <$> (V2 <$> behPaddingLeft <*> behPaddingTop)
-    --
-    (behPos, pushPos) <- newBehavior $ P (V2 0 0)
-    clk <- PRT.mkClickableArea behPos behShape (D.wePML events) (D.weRML events) (D.weMMPos events)
+    -- Make parts
+    clk <- PRT.mkClickableArea behPos (Rect <$> behSize) (D.wePML events) (D.weRML events) (D.weMMPos events)
     -- Hover
     behShapeColor <- hold COL.planeShapeColor $ toShapeColor <$> PRT.crossBoundary clk
     -- Update event
