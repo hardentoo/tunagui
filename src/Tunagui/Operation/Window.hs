@@ -95,10 +95,11 @@ runWin = interpret
 
     eval w (MkButton cfg :>>= is) =
       (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Button.newButton cfg w
-    eval w (MkLabelT cfg text :>>= is) =
-      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Label.newLabelT cfg w text
+    eval w (MkLabelT cfg text :>>= is) = do
+      (beh,_) <- liftIO . sync $ newBehavior text
+      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Label.newLabel cfg w beh
     eval w (MkLabelB cfg beh :>>= is) =
-      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Label.newLabelB cfg w beh
+      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Label.newLabel cfg w beh
 
     render tree = do
       R.setColor $ V4 45 45 45 255

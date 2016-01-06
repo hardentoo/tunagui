@@ -2,7 +2,7 @@ module Tunagui.Widget.Prim.Label
   (
     Label (..)
   , Config (..), defaultConfig
-  , newLabelT, newLabelB
+  , newLabel
   ) where
 
 import Control.Monad (void)
@@ -75,14 +75,8 @@ instance Renderable Label where
   update = update_
   free   = free_
 
-newLabelT :: Config -> D.Window -> T.Text -> TunaguiT Label
-newLabelT c w t =
-  newLabelB c w =<< toBeh t
-  where
-    toBeh = fmap fst . liftIO . sync . newBehavior
-
-newLabelB :: Config -> D.Window -> Behavior T.Text -> TunaguiT Label
-newLabelB cnf win behText = do
+newLabel :: Config -> D.Window -> Behavior T.Text -> TunaguiT Label
+newLabel cnf win behText = do
   tuna <- ask
   liftIO . sync $ do
     -- Text
