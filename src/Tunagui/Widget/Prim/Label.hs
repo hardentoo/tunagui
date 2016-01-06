@@ -22,6 +22,7 @@ import Tunagui.Internal.Render.SDL (runRender)
 import Tunagui.Widget.Component.Features
 import qualified Tunagui.Widget.Component.Part as PRT
 import Tunagui.Widget.Component.Util (upS, mkSizeBehav)
+import Tunagui.Widget.Component.Conf (DimConf (..))
 
 data Label = Label
   { pos :: Behavior (Point Int)
@@ -36,33 +37,17 @@ data Label = Label
 
 data Config = Config
   { width :: D.DimSize Int
+  , widthConf :: DimConf Int
   , height :: D.DimSize Int
-  -- Boundary
-  , minWidth :: Maybe Int
-  , maxWidth :: Maybe Int
-  , minHeight :: Maybe Int
-  , maxHeight :: Maybe Int
-  -- Padding
-  , paddingLeft :: Int
-  , paddingRight :: Int
-  , paddingTop :: Int
-  , paddingBottom :: Int
+  , heightConf :: DimConf Int
   } deriving Show
 
 defaultConfig :: Config
 defaultConfig = Config
   { width = RelContent
+  , widthConf = DimConf Nothing Nothing 10 10 0 0
   , height = RelContent
-  --
-  , minWidth = Nothing
-  , maxWidth = Nothing
-  , minHeight = Nothing
-  , maxHeight = Nothing
-  --
-  , paddingLeft   = 10
-  , paddingRight  = 10
-  , paddingTop    = 10
-  , paddingBottom = 10
+  , heightConf = DimConf Nothing Nothing 10 10 0 0
   }
 
 instance Show Label where
@@ -102,13 +87,13 @@ newLabel cnf win behText = do
       }
   where
     mkSize cnf tc = do
-      behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) (paddingLeft cnf) (paddingRight cnf) (PRT.tcWidth tc)
-      behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) (paddingTop cnf) (paddingBottom cnf) (PRT.tcHeight tc)
+      behW <- mkSizeBehav (width cnf) (widthConf cnf) (PRT.tcWidth tc)
+      behH <- mkSizeBehav (height cnf) (heightConf cnf) (PRT.tcHeight tc)
       return $ S <$> (V2 <$> behW <*> behH)
 
     mkPadding cnf = do
-      behPaddingLeft <- fst <$> newBehavior (paddingLeft cnf)
-      behPaddingRight <- fst <$> newBehavior (paddingRight cnf)
+      behPaddingLeft <- fst <$> newBehavior (padding1 (widthConf cnf))
+      behPaddingRight <- fst <$> newBehavior (padding1 (heightConf cnf))
       return $ S <$> (V2 <$> behPaddingLeft <*> behPaddingRight)
 
 range_ :: Label -> IO (Range Int)

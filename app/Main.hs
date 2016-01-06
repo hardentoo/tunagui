@@ -35,10 +35,7 @@ testButton =
         threadDelay 1000000
   where
     mkBtn i = do
-      (btn,w) <- Button.mkButton $ Button.defaultConfig
-        { Button.bcText = text
-        , Button.bcMinWidth = Just 20
-        }
+      (btn,w) <- Button.mkButton $ Button.defaultConfig {Button.bcText = text}
       liftIO $ btn `onClick` work
       return w
       where
@@ -51,8 +48,8 @@ testLabel =
     withWindow (WinConfig "main" True (V2 300 300)) tuna $ \win -> do
       (beh, push) <- liftIO . sync $ newBehavior (0 :: Integer)
       _ <- runTuna tuna $ runWin win $ do
-        (btnP,wBtnP) <- Button.mkButton $ btnSize (Button.defaultConfig {Button.bcText = Just "+"})
-        (btnM,wBtnM) <- Button.mkButton $ btnSize (Button.defaultConfig {Button.bcText = Just "-"})
+        (btnP,wBtnP) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just "+"})
+        (btnM,wBtnM) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just "-"})
         (btnC,wBtnC) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just "CLEAR"})
         (_,wLbl) <- Label.mkLabelB Label.defaultConfig (T.pack . show <$> beh)
         testOverwriteTreeOP (Container DirV [wBtnP,wBtnM,wLbl,wBtnC])
@@ -66,8 +63,6 @@ testLabel =
       liftIO . forever $ do
         putStrLn "."
         threadDelay 1000000
-  where
-    btnSize conf = conf {Button.bcMinWidth = Just 40, Button.bcMinHeight = Just 40}
 
 -- test :: IO ()
 -- test =

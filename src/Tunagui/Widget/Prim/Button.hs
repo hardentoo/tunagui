@@ -26,6 +26,7 @@ import           Tunagui.Widget.Component.Features
 import qualified Tunagui.Widget.Component.Part as PRT
 import           Tunagui.Widget.Component.Util (upS, upD, mkSizeBehav)
 import           Tunagui.Widget.Component.Color as COL
+import           Tunagui.Widget.Component.Conf (DimConf (..))
 
 data Button = Button
   { btnPos     :: Behavior (Point Int)
@@ -44,17 +45,9 @@ data Button = Button
 
 data Config = Config
   { bcWidth  :: DimSize Int
+  , bcWidthConf :: DimConf Int
   , bcHeight :: DimSize Int
-  -- Boundary
-  , bcMinWidth :: Maybe Int
-  , bcMaxWidth :: Maybe Int
-  , bcMinHeight :: Maybe Int
-  , bcMaxHeight :: Maybe Int
-  -- Padding
-  , bcPaddingLeft :: Int
-  , bcPaddingRight :: Int
-  , bcPaddingTop :: Int
-  , bcPaddingBottom :: Int
+  , bcHeightConf :: DimConf Int
   --
   , bcText :: Maybe T.Text
   } deriving Show
@@ -62,17 +55,9 @@ data Config = Config
 defaultConfig :: Config
 defaultConfig = Config
   { bcWidth = RelContent
+  , bcWidthConf = DimConf Nothing Nothing 10 10 0 0
   , bcHeight = RelContent
-  --
-  , bcMinWidth = Nothing
-  , bcMaxWidth = Nothing
-  , bcMinHeight = Nothing
-  , bcMaxHeight = Nothing
-  --
-  , bcPaddingLeft   = 10
-  , bcPaddingRight  = 10
-  , bcPaddingTop    = 10
-  , bcPaddingBottom = 10
+  , bcHeightConf = DimConf Nothing Nothing 10 10 0 0
   --
   , bcText = Nothing
   }
@@ -129,13 +114,13 @@ newButton c win = do
     toShapeColor False = COL.planeShapeColor
 
     mkSize c tc = do
-      behW <- mkSizeBehav (bcWidth c) (bcMinWidth c) (bcMaxWidth c) (bcPaddingLeft c) (bcPaddingRight c) (PRT.tcWidth tc)
-      behH <- mkSizeBehav (bcHeight c) (bcMinHeight c) (bcMaxHeight c) (bcPaddingTop c) (bcPaddingBottom c) (PRT.tcHeight tc)
+      behW <- mkSizeBehav (bcWidth c) (bcWidthConf c) (PRT.tcWidth tc)
+      behH <- mkSizeBehav (bcHeight c) (bcHeightConf c) (PRT.tcHeight tc)
       return $ S <$> (V2 <$> behW <*> behH)
 
     mkPadding c = do
-      behPaddingLeft <- fst <$> newBehavior (bcPaddingLeft c)
-      behPaddingTop <- fst <$> newBehavior (bcPaddingTop c)
+      behPaddingLeft <- fst <$> newBehavior (padding1 (bcWidthConf c))
+      behPaddingTop <- fst <$> newBehavior (padding1 (bcHeightConf c))
       return $ S <$> (V2 <$> behPaddingLeft <*> behPaddingTop)
 
 range_ :: Button -> IO (Range Int)
