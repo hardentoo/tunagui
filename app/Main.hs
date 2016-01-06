@@ -52,7 +52,8 @@ testLabel =
         (btnM,wBtnM) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just "-"})
         (btnC,wBtnC) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just "CLEAR"})
         (_,wLbl) <- Label.mkLabelB Label.defaultConfig (T.pack . show <$> beh)
-        testOverwriteTreeOP (Container DirV [wBtnP,wBtnM,wLbl,wBtnC])
+        let cBtn = Container DirH [wBtnP, wBtnM]
+        testOverwriteTreeOP (Container DirV [cBtn,wLbl,wBtnC])
         testRenderTree
         --
         liftIO $ do
