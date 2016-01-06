@@ -32,6 +32,7 @@ library
                      , Tunagui.Widget.Component.Features
                      , Tunagui.Widget.Component.Part
                      , Tunagui.Widget.Component.Color
+                     , Tunagui.Widget.Component.Conf
                      , Tunagui.Widget.Component.Util
                      , Tunagui.Widget.Prim.Button
                      , Tunagui.Widget.Prim.Label
