@@ -24,7 +24,7 @@ import           Tunagui.Internal.Render  as R
 import           Tunagui.Internal.Render.SDL (runRender)
 import           Tunagui.Widget.Component.Features
 import qualified Tunagui.Widget.Component.Part as PRT
-import           Tunagui.Widget.Component.Util (upS, upD, mkSizeBehav)
+import           Tunagui.Widget.Component.Util (upS, upD, mkDimBehav)
 import           Tunagui.Widget.Component.Color as COL
 import           Tunagui.Widget.Component.Conf (DimConf (..))
 
@@ -84,7 +84,7 @@ newButton c win = do
     -- Position
     (behPos, pushPos) <- newBehavior $ P (V2 0 0)
     -- Size
-    behSize <- mkSize c tc
+    behSize <- mkSizeBehav c tc
     -- Padding
     behPadding <- mkPadding c
     -- Make parts
@@ -113,15 +113,15 @@ newButton c win = do
     toShapeColor True  = COL.hoverShapeColor
     toShapeColor False = COL.planeShapeColor
 
-    mkSize c tc = do
-      behW <- mkSizeBehav (width c) (widthConf c) (PRT.tcWidth tc)
-      behH <- mkSizeBehav (height c) (heightConf c) (PRT.tcHeight tc)
-      return $ S <$> (V2 <$> behW <*> behH)
+    mkSize behW behH = S <$> (V2 <$> behW <*> behH)
 
-    mkPadding c = do
-      behPaddingLeft <- fst <$> newBehavior (padding1 (widthConf c))
-      behPaddingTop <- fst <$> newBehavior (padding1 (heightConf c))
-      return $ S <$> (V2 <$> behPaddingLeft <*> behPaddingTop)
+    mkSizeBehav c tc =
+      mkSize <$> mkDimBehav (width c) (widthConf c) (PRT.tcWidth tc)
+             <*> mkDimBehav (height c) (heightConf c) (PRT.tcHeight tc)
+
+    mkPadding c =
+      mkSize <$> (fst <$> newBehavior (padding1 (widthConf c)))
+             <*> (fst <$> newBehavior (padding1 (heightConf c)))
 
 range_ :: Button -> IO (Range Int)
 range_ btn = sync $

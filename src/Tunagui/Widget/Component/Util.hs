@@ -1,6 +1,6 @@
 module Tunagui.Widget.Component.Util
   ( upD, upS
-  , mkSizeBehav
+  , mkDimBehav
   ) where
 
 import Control.Monad (void)
@@ -16,9 +16,9 @@ upD beh = const Redraw <$> updates beh
 upS :: Behavior a -> Event UpdateType
 upS beh = const Reshape <$> updates beh
 
-mkSizeBehav :: (Ord a, Num a) =>
+mkDimBehav :: (Ord a, Num a) =>
   DimSize a -> DimConf a -> Behavior a -> Reactive (Behavior a)
-mkSizeBehav dimA conf behContent =
+mkDimBehav dimA conf behContent =
   fmap work <$> case dimA of
     Absolute a -> fst <$> newBehavior a
     RelContent -> return behContent
