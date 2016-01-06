@@ -55,9 +55,9 @@ data Config = Config
 defaultConfig :: Config
 defaultConfig = Config
   { width = RelContent
-  , widthConf = DimConf Nothing Nothing 10 10 0 0
+  , widthConf = DimConf Nothing Nothing 4 4 2 2
   , height = RelContent
-  , heightConf = DimConf Nothing Nothing 10 10 0 0
+  , heightConf = DimConf Nothing Nothing 2 2 2 2
   --
   , bcText = Nothing
   }
