@@ -29,10 +29,10 @@ import           Tunagui.Widget.Component.Color as COL
 import           Tunagui.Widget.Component.Conf (DimConf (..))
 
 data Button = Button
-  { btnPos     :: Behavior (Point Int)
-  , btnSize    :: Behavior (Size Int)
-  , btnPadding  :: Behavior (Size Int)
-  , btnColor   :: Behavior COL.ShapeColor
+  { pos :: Behavior (Point Int)
+  , size :: Behavior (Size Int)
+  , padding :: Behavior (Size Int)
+  , color :: Behavior COL.ShapeColor
   -- Text
   , text :: Behavior T.Text
   , modifyText :: (T.Text -> T.Text) -> Reactive ()
@@ -44,20 +44,20 @@ data Button = Button
   }
 
 data Config = Config
-  { bcWidth  :: DimSize Int
-  , bcWidthConf :: DimConf Int
-  , bcHeight :: DimSize Int
-  , bcHeightConf :: DimConf Int
+  { width  :: DimSize Int
+  , widthConf :: DimConf Int
+  , height :: DimSize Int
+  , heightConf :: DimConf Int
   --
   , bcText :: Maybe T.Text
   } deriving Show
 
 defaultConfig :: Config
 defaultConfig = Config
-  { bcWidth = RelContent
-  , bcWidthConf = DimConf Nothing Nothing 10 10 0 0
-  , bcHeight = RelContent
-  , bcHeightConf = DimConf Nothing Nothing 10 10 0 0
+  { width = RelContent
+  , widthConf = DimConf Nothing Nothing 10 10 0 0
+  , height = RelContent
+  , heightConf = DimConf Nothing Nothing 10 10 0 0
   --
   , bcText = Nothing
   }
@@ -94,10 +94,10 @@ newButton c win = do
     -- Update event
     let eUpdate = foldl1' mappend [upS behPos, upS behSize, upD behShapeColor]
     return Button
-      { btnPos = behPos
-      , btnSize = behSize
-      , btnPadding = behPadding
-      , btnColor = behShapeColor
+      { pos = behPos
+      , size = behSize
+      , padding = behPadding
+      , color = behShapeColor
       , btnClkArea = clk
       -- Text
       , text = PRT.tcText tc
@@ -114,31 +114,31 @@ newButton c win = do
     toShapeColor False = COL.planeShapeColor
 
     mkSize c tc = do
-      behW <- mkSizeBehav (bcWidth c) (bcWidthConf c) (PRT.tcWidth tc)
-      behH <- mkSizeBehav (bcHeight c) (bcHeightConf c) (PRT.tcHeight tc)
+      behW <- mkSizeBehav (width c) (widthConf c) (PRT.tcWidth tc)
+      behH <- mkSizeBehav (height c) (heightConf c) (PRT.tcHeight tc)
       return $ S <$> (V2 <$> behW <*> behH)
 
     mkPadding c = do
-      behPaddingLeft <- fst <$> newBehavior (padding1 (bcWidthConf c))
-      behPaddingTop <- fst <$> newBehavior (padding1 (bcHeightConf c))
+      behPaddingLeft <- fst <$> newBehavior (padding1 (widthConf c))
+      behPaddingTop <- fst <$> newBehavior (padding1 (heightConf c))
       return $ S <$> (V2 <$> behPaddingLeft <*> behPaddingTop)
 
 range_ :: Button -> IO (Range Int)
 range_ btn = sync $
-  mkRange <$> sample (btnPos btn) <*> sample (btnSize btn)
+  mkRange <$> sample (pos btn) <*> sample (size btn)
 
 render_ :: Button -> R.RenderP TunaguiT ()
 render_ btn = do
-  (p, s, pd, color, t) <- liftIO . sync $ do
-    p <- sample $ btnPos btn
-    s <- sample $ btnSize btn
-    pd <- sample $ btnPadding btn
-    color <- sample $ btnColor btn
+  (p, s, pd, c, t) <- liftIO . sync $ do
+    p <- sample $ pos btn
+    s <- sample $ size btn
+    pd <- sample $ padding btn
+    c <- sample $ color btn
     t <- sample $ text btn
-    return (p, s, pd, color, t)
-  R.setColor $ COL.fill color
+    return (p, s, pd, c, t)
+  R.setColor $ COL.fill c
   R.fillRect p s
-  R.setColor $ COL.border color
+  R.setColor $ COL.border c
   R.drawRect p s
   -- Text
   R.renderText (p `plusPS` pd) t
