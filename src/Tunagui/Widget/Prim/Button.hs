@@ -80,15 +80,15 @@ instance Renderable Button where
   free   = free_
 
 newButton :: Config -> D.Window -> TunaguiT Button
-newButton c win = do
+newButton conf win = do
   tuna <- ask
   liftIO . sync $ do
     -- Text
-    tc <- PRT.mkTextContent tuna win (bcText c)
+    tc <- PRT.mkTextContent tuna win (bcText conf)
     -- Position
     (behPos, pushPos) <- newBehavior $ P (V2 0 0)
     -- Size
-    (behBorderPos, behTextPos, behBorderSize, behRangeSize) <- mkSizeBehav' behPos c tc
+    (behBorderPos, behTextPos, behBorderSize, behRangeSize) <- mkSizeBehav' behPos conf tc
     -- Make parts
     clk <- PRT.mkClickableArea behBorderPos (Rect <$> behBorderSize) (D.wePML events) (D.weRML events) (D.weMMPos events)
     -- Hover
@@ -125,10 +125,6 @@ newButton c win = do
     mkSizeBehav' behPos c tc =
       mkSizeBehav behPos (width c) (widthConf c) (PRT.tcWidth tc)
                          (height c) (heightConf c) (PRT.tcHeight tc)
-
-    mkPadding c =
-      mkSize <$> (fst <$> newBehavior (padding1 (widthConf c)))
-             <*> (fst <$> newBehavior (padding1 (heightConf c)))
 
 range_ :: Button -> IO (Range Int)
 range_ btn = sync $
