@@ -95,7 +95,6 @@ newButton c win = do
   tuna <- ask
   liftIO . sync $ do
     -- Text
-    -- (behCW, behCH, behText, pushText) <- mkText tuna $ bcText c
     tc <- PRT.mkTextContent tuna win (bcText c)
     -- Position
     (behPos, pushPos) <- newBehavior $ P (V2 0 0)
@@ -147,16 +146,16 @@ range_ btn = sync $ do
 
 render_ :: Button -> R.RenderP TunaguiT ()
 render_ btn = do
-  (p, s, pWithPad, color, t) <- liftIO . sync $ do
+  (p, s, pd, color, t) <- liftIO . sync $ do
     p <- sample $ btnPos btn
     s <- sample $ btnSize btn
     pd <- sample $ btnPadding btn
     color <- sample $ btnColor btn
     t <- sample $ text btn
-    return (p, s, p `plusPS` pd, color, t)
+    return (p, s, pd, color, t)
   R.setColor $ COL.fill color
   R.fillRect p s
   R.setColor $ COL.border color
   R.drawRect p s
   -- Text
-  R.renderText pWithPad t
+  R.renderText (p `plusPS` pd) t
