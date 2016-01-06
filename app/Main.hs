@@ -32,7 +32,7 @@ select = GUI.withTunagui $ \tuna ->
       --
       liftIO $ btnButton `onClick` testButton tuna
       liftIO $ btnLabel `onClick` testLabel tuna
-    forever $ do
+    forever $ do -- TODO: Clear thread leak
       putStrLn "."
       threadDelay 1000000
 
@@ -45,7 +45,7 @@ testButton tuna =
       testOverwriteTreeOP $ Container DirV [ws1,ws2]
       testRenderTree
       --
-    forever $ do
+    forever $ do -- Clear thread leak
       putStrLn "."
       threadDelay 1000000
   where
@@ -75,6 +75,6 @@ testLabel tuna =
         btnM `onClick` sync (push . (+ (-1)) =<< sample beh)
         btnC `onClick` sync (push 0)
 
-    liftIO . forever $ do
+    liftIO . forever $ do -- Clear thread leak
       putStrLn "."
       threadDelay 1000000
