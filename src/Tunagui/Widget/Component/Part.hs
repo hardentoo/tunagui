@@ -60,7 +60,7 @@ data TextContent = TextContent
   , modifyText :: (T.Text -> T.Text) -> Reactive ()
   }
 
--- mkTextContent :: Tunagui -> Reactive ()
+mkTextContent :: Tunagui -> D.Window -> Maybe T.Text -> Reactive TextContent
 mkTextContent tuna win mtext = do
   (behCW, pushCW) <- newBehavior 0
   (behCH, pushCH) <- newBehavior 0
