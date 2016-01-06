@@ -34,7 +34,7 @@ data Button = Button
   , btnColor   :: Behavior COL.ShapeColor
   -- Text
   , text :: Behavior T.Text
-  , setText :: T.Text -> Reactive ()
+  , modifyText :: (T.Text -> T.Text) -> Reactive ()
   -- Features
   , btnClkArea :: PRT.ClickableArea
   , locate_     :: Point Int -> IO ()
@@ -95,11 +95,12 @@ newButton c win = do
   tuna <- ask
   liftIO . sync $ do
     -- Text
-    (behCW, behCH, behText, pushText) <- mkText tuna $ bcText c
+    -- (behCW, behCH, behText, pushText) <- mkText tuna $ bcText c
+    tc <- PRT.mkTextContent tuna win (bcText c)
     -- Position
     (behPos, pushPos) <- newBehavior $ P (V2 0 0)
     -- Size
-    behSize <- mkSize c behCW behCH
+    behSize <- mkSize c tc
     -- Padding
     behPadding <- mkPadding c
     -- Make parts
@@ -115,8 +116,8 @@ newButton c win = do
       , btnColor = behShapeColor
       , btnClkArea = clk
       -- Text
-      , text = behText
-      , setText = pushText
+      , text = PRT.tcText tc
+      , modifyText = PRT.modifyText tc
       --
       , locate_ = sync . pushPos
       , update_ = eUpdate
@@ -141,9 +142,9 @@ newButton c win = do
       pushText $ fromMaybe (T.pack "") mt
       return (behCW, behCH, behText, pushText)
 
-    mkSize c behCW behCH = do
-      behW <- mkSizeBehav (bcWidth c) (bcMinWidth c) (bcMaxWidth c) (bcPaddingLeft c) (bcPaddingRight c) behCW
-      behH <- mkSizeBehav (bcHeight c) (bcMinHeight c) (bcMaxHeight c) (bcPaddingTop c) (bcPaddingBottom c) behCH
+    mkSize c tc = do
+      behW <- mkSizeBehav (bcWidth c) (bcMinWidth c) (bcMaxWidth c) (bcPaddingLeft c) (bcPaddingRight c) (PRT.tcWidth tc)
+      behH <- mkSizeBehav (bcHeight c) (bcMinHeight c) (bcMaxHeight c) (bcPaddingTop c) (bcPaddingBottom c) (PRT.tcHeight tc)
       return $ S <$> (V2 <$> behW <*> behH)
 
     mkPadding c = do
