@@ -5,6 +5,7 @@ module Tunagui.General.Types
     Point(..), Size(..)
   , plusPS
   , Range(..)
+  , mkRange
   , Shape(..), within
   , WidgetId
   , UpdateType (..)
@@ -25,6 +26,9 @@ data Range a = R
   { leftTop     :: Point a
   , rightBottom :: Point a
   } deriving (Show, Eq)
+
+mkRange :: Num a => Point a -> Size a -> Range a
+mkRange p s = R p (p `plusPS` s)
 
 data Shape a
   = Rect (Size a)

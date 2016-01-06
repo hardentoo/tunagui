@@ -15,7 +15,7 @@ import Linear.V2
 
 import qualified Tunagui.General.Data as D
 import Tunagui.General.Data (DimSize(..))
-import Tunagui.General.Types (Point(..), Size(..), Range(..), plusPS, UpdateType)
+import Tunagui.General.Types (Point(..), Size(..), Range(..), plusPS, mkRange, UpdateType)
 import Tunagui.General.Base (TunaguiT, runTuna)
 import Tunagui.Internal.Render as R
 import Tunagui.Internal.Render.SDL (runRender)
@@ -97,10 +97,8 @@ newLabel cnf win behText = do
       return $ S <$> (V2 <$> behPaddingLeft <*> behPaddingRight)
 
 range_ :: Label -> IO (Range Int)
-range_ label = sync $ do
-  pos <- sample $ pos label
-  size <- sample $ size label
-  return $ R pos (pos `plusPS` size)
+range_ label = sync $
+  mkRange <$> sample (pos label) <*> sample (size label)
 
 render_ :: Label -> R.RenderP TunaguiT ()
 render_ label = do

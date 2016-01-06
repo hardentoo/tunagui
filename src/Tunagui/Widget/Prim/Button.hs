@@ -18,7 +18,7 @@ import           Data.Maybe               (fromMaybe)
 
 import qualified Tunagui.General.Data     as D
 import           Tunagui.General.Data     (DimSize (..))
-import           Tunagui.General.Types    (Point(..), Size(..), Range(..), Shape(..), plusPS, UpdateType)
+import           Tunagui.General.Types    (Point(..), Size(..), Range(..), Shape(..), plusPS, mkRange, UpdateType)
 import           Tunagui.General.Base     (TunaguiT, runTuna)
 import           Tunagui.Internal.Render  as R
 import           Tunagui.Internal.Render.SDL (runRender)
@@ -124,10 +124,8 @@ newButton c win = do
       return $ S <$> (V2 <$> behPaddingLeft <*> behPaddingTop)
 
 range_ :: Button -> IO (Range Int)
-range_ btn = sync $ do
-  pos <- sample (btnPos btn)
-  size <- sample (btnSize btn)
-  return $ R pos (pos `plusPS` size)
+range_ btn = sync $
+  mkRange <$> sample (btnPos btn) <*> sample (btnSize btn)
 
 render_ :: Button -> R.RenderP TunaguiT ()
 render_ btn = do
