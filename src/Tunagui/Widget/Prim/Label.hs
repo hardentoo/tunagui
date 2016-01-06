@@ -20,6 +20,7 @@ import Tunagui.General.Base (TunaguiT, runTuna)
 import Tunagui.Internal.Render as R
 import Tunagui.Internal.Render.SDL (runRender)
 import Tunagui.Widget.Component.Features
+import qualified Tunagui.Widget.Component.Part as PRT
 import Tunagui.Widget.Component.Util (upS, mkSizeBehav)
 
 data Label = Label
@@ -83,38 +84,32 @@ newLabelT c w t =
 newLabelB :: Config -> D.Window -> Behavior T.Text -> TunaguiT Label
 newLabelB cnf win behText = do
   tuna <- ask
-  (behCW, pushCW) <- liftIO . sync . newBehavior $ 0
-  (behCH, pushCH) <- liftIO . sync . newBehavior $ 0
-  let setCW text = void . forkIO $ do
-        (S (V2 w h)) <- runTuna tuna $ runRender (D.wRenderer win) (R.textSize text)
-        sync $ do
-          pushCW w
-          pushCH h
-  liftIO $ do
-    setCW =<< (sync . sample) behText
-    sync $ do
-      listen (updates behText) setCW
-      -- Position
-      (behPos, pushPos) <- newBehavior $ P (V2 0 0)
-      -- Size
-      behSize <- mkSize cnf behCW behCH
-      -- Padding
-      behPadding <- mkPadding cnf
-      -- Make update event
-      let eUpdate = upS behText
-      return Label
-        { pos = behPos
-        , size = behSize
-        , padding = behPadding
-        , text = behText
-        , locate_ = sync . pushPos
-        , update_ = eUpdate
-        , free_ = putStrLn "free Label" -- test
-        }
+  liftIO . sync $ do
+    -- Text
+    tc <- PRT.mkTextContent tuna win . Just =<< sample behText
+    listen (updates behText) $ \text -> -- connect
+      void . forkIO . void . sync $ PRT.modifyText tc (const text)
+    -- Position
+    (behPos, pushPos) <- newBehavior $ P (V2 0 0)
+    -- Size
+    behSize <- mkSize cnf tc
+    -- Padding
+    behPadding <- mkPadding cnf
+    -- Make update event
+    let eUpdate = upS behText
+    return Label
+      { pos = behPos
+      , size = behSize
+      , padding = behPadding
+      , text = PRT.tcText tc
+      , locate_ = sync . pushPos
+      , update_ = eUpdate
+      , free_ = putStrLn "free Label" -- test
+      }
   where
-    mkSize cnf behCW behCH = do
-      behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) (paddingLeft cnf) (paddingRight cnf) behCW
-      behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) (paddingTop cnf) (paddingBottom cnf) behCH
+    mkSize cnf tc = do
+      behW <- mkSizeBehav (width cnf) (minWidth cnf) (maxWidth cnf) (paddingLeft cnf) (paddingRight cnf) (PRT.tcWidth tc)
+      behH <- mkSizeBehav (height cnf) (minHeight cnf) (maxHeight cnf) (paddingTop cnf) (paddingBottom cnf) (PRT.tcHeight tc)
       return $ S <$> (V2 <$> behW <*> behH)
 
     mkPadding cnf = do
