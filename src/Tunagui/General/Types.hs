@@ -3,7 +3,7 @@
 module Tunagui.General.Types
   (
     Point(..), Size(..)
-  , plusPS
+  , plusPS, plusPP
   , Range(..)
   , mkRange
   , Shape(..), within
@@ -21,6 +21,9 @@ newtype Size a = S (V2 a)
 
 plusPS :: Num a => Point a -> Size a -> Point a
 plusPS (P p) (S s) = P $ (+) <$> p <*> s
+
+plusPP :: Num a => Point a -> Point a -> Point a
+plusPP (P p1) (P p2) = P $ (+) <$> p1 <*> p2
 
 data Range a = R
   { leftTop     :: Point a
