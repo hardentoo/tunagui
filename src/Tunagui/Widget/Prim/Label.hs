@@ -21,13 +21,14 @@ import Tunagui.Internal.Render as R
 import Tunagui.Internal.Render.SDL (runRender)
 import Tunagui.Widget.Component.Features
 import qualified Tunagui.Widget.Component.Part as PRT
-import Tunagui.Widget.Component.Util (upS, mkDimBehav)
+import Tunagui.Widget.Component.Util (upS, mkSizeBehav)
 import Tunagui.Widget.Component.Conf (DimConf (..))
 
 data Label = Label
   { pos :: Behavior (Point Int)
   , size :: Behavior (Size Int)
-  , padding :: Behavior (Size Int)
+  --
+  , textPos :: Behavior (Point Int)
   , text :: Behavior T.Text
   --
   , locate_ :: Point Int -> IO ()
@@ -45,9 +46,9 @@ data Config = Config
 defaultConfig :: Config
 defaultConfig = Config
   { width = RelContent
-  , widthConf = DimConf Nothing Nothing 10 10 0 0
+  , widthConf = DimConf Nothing Nothing 4 4 2 2
   , height = RelContent
-  , heightConf = DimConf Nothing Nothing 10 10 0 0
+  , heightConf = DimConf Nothing Nothing 4 4 2 2
   }
 
 instance Show Label where
@@ -61,7 +62,7 @@ instance Renderable Label where
   free   = free_
 
 newLabel :: Config -> D.Window -> Behavior T.Text -> TunaguiT Label
-newLabel cnf win behText = do
+newLabel conf win behText = do
   tuna <- ask
   liftIO . sync $ do
     -- Text
@@ -71,30 +72,24 @@ newLabel cnf win behText = do
     -- Position
     (behPos, pushPos) <- newBehavior $ P (V2 0 0)
     -- Size
-    behSize <- mkSizeBehav cnf tc
-    -- Padding
-    behPadding <- mkPadding cnf
+    (behBorderPos, behTextPos, _behBorderSize, behRangeSize) <- mkSizeBehav' behPos conf tc
     -- Make update event
     let eUpdate = upS behText
     return Label
       { pos = behPos
-      , size = behSize
-      , padding = behPadding
+      , size = behRangeSize
+      -- Text
+      , textPos = behTextPos
       , text = PRT.tcText tc
+      -- Features
       , locate_ = sync . pushPos
       , update_ = eUpdate
       , free_ = putStrLn "free Label" -- test
       }
   where
-    mkSize behW behH = S <$> (V2 <$> behW <*> behH)
-
-    mkSizeBehav cnf tc =
-      mkSize <$> mkDimBehav (width cnf) (widthConf cnf) (PRT.tcWidth tc)
-             <*> mkDimBehav (height cnf) (heightConf cnf) (PRT.tcHeight tc)
-
-    mkPadding cnf =
-      mkSize <$> (fst <$> newBehavior (padding1 (widthConf cnf)))
-             <*> (fst <$> newBehavior (padding1 (heightConf cnf)))
+    mkSizeBehav' behPos c tc =
+      mkSizeBehav behPos (width c) (widthConf c) (PRT.tcWidth tc)
+                         (height c) (heightConf c) (PRT.tcHeight tc)
 
 range_ :: Label -> IO (Range Int)
 range_ label = sync $
@@ -102,9 +97,8 @@ range_ label = sync $
 
 render_ :: Label -> R.RenderP TunaguiT ()
 render_ label = do
-  (p, t) <- liftIO . sync $ do
-    p <- sample (pos label)
+  (tp, t) <- liftIO . sync $ do
+    tp <- sample (textPos label)
     t <- sample (text label)
-    pd <- sample (padding label)
-    return (p `plusPS` pd, t)
-  R.renderText p t
+    return (tp, t)
+  R.renderText tp t
