@@ -107,8 +107,8 @@ withWindow cnf t = bracket (newWindow cnf events) freeWindow
   where
     events = cntEvents t
 
-generateWidId :: Window -> IO T.WidgetId
-generateWidId win = atomically $ do
+generateWidId :: MonadIO m => Window -> m T.WidgetId
+generateWidId win = liftIO . atomically $ do
   (is, v) <- work <$> takeTMVar t
   putTMVar t is
   return v
@@ -125,8 +125,8 @@ data WidgetTree =
   forall a. (Show a, Renderable a)
   => Widget T.WidgetId (MVar SDL.Surface) a | Container Direction [WidgetTree]
 
-newWidget :: (Show a, Renderable a) => Window -> a -> IO WidgetTree
-newWidget win a =
+newWidget :: (MonadIO m, Show a, Renderable a) => Window -> a -> m WidgetTree
+newWidget win a = liftIO $
   Widget <$> generateWidId win
          <*> (newMVar =<< SDL.createRGBSurface (V2 1 1) 32 (V4 0 0 0 0))
          <*> pure a
