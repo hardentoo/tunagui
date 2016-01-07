@@ -24,8 +24,8 @@ select :: IO ()
 select = GUI.withTunagui $ \tuna ->
   withWindow (WinConfig "Select" False (V2 300 300)) tuna $ \win -> do
     runTuna tuna $ runWin win $ do
-      (btnButton, wRunButton) <- Button.mkButton $ Button.defaultConfig {Button.bcText = Just "Button test"}
-      (btnLabel, wRunLabel) <- Button.mkButton $ Button.defaultConfig {Button.bcText = Just "Label test"}
+      (btnButton, wRunButton) <- Button.new $ Button.defaultConfig {Button.bcText = Just "Button test"}
+      (btnLabel, wRunLabel) <- Button.new $ Button.defaultConfig {Button.bcText = Just "Label test"}
       --
       testOverwriteTreeOP $ Container DirV [wRunButton, wRunLabel]
       testRenderTree
@@ -50,7 +50,7 @@ testButton tuna =
       threadDelay 1000000
   where
     mkBtn i = do
-      (btn,w) <- Button.mkButton $ Button.defaultConfig {Button.bcText = text}
+      (btn,w) <- Button.new $ Button.defaultConfig {Button.bcText = text}
       liftIO $ btn `onClick` work
       return w
       where
@@ -62,10 +62,10 @@ testLabel tuna =
   withWindow (WinConfig "main" True (V2 300 300)) tuna $ \win -> do
     (beh, push) <- liftIO . sync $ newBehavior (0 :: Integer)
     _ <- runTuna tuna $ runWin win $ do
-      (btnP,wBtnP) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just "+"})
-      (btnM,wBtnM) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just "-"})
-      (btnC,wBtnC) <- Button.mkButton (Button.defaultConfig {Button.bcText = Just "CLEAR"})
-      (_,wLbl) <- Label.mkLabelB Label.defaultConfig (T.pack . show <$> beh)
+      (btnP,wBtnP) <- Button.new (Button.defaultConfig {Button.bcText = Just "+"})
+      (btnM,wBtnM) <- Button.new (Button.defaultConfig {Button.bcText = Just "-"})
+      (btnC,wBtnC) <- Button.new (Button.defaultConfig {Button.bcText = Just "CLEAR"})
+      (_,wLbl) <- Label.newB Label.defaultConfig (T.pack . show <$> beh)
       let cBtn = Container DirH [wBtnP, wBtnM]
       testOverwriteTreeOP (Container DirV [cBtn,wLbl,wBtnC])
       testRenderTree

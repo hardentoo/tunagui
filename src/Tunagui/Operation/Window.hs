@@ -48,14 +48,14 @@ type WindowP m a = ProgramT WindowI m a
 testOverwriteTreeOP = singleton . TestOverwriteTree
 testRenderTree = singleton TestRenderTree
 
-mkButton :: Button.Config -> ProgramT WindowI m (Button.Button, WidgetTree)
-mkButton = singleton . MkButton
+newButton :: Button.Config -> ProgramT WindowI m (Button.Button, WidgetTree)
+newButton = singleton . MkButton
 
-mkLabelT :: Label.Config -> Text -> ProgramT WindowI m (Label.Label, WidgetTree)
-mkLabelT c t = singleton $ MkLabelT c t
+newLabelT :: Label.Config -> Text -> ProgramT WindowI m (Label.Label, WidgetTree)
+newLabelT c t = singleton $ MkLabelT c t
 
-mkLabelB :: Label.Config -> Behavior Text -> ProgramT WindowI m (Label.Label, WidgetTree)
-mkLabelB c b = singleton $ MkLabelB c b
+newLabelB :: Label.Config -> Behavior Text -> ProgramT WindowI m (Label.Label, WidgetTree)
+newLabelB c b = singleton $ MkLabelB c b
 
 -- *****************************************************************************
 runWin :: D.Window -> WindowP TunaguiT a -> TunaguiT a
@@ -94,12 +94,12 @@ runWin = interpret
       interpret w (is ())
 
     eval w (MkButton cfg :>>= is) =
-      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Button.newButton cfg w
+      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Button.mkButton cfg w
     eval w (MkLabelT cfg text :>>= is) = do
       (beh,_) <- liftIO . sync $ newBehavior text
-      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Label.newLabel cfg w beh
+      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Label.mkLabel cfg w beh
     eval w (MkLabelB cfg beh :>>= is) =
-      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Label.newLabel cfg w beh
+      (interpret w . is) =<< (liftIO . atomically . genWT w) =<< Label.mkLabel cfg w beh
 
     render tree = do
       R.setColor $ V4 45 45 45 255

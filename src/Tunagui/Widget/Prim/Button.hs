@@ -2,7 +2,7 @@ module Tunagui.Widget.Prim.Button
   (
     Button (..), Config (..)
   , defaultConfig
-  , newButton
+  , mkButton
   ) where
 
 import           Control.Monad.IO.Class   (MonadIO, liftIO)
@@ -79,8 +79,8 @@ instance Renderable Button where
   update = update_
   free   = free_
 
-newButton :: Config -> D.Window -> TunaguiT Button
-newButton conf win = do
+mkButton :: Config -> D.Window -> TunaguiT Button
+mkButton conf win = do
   tuna <- ask
   liftIO . sync $ do
     -- Text

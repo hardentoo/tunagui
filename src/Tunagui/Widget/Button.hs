@@ -2,8 +2,10 @@ module Tunagui.Widget.Button
   (
     Config (..)
   , defaultConfig
-  , mkButton
+  , new
   ) where
 
 import Tunagui.Widget.Prim.Button (Config (..), defaultConfig)
-import Tunagui.Operation.Window (mkButton)
+import Tunagui.Operation.Window (newButton)
+
+new = newButton

@@ -2,7 +2,7 @@ module Tunagui.Widget.Prim.Label
   (
     Label (..)
   , Config (..), defaultConfig
-  , newLabel
+  , mkLabel
   ) where
 
 import Control.Monad (void)
@@ -61,8 +61,8 @@ instance Renderable Label where
   update = update_
   free   = free_
 
-newLabel :: Config -> D.Window -> Behavior T.Text -> TunaguiT Label
-newLabel conf win behText = do
+mkLabel :: Config -> D.Window -> Behavior T.Text -> TunaguiT Label
+mkLabel conf win behText = do
   tuna <- ask
   liftIO . sync $ do
     -- Text
