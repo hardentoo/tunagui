@@ -23,10 +23,11 @@ import           Data.List               (foldl', foldl1')
 import           Control.Exception     (bracket, bracket_)
 import qualified Data.Text             as T
 import           FRP.Sodium
-import           Control.Concurrent.MVar (MVar, newMVar, withMVar, modifyMVarMasked)
+import           Control.Concurrent.MVar
 import           Control.Concurrent.STM.TMVar
 import           GHC.Conc.Sync
 import           Linear.V2
+import           Linear.V4
 import qualified SDL
 import           Data.Set              (Set)
 import qualified Data.Set              as Set
@@ -96,7 +97,9 @@ freeWindow w = do
   SDL.destroyRenderer $ wRenderer w
   SDL.destroyWindow $ wWindow w
   where
-    freeWT (Widget _ a) = free a
+    freeWT (Widget _ ms a) = do
+      SDL.freeSurface =<< readMVar ms
+      free a
     freeWT (Container _ ws) = mapM_ freeWT ws
 
 withWindow :: WinConfig -> Tunagui -> (Window -> IO a) -> IO a
@@ -104,8 +107,8 @@ withWindow cnf t = bracket (newWindow cnf events) freeWindow
   where
     events = cntEvents t
 
-generateWidId :: Window -> STM T.WidgetId
-generateWidId win = do
+generateWidId :: Window -> IO T.WidgetId
+generateWidId win = atomically $ do
   (is, v) <- work <$> takeTMVar t
   putTMVar t is
   return v
@@ -120,10 +123,13 @@ generateWidId win = do
 
 data WidgetTree =
   forall a. (Show a, Renderable a)
-  => Widget T.WidgetId a | Container Direction [WidgetTree]
+  => Widget T.WidgetId (MVar SDL.Surface) a | Container Direction [WidgetTree]
 
-newWidget :: (Show a, Renderable a) => Window -> a -> STM WidgetTree
-newWidget win a = Widget <$> generateWidId win <*> pure a
+newWidget :: (Show a, Renderable a) => Window -> a -> IO WidgetTree
+newWidget win a =
+  Widget <$> generateWidId win
+         <*> (newMVar =<< SDL.createRGBSurface (V2 1 1) 32 (V4 0 0 0 0))
+         <*> pure a
 
 data Direction
   = DirH -- Horizontal
@@ -131,7 +137,7 @@ data Direction
   deriving Show
 
 instance Show WidgetTree where
-  show (Widget i a) = "Widget#" ++ show i ++ " " ++ show a
+  show (Widget i _ a) = "Widget#" ++ show i ++ " " ++ show a
   show (Container dir ws) = "Container " ++ show dir ++ " " ++ show ws
 
 -- |
@@ -143,7 +149,7 @@ locateWT w reshapeIds = do
     void $ go tree (T.P (V2 0 0)) False
   where
     go :: WidgetTree -> T.Point Int -> Bool -> IO (Bool, T.Range Int)
-    go (Widget wid a) p0 pre = do
+    go (Widget wid _ a) p0 pre = do
       let isUpdated = pre || Set.member wid reshapeIds
       when isUpdated $ locate a p0
       (,) isUpdated <$> range a
@@ -172,7 +178,7 @@ locateWT w reshapeIds = do
 -- |
 -- Render all widgets in WidgetTree.
 renderWT :: WidgetTree -> RenderP TunaguiT ()
-renderWT (Widget _ a)     = render a
+renderWT (Widget _ _ a)   = render a
 renderWT (Container _ ws) = mapM_ renderWT ws
 
 mkUpdateEventWT :: Window -> IO (Event [(T.WidgetId, T.UpdateType)])
@@ -183,7 +189,7 @@ mkUpdateEventWT win = do
     behUp = updatable win
     --
     go :: WidgetTree -> Event [(T.WidgetId, T.UpdateType)]
-    go (Widget wid a)   = (\t -> [(wid,t)]) <$> gate (update a) behUp
+    go (Widget wid _ a) = (\t -> [(wid,t)]) <$> gate (update a) behUp
     go (Container _ ws) = foldl1' (mergeWith (++)) $ map go ws
 
 -- *****************************************************************************
