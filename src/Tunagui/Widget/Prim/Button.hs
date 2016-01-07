@@ -44,6 +44,7 @@ data Button = Button
   , btnClkArea :: PRT.ClickableArea
   , locate_     :: Point Int -> IO ()
   , update_ :: Event UpdateType
+  , resize_ :: Event (Size Int)
   , free_ :: IO ()
   }
 
@@ -77,6 +78,7 @@ instance Renderable Button where
   locate = locate_
   range  = range_
   update = update_
+  resize = resize_
   free   = free_
 
 mkButton :: Config -> D.Window -> TunaguiT Button
@@ -112,6 +114,7 @@ mkButton conf win = do
       , btnClkArea = clk
       , locate_ = sync . pushPos
       , update_ = eUpdate
+      , resize_ = value behRangeSize -- TODO: Check if it fires when range is resized
       , free_ = putStrLn "free Button" -- test
       }
   where

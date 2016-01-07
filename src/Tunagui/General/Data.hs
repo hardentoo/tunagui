@@ -25,7 +25,7 @@ import qualified Data.Text             as T
 import           FRP.Sodium
 import           Control.Concurrent.MVar
 import           Control.Concurrent.STM.TMVar
-import           GHC.Conc.Sync
+import           GHC.Conc.Sync (atomically)
 import           Linear.V2
 import           Linear.V4
 import qualified SDL
@@ -34,7 +34,7 @@ import qualified Data.Set              as Set
 
 import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..), TunaguiT)
 import qualified Tunagui.General.Types as T
-import           Tunagui.Widget.Component.Features (Renderable, locate, range, render, update, free)
+import           Tunagui.Widget.Component.Features (Renderable, locate, range, render, update, resize, free)
 import           Tunagui.Internal.Render (RenderP)
 
 -- Window
@@ -126,10 +126,15 @@ data WidgetTree =
   => Widget T.WidgetId (MVar SDL.Surface) a | Container Direction [WidgetTree]
 
 newWidget :: (MonadIO m, Show a, Renderable a) => Window -> a -> m WidgetTree
-newWidget win a = liftIO $
-  Widget <$> generateWidId win
-         <*> (newMVar =<< SDL.createRGBSurface (V2 1 1) 32 (V4 0 0 0 0))
-         <*> pure a
+newWidget win prim = liftIO $ do
+  wid <- generateWidId win
+  mSurface <- newMVar =<< SDL.createRGBSurface (V2 1 1) 32 (V4 0 0 0 0)
+  sync $ listen (resize prim) $ \(T.S size) ->
+    modifyMVar_ mSurface $ \surface -> do
+      putStrLn $ "Recreate surface! " ++ show wid
+      SDL.freeSurface surface
+      SDL.createRGBSurface (fromIntegral <$> size) 32 (V4 0 0 0 0)
+  return $ Widget wid mSurface prim
 
 data Direction
   = DirH -- Horizontal

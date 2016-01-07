@@ -33,6 +33,7 @@ data Label = Label
   --
   , locate_ :: Point Int -> IO ()
   , update_ :: Event UpdateType
+  , resize_ :: Event (Size Int)
   , free_ :: IO ()
   }
 
@@ -59,6 +60,7 @@ instance Renderable Label where
   locate = locate_
   range  = range_
   update = update_
+  resize = resize_
   free   = free_
 
 mkLabel :: Config -> D.Window -> Behavior T.Text -> TunaguiT Label
@@ -84,6 +86,7 @@ mkLabel conf win behText = do
       -- Features
       , locate_ = sync . pushPos
       , update_ = eUpdate
+      , resize_ = updates behRangeSize
       , free_ = putStrLn "free Label" -- test
       }
   where
