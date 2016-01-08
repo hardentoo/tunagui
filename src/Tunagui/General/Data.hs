@@ -97,8 +97,8 @@ freeWindow w = do
   SDL.destroyRenderer $ wRenderer w
   SDL.destroyWindow $ wWindow w
   where
-    freeWT (Widget _ ms a) = do
-      SDL.freeSurface =<< readMVar ms
+    freeWT (Widget _ mTex a) = do
+      SDL.destroyTexture =<< readMVar mTex
       free a
     freeWT (Container _ ws) = mapM_ freeWT ws
 
@@ -123,18 +123,20 @@ generateWidId win = liftIO . atomically $ do
 
 data WidgetTree =
   forall a. (Show a, Renderable a)
-  => Widget T.WidgetId (MVar SDL.Surface) a | Container Direction [WidgetTree]
+  => Widget T.WidgetId (MVar SDL.Texture) a | Container Direction [WidgetTree]
 
 newWidget :: (MonadIO m, Show a, Renderable a) => Window -> a -> m WidgetTree
 newWidget win prim = liftIO $ do
   wid <- generateWidId win
-  mSurface <- newMVar =<< SDL.createRGBSurface (V2 1 1) 32 (V4 0 0 0 0)
+  mTexture <- newMVar =<< SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (V2 1 1)
   sync $ listen (resize prim) $ \(T.S size) ->
-    modifyMVar_ mSurface $ \surface -> do
-      putStrLn $ "Recreate surface! " ++ show wid
-      SDL.freeSurface surface
-      SDL.createRGBSurface (fromIntegral <$> size) 32 (V4 0 0 0 0)
-  return $ Widget wid mSurface prim
+    modifyMVar_ mTexture $ \texture -> do
+      putStrLn $ "Recreate texture! " ++ show wid
+      SDL.destroyTexture texture
+      SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (fromIntegral <$> size)
+  return $ Widget wid mTexture prim
+  where
+    r = wRenderer win
 
 data Direction
   = DirH -- Horizontal
