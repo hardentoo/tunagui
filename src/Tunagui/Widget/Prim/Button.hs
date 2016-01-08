@@ -18,7 +18,7 @@ import           Data.Maybe               (fromMaybe)
 
 import qualified Tunagui.General.Data     as D
 import           Tunagui.General.Data     (DimSize (..))
-import           Tunagui.General.Types    (Point(..), Size(..), Range(..), Shape(..), plusPS, mkRange, UpdateType)
+import           Tunagui.General.Types    (Point(..), Size(..), Range(..), Shape(..), plusPS, plusPP, mkRange, UpdateType)
 import           Tunagui.General.Base     (TunaguiT, runTuna)
 import           Tunagui.Internal.Render  as R
 import           Tunagui.Internal.Render.SDL (runRender)
@@ -29,20 +29,14 @@ import           Tunagui.Widget.Component.Color as COL
 import           Tunagui.Widget.Component.Conf (DimConf (..))
 
 data Button = Button
-  { pos :: Behavior (Point Int)
-  , size :: Behavior (Size Int)
-  -- Border
-  , borderPos :: Behavior (Point Int)
-  , borderSize :: Behavior (Size Int)
-  -- Text
-  , textPos :: Behavior (Point Int)
-  , text :: Behavior T.Text
-  , modifyText :: (T.Text -> T.Text) -> Reactive ()
+  { modifyText :: (T.Text -> T.Text) -> Reactive ()
   --
   , color :: Behavior COL.ShapeColor
   -- Features
   , btnClkArea :: PRT.ClickableArea
+  , render_ :: R.RenderP TunaguiT ()
   , locate_     :: Point Int -> IO ()
+  , range_ :: IO (Range Int)
   , update_ :: Event UpdateType
   , resize_ :: Event (Size Int)
   , free_ :: IO ()
@@ -88,31 +82,44 @@ mkButton conf win = do
     -- Text
     tc <- PRT.mkTextContent tuna win (bcText conf)
     -- Position
-    (behPos, pushPos) <- newBehavior $ P (V2 0 0)
+    (behAbsPos0, pushAbsPos0) <- newBehavior $ P (V2 0 0)
     -- Size
-    (behBorderPos, behTextPos, behBorderSize, behRangeSize) <- mkSizeBehav' behPos conf tc
+    (behBorderRelPos, behTextRelPos, behBorderSize, behRangeSize) <- mkSizeBehav' behAbsPos0 conf tc
     -- Make parts
-    clk <- PRT.mkClickableArea behBorderPos (Rect <$> behBorderSize) (D.wePML events) (D.weRML events) (D.weMMPos events)
+    let behBorderAbsPos = plusPP <$> behAbsPos0 <*> behBorderRelPos
+    clk <- PRT.mkClickableArea behBorderAbsPos (Rect <$> behBorderSize) (D.wePML events) (D.weRML events) (D.weMMPos events)
     -- Hover
     behShapeColor <- hold COL.planeShapeColor $ toShapeColor <$> PRT.crossBoundary clk
     -- Update event
     let eUpdate = foldl1' mappend
-          [ upS behPos, upS behBorderSize, upS behRangeSize, upD behShapeColor]
+          [ upS behAbsPos0, upS behBorderSize, upS behRangeSize, upD behShapeColor]
+
+    -- Features
+    let range' = sync $ mkRange <$> sample behAbsPos0 <*> sample behRangeSize
+
+    let render' = do
+          (bp, bs, tp, c, t) <- liftIO . sync $ do
+            bp <- sample behBorderRelPos
+            bs <- sample behBorderSize
+            tp <- sample behTextRelPos
+            c <- sample behShapeColor
+            t <- sample $ PRT.tcText tc
+            return (bp, bs, tp, c, t)
+          R.setColor $ COL.fill c
+          R.fillRect bp bs
+          R.setColor $ COL.border c
+          R.drawRect bp bs
+          -- Text
+          R.renderText tp t
     return Button
-      { pos = behPos
-      , size = behRangeSize
-      -- Border
-      , borderPos = behBorderPos
-      , borderSize = behBorderSize
-      -- Text
-      , textPos = behTextPos
-      , text = PRT.tcText tc
-      , modifyText = PRT.modifyText tc
+      { modifyText = PRT.modifyText tc
       --
       , color = behShapeColor
       -- Features
       , btnClkArea = clk
-      , locate_ = sync . pushPos
+      , render_ = render'
+      , locate_ = sync . pushAbsPos0
+      , range_ = range'
       , update_ = eUpdate
       , resize_ = value behRangeSize -- TODO: Check if it fires when range is resized
       , free_ = putStrLn "free Button" -- test
@@ -128,23 +135,3 @@ mkButton conf win = do
     mkSizeBehav' behPos c tc =
       mkSizeBehav behPos (width c) (widthConf c) (PRT.tcWidth tc)
                          (height c) (heightConf c) (PRT.tcHeight tc)
-
-range_ :: Button -> IO (Range Int)
-range_ btn = sync $
-  mkRange <$> sample (pos btn) <*> sample (size btn)
-
-render_ :: Button -> R.RenderP TunaguiT ()
-render_ btn = do
-  (bp, bs, tp, c, t) <- liftIO . sync $ do
-    bp <- sample $ borderPos btn
-    bs <- sample $ borderSize btn
-    tp <- sample $ textPos btn
-    c <- sample $ color btn
-    t <- sample $ text btn
-    return (bp, bs, tp, c, t)
-  R.setColor $ COL.fill c
-  R.fillRect bp bs
-  R.setColor $ COL.border c
-  R.drawRect bp bs
-  -- Text
-  R.renderText tp t

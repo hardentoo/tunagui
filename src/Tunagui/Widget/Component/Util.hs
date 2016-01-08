@@ -46,9 +46,9 @@ mkSizeBehav behP0 wDim wConf behCW hDim hConf behCH = do
   (behBH, behRH) <- mkDimBehav hDim hConf behCH
   let behBorderSize = mkSize behBW behBH
       behRangeSize = mkSize behRW behRH
-      behBorderPoint = plusPP margin <$> behP0
-      behContentPoint = plusPP padding <$> behBorderPoint
-  return (behBorderPoint, behContentPoint, behBorderSize, behRangeSize)
+  behBorderRelPos <- fst <$> newBehavior margin
+  behContentRelPos <- fst <$> newBehavior (margin `plusPP` padding)
+  return (behBorderRelPos, behContentRelPos, behBorderSize, behRangeSize)
   where
     mkSize w h = S <$> (V2 <$> w <*> h)
     margin = P (V2 (margin1 wConf) (margin1 hConf))
