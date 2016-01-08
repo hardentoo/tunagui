@@ -106,13 +106,13 @@ runWin = interpret
     --   (interpret w . is) =<< genWT w =<< Label.mkLabel cfg w beh
 
     render' win = do
-      runRender r $ do
+      withMVar mr $ \r -> runRender r $ do
         R.setColor $ V4 45 45 45 255
         R.clear
       renderWT win
-      runRender r R.flush
+      withMVar mr $ \r -> runRender r R.flush
       where
-        r = D.wRenderer win
+        mr = D.wRenderer win
 
 -- *****************************************************************************
 -- utilities

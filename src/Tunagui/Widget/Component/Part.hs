@@ -9,6 +9,7 @@ module Tunagui.Widget.Component.Part
 import           Control.Monad (void)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Concurrent (forkIO)
+import           Control.Concurrent.MVar
 import           FRP.Sodium
 import qualified Data.Text as T
 import           Linear.V2
@@ -69,7 +70,8 @@ mkTextContent win font mtext = do
   (behText, pushText) <- newBehavior $ T.pack ""
   listen (updates behText) $ \text ->
     void . forkIO $ do
-      (S (V2 w h)) <- runRender (D.wRenderer win) $ R.textSize font text
+      (S (V2 w h)) <- withMVar (D.wRenderer win) $ \r ->
+        runRender r $ R.textSize font text
       liftIO . sync $ do
         pushCW w
         pushCH h

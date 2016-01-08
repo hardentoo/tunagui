@@ -48,7 +48,7 @@ import           Tunagui.Internal.Render (runRender, onTexture)
 data Window = Window
   { wWindow     :: SDL.Window
   , wEvents     :: WinEvents
-  , wRenderer   :: SDL.Renderer
+  , wRenderer   :: MVar SDL.Renderer
   , wWidgetTree :: TMVar WidgetTree
   , idSet       :: TMVar (Set T.WidgetId)
   , updatable   :: Behavior Bool
@@ -77,7 +77,7 @@ newWindow cnf es = do
   (behUp, pushUp) <- sync $ newBehavior True
   let withUp = bracket_ (sync $ pushUp False) (sync $ pushUp True)
   win <- Window sWin es
-          <$> SDL.createRenderer sWin (-1) SDL.defaultRenderer
+          <$> (newMVar =<< SDL.createRenderer sWin (-1) SDL.defaultRenderer)
           <*> atomically (newTMVar (Container DirV []))
           <*> atomically (newTMVar Set.empty)
           <*> pure behUp
@@ -101,7 +101,7 @@ newWindow cnf es = do
 freeWindow :: Window -> IO ()
 freeWindow w = do
   freeWT =<< (atomically . readTMVar . wWidgetTree $ w)
-  SDL.destroyRenderer $ wRenderer w
+  SDL.destroyRenderer =<< readMVar (wRenderer w)
   SDL.destroyWindow $ wWindow w
   where
     freeWT (Widget _ _ mTex a) = do
@@ -136,7 +136,8 @@ data WidgetTree =
 newWidget :: (MonadIO m, Show a, Renderable a) => Window -> a -> m WidgetTree
 newWidget win prim = liftIO $ do
   wid <- generateWidId win
-  mTexture <- newMVar =<< SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (V2 1 1)
+  mTexture <- withMVar mr $ \r ->
+    newMVar =<< SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (V2 1 1)
   c <- atomically $ newTMVar 0
   --
   sync $ do
@@ -144,13 +145,16 @@ newWidget win prim = liftIO $ do
       modifyMVar_ mTexture $ \texture -> do
         putStrLn $ "Recreate texture! " ++ show wid
         SDL.destroyTexture texture
-        SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (fromIntegral <$> size)
+        withMVar mr $ \r ->
+          SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (fromIntegral <$> size)
     --
     listen (update prim) $ \_ -> void . forkIO $ do
       putStrLn $ "Rendering itself! " ++ show wid
       withMVar mTexture $ \t ->
-        runRender r $
-          onTexture t $ render prim
+        withMVar mr $ \r -> -- Lock Renderer
+          runRender r $
+            onTexture t $
+              render prim
       -- Notify updated
       atomically $ do
         i <- takeTMVar c
@@ -158,7 +162,7 @@ newWidget win prim = liftIO $ do
 
   return $ Widget wid c mTexture prim
   where
-    r = wRenderer win
+    mr = wRenderer win
 
 data Direction
   = DirH -- Horizontal
@@ -172,26 +176,26 @@ instance Show WidgetTree where
 -- |
 -- Render all widgets in WidgetTree.
 renderWT :: MonadIO m => Window -> m ()
-renderWT win = do
-  tree <- liftIO . atomically . readTMVar . wWidgetTree $ win
-  go tree (T.P (V2 0 0))
+renderWT win = liftIO $ do
+  tree <- atomically . readTMVar . wWidgetTree $ win
+  withMVar mr $ \r -> go r tree (T.P (V2 0 0))
   where
-    r = wRenderer win
-    go :: MonadIO m => WidgetTree -> T.Point Int -> m ()
-    go wt@(Widget _ _ mTex a) (T.P p) = liftIO $ do
+    mr = wRenderer win
+    --
+    go :: MonadIO m => SDL.Renderer -> WidgetTree -> T.Point Int -> m ()
+    go r wt@(Widget _ _ mTex a) (T.P p) = liftIO $ do
       (T.S sz) <- size a
       let rect = SDL.Rectangle (A.P (fromIntegral <$> p)) (fromIntegral <$> sz)
       withMVar mTex $ \tex -> SDL.copy r tex Nothing (Just rect)
-    go wt@(Container _ as) (T.P p) = liftIO $ do
+    go r wt@(Container _ as) (T.P p) = liftIO $ do
       (ps, T.S sz) <- sizeWT wt
       let sz' = fromIntegral <$> sz
           rect = SDL.Rectangle (A.P (fromIntegral <$> p)) sz'
       bracket (SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget sz')
               SDL.destroyTexture
               (\cntTex -> do
-                  -- runRender r $ onTexture cntTex $ mapM_ (uncurry go) $ zip as ps
-                  -- SDL.copy r cntTex Nothing (Just rect)
-                  runRender r $ mapM_ (uncurry go) $ zip as ps -- test!
+                  runRender r $ onTexture cntTex $ mapM_ (uncurry (go r)) $ zip as ps
+                  SDL.copy r cntTex Nothing (Just rect)
               )
 
 sizeWT :: MonadIO m => WidgetTree -> m ([T.Point Int], T.Size Int)
