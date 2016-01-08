@@ -12,7 +12,7 @@ import           Control.Monad.Operational
 import           Control.Monad.Reader        (ask, asks)
 import           Control.Concurrent          (forkIO)
 import           FRP.Sodium
-import           Control.Concurrent.MVar     (MVar, swapMVar, readMVar, withMVar)
+import           Control.Concurrent.MVar     (MVar, swapMVar, readMVar)
 import           GHC.Conc.Sync
 import           Control.Concurrent.STM.TMVar
 import           Linear.V2                   (V2 (..))
@@ -20,9 +20,10 @@ import           Linear.V4                   (V4 (..))
 import           Data.Text (Text)
 import qualified Data.Set as Set
 import           Data.Set (Set)
+import           Data.Tree                   (flatten)
 
 import qualified Tunagui.General.Data        as D
-import           Tunagui.General.Data        (WidgetTree, mkUpdateEventWT, locateWT, renderWT, newWidget)
+import           Tunagui.General.Data        (WidgetTree, mkUpdateEventWT, renderWT, newWidget)
 import qualified Tunagui.General.Types       as T
 import           Tunagui.General.Base        (Tunagui, TunaguiT, runTuna)
 import qualified Tunagui.Internal.Render     as R
@@ -71,21 +72,12 @@ runWin = interpret
       tuna <- ask
       liftIO $ do
         _ <- atomically $ swapTMVar (D.wWidgetTree w) tree
-        -- eUp <- mkUpdateEventWT w -- TODO: Listen it again when WidgetTree is updated
-        -- sync $
-        --   listen eUp $ \_ ->
-        --     -- Render tree
-        --     void . forkIO $ do
-        --       putStrLn "update"
-        --       locateWT w
-        --       -- t <- atomically . readTMVar . D.wWidgetTree $ w
-        --       -- runTuna tuna $ render' (D.wRenderer w) t
-
-        -- Re-draw
+        --
         let loop stWT = do -- TODO: Kill when this Window is destroyed
+              putStrLn "!Render WidgetTree"
+              print $ flatten stWT
+              render' w
               t <- atomically . readTMVar . D.wWidgetTree $ w
-              putStrLn "Render WidgetTree"
-              -- render' (D.wRenderer w) t
               next <- atomically $ do
                 newStWT <- D.updateStateWT t
                 if newStWT == stWT
@@ -98,10 +90,10 @@ runWin = interpret
         forkIO $ loop curStWT
 
       interpret w (is ())
-    eval w (TestRenderTree :>>= is) = do
-      tree <- liftIO $ do
-        locateWT w
-        atomically . readTMVar . D.wWidgetTree $ w
+    eval w (TestRenderTree :>>= is) =
+      -- tree <- liftIO $ do
+      --   locateWT w
+      --   atomically . readTMVar . D.wWidgetTree $ w
       -- render' (D.wRenderer w) tree
       interpret w (is ())
 
@@ -113,12 +105,14 @@ runWin = interpret
     -- eval w (MkLabelB cfg beh :>>= is) =
     --   (interpret w . is) =<< genWT w =<< Label.mkLabel cfg w beh
 
-    -- render' r tree = do
-    --   runRender r $ do
-    --     R.setColor $ V4 45 45 45 255
-    --     R.clear
-    --   renderWT r tree
-    --   runRender r R.flush
+    render' win = do
+      runRender r $ do
+        R.setColor $ V4 45 45 45 255
+        R.clear
+      renderWT win
+      runRender r R.flush
+      where
+        r = D.wRenderer win
 
 -- *****************************************************************************
 -- utilities

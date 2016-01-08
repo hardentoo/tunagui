@@ -28,6 +28,7 @@ select = GUI.withTunagui $ \tuna ->
       (btnLabel, wRunLabel) <- Button.new $ Button.defaultConfig {Button.bcText = Just "Label test"}
       --
       testOverwriteTreeOP $ Container DirV [wRunButton, wRunLabel]
+      -- testOverwriteTreeOP $ Container DirV [wRunButton]
       testRenderTree
       --
       liftIO $ btnButton `onClick` testButton tuna

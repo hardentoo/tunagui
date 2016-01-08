@@ -13,7 +13,7 @@ import qualified Data.Text                 as T
 import           Control.Monad.Managed     (runManaged, managed)
 
 import qualified SDL
-import           SDL                       (($=))
+import           SDL                       (($=), get)
 import qualified SDL.Font as TTF
 
 import           Control.Monad.Operational
@@ -35,12 +35,14 @@ clear = ask >>= SDL.clear
 flush :: RenderT ()
 flush = ask >>= SDL.present
 
-withTexture :: SDL.Texture -> RenderT a -> RenderT a
-withTexture texture f = do
+onTexture :: SDL.Texture -> RenderT a -> RenderT a
+onTexture texture f = do
   r <- ask
-  liftIO $ bracket_ (SDL.rendererRenderTarget r $= Just texture)
-                    (SDL.rendererRenderTarget r $= Nothing)
-                    (runRender r f)
+  liftIO $ do
+    curTarget <- get $ SDL.rendererRenderTarget r
+    bracket_ (SDL.rendererRenderTarget r $= Just texture >> putStrLn "> Change rendering target to texture")
+             (SDL.rendererRenderTarget r $= curTarget >> putStrLn "< Change back rendering target")
+             (runRender r f)
 
 setColor :: V4 Word8 -> RenderT ()
 setColor color = do

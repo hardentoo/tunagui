@@ -10,8 +10,8 @@ module Tunagui.General.Data
   , WidgetTree (..)
   , Direction (..)
   , newWidget
-  , locateWT
   , renderWT
+  , sizeWT -- for debug
   , mkUpdateEventWT
   , updateStateWT
   , DimSize (..)
@@ -24,11 +24,13 @@ import           Data.List               (foldl', foldl1')
 import           Control.Exception     (bracket, bracket_)
 import qualified Data.Text             as T
 import           FRP.Sodium
+import           Control.Concurrent (forkIO)
 import           Control.Concurrent.MVar
 import           Control.Concurrent.STM.TMVar
 import           GHC.Conc.Sync (STM, atomically)
 import           Linear.V2
 import           Linear.V4
+import qualified Linear.Affine as A
 import           Data.Set              (Set)
 import qualified Data.Set              as Set
 import           Data.Word (Word8)
@@ -39,8 +41,8 @@ import           SDL (($=))
 
 import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..), TunaguiT)
 import qualified Tunagui.General.Types as T
-import           Tunagui.Widget.Component.Features (Renderable, locate, range, render, update, resize, free)
-import           Tunagui.Internal.Render (runRender, withTexture)
+import           Tunagui.Widget.Component.Features (Renderable, size, render, update, resize, free)
+import           Tunagui.Internal.Render (runRender, onTexture)
 
 -- Window
 data Window = Window
@@ -144,11 +146,11 @@ newWidget win prim = liftIO $ do
         SDL.destroyTexture texture
         SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (fromIntegral <$> size)
     --
-    listen (update prim) $ \_ -> do
-      putStrLn "Render by itself"
+    listen (update prim) $ \_ -> void . forkIO $ do
+      putStrLn $ "Rendering itself! " ++ show wid
       withMVar mTexture $ \t ->
         runRender r $
-          withTexture t $ render prim
+          onTexture t $ render prim
       -- Notify updated
       atomically $ do
         i <- takeTMVar c
@@ -168,47 +170,59 @@ instance Show WidgetTree where
   show (Container dir ws) = "Container " ++ show dir ++ " " ++ show ws
 
 -- |
--- Fix the location of WidgetTree
-locateWT :: Window -> IO ()
-locateWT w = do
-  tree <- atomically . readTMVar . wWidgetTree $ w
-  withUpdatable w $
-    void $ go tree (T.P (V2 0 0))
-  where
-    go :: WidgetTree -> T.Point Int -> IO (T.Range Int)
-    go (Widget wid _ _ a)   p0 = locate a p0 >> range a
-    go (Container dir ws) p0 = snd <$> runStateT (locateList ws p0) (T.R p0 p0)
-      where
-        locateList :: MonadIO m => [WidgetTree] -> T.Point Int -> StateT (T.Range Int) m ()
-        locateList []     _ = return ()
-        locateList (a:as) p = do
-          r <- liftIO $ go a p
-          modify (expand r)
-          locateList as (nextPt r)
-
-        expand :: T.Range Int -> T.Range Int -> T.Range Int
-        expand ra rb =
-          T.R (T.P (V2 (ax0 `min` bx0) (ay0 `min` by0))) (T.P (V2 (ax1 `max` bx1) (ay1 `max` by1)))
-          where
-            (T.R (T.P (V2 ax0 ay0)) (T.P (V2 ax1 ay1))) = ra
-            (T.R (T.P (V2 bx0 by0)) (T.P (V2 bx1 by1))) = rb
-
-        nextPt :: T.Range Int -> T.Point Int
-        nextPt (T.R (T.P (V2 x0 y0)) (T.P (V2 x1 y1))) =
-          case dir of
-            DirH -> T.P (V2 x1 y0)
-            DirV -> T.P (V2 x0 y1)
-
--- |
 -- Render all widgets in WidgetTree.
-renderWT :: SDL.Renderer -> WidgetTree -> TunaguiT ()
-renderWT r (Widget _ _ mTex a) =
-  -- -- TODO: rendererをtextureに切り替える
-  -- liftIO $ withMVar mTex $ \tex -> SDL.rendererRenderTarget r $= Just tex
-  -- runRender r $ render a
-  -- liftIO $ SDL.rendererRenderTarget r $= Nothing
-  return ()
-renderWT r (Container _ ws) = mapM_ (renderWT r) ws
+renderWT :: MonadIO m => Window -> m ()
+renderWT win = do
+  tree <- liftIO . atomically . readTMVar . wWidgetTree $ win
+  go tree (T.P (V2 0 0))
+  where
+    r = wRenderer win
+    go :: MonadIO m => WidgetTree -> T.Point Int -> m ()
+    go wt@(Widget _ _ mTex a) (T.P p) = liftIO $ do
+      (T.S sz) <- size a
+      let rect = SDL.Rectangle (A.P (fromIntegral <$> p)) (fromIntegral <$> sz)
+      withMVar mTex $ \tex -> SDL.copy r tex Nothing (Just rect)
+    go wt@(Container _ as) (T.P p) = liftIO $ do
+      (ps, T.S sz) <- sizeWT wt
+      let sz' = fromIntegral <$> sz
+          rect = SDL.Rectangle (A.P (fromIntegral <$> p)) sz'
+      bracket (SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget sz')
+              SDL.destroyTexture
+              (\cntTex -> do
+                  -- runRender r $ onTexture cntTex $ mapM_ (uncurry go) $ zip as ps
+                  -- SDL.copy r cntTex Nothing (Just rect)
+                  runRender r $ mapM_ (uncurry go) $ zip as ps -- test!
+              )
+
+sizeWT :: MonadIO m => WidgetTree -> m ([T.Point Int], T.Size Int)
+sizeWT (Widget _ _ _ a) = liftIO $ (,) [T.P (V2 0 0)] <$> size a
+sizeWT (Container dir as) = do
+  (ps, T.R _ (T.P s)) <- runStateT (go as p0) (T.R p0 p0)
+  return (ps, T.S s)
+  where
+    p0 = T.P (V2 0 0)
+    go :: MonadIO m => [WidgetTree] -> T.Point Int -> StateT (T.Range Int) m [T.Point Int]
+    go []     _ = return []
+    go (w:ws) p = do
+      r <- liftIO $ toRange . snd <$> sizeWT w
+      modify (expand r)
+      ps <- go ws (nextPt r)
+      return (p:ps)
+      where
+        toRange sz = T.R p (p `T.plusPS` sz)
+
+    expand :: T.Range Int -> T.Range Int -> T.Range Int
+    expand ra rb =
+      T.R (T.P (V2 (ax0 `min` bx0) (ay0 `min` by0))) (T.P (V2 (ax1 `max` bx1) (ay1 `max` by1)))
+      where
+        (T.R (T.P (V2 ax0 ay0)) (T.P (V2 ax1 ay1))) = ra
+        (T.R (T.P (V2 bx0 by0)) (T.P (V2 bx1 by1))) = rb
+
+    nextPt :: T.Range Int -> T.Point Int
+    nextPt (T.R (T.P (V2 x0 y0)) (T.P (V2 x1 y1))) =
+      case dir of
+        DirH -> T.P (V2 x1 y0)
+        DirV -> T.P (V2 x0 y1)
 
 mkUpdateEventWT :: Window -> IO (Event ())
 mkUpdateEventWT win = do

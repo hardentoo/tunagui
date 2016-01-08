@@ -37,8 +37,8 @@ data Button = Button
   -- Features
   , btnClkArea :: PRT.ClickableArea
   , render_ :: RenderT ()
-  , locate_     :: Point Int -> IO ()
-  , range_ :: IO (Range Int)
+  , locate_ :: Point Int -> IO ()
+  , size_ :: IO (Size Int)
   , update_ :: Event ()
   , resize_ :: Event (Size Int)
   , free_ :: IO ()
@@ -71,8 +71,7 @@ instance Clickable Button where
 
 instance Renderable Button where
   render = render_
-  locate = locate_
-  range  = range_
+  size   = size_
   update = update_
   resize = resize_
   free   = free_
@@ -100,9 +99,6 @@ mkButton conf win =
             , up behShapeColor
             ]
 
-      -- Features
-      let range' = sync $ mkRange <$> sample behAbsPos0 <*> sample behRangeSize
-
       let render' = do
             (bp, bs, tp, c, t) <- liftIO . sync $ do
               bp <- sample behBorderRelPos
@@ -129,7 +125,7 @@ mkButton conf win =
         , btnClkArea = clk
         , render_ = render'
         , locate_ = sync . pushAbsPos0
-        , range_ = range'
+        , size_ = sync (sample behRangeSize)
         , update_ = update'
         , resize_ = value behRangeSize -- TODO: Check if it fires when range is resized
         , free_ = free'
