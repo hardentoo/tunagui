@@ -11,8 +11,8 @@ class Renderable a where
   render :: a -> RenderP TunaguiT ()
   locate :: a -> Point Int -> IO ()
   range  :: a -> IO (Range Int)
-  update :: a -> Event UpdateType
-  resize :: a -> Event (Size Int)
+  update :: a -> Event UpdateType -- When content is changed
+  resize :: a -> Event (Size Int) -- When range is changed
   free   :: a -> IO ()
 
 class Clickable a where
