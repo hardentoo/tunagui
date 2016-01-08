@@ -71,15 +71,31 @@ runWin = interpret
       tuna <- ask
       liftIO $ do
         _ <- atomically $ swapTMVar (D.wWidgetTree w) tree
-        eUp <- mkUpdateEventWT w -- TODO: Listen it again when WidgetTree is updated
-        sync $
-          listen eUp $ \_ ->
-            -- Render tree
-            void . forkIO $ do
-              putStrLn "update"
-              locateWT w
-              -- t <- atomically . readTMVar . D.wWidgetTree $ w
-              -- runTuna tuna $ render' (D.wRenderer w) t
+        -- eUp <- mkUpdateEventWT w -- TODO: Listen it again when WidgetTree is updated
+        -- sync $
+        --   listen eUp $ \_ ->
+        --     -- Render tree
+        --     void . forkIO $ do
+        --       putStrLn "update"
+        --       locateWT w
+        --       -- t <- atomically . readTMVar . D.wWidgetTree $ w
+        --       -- runTuna tuna $ render' (D.wRenderer w) t
+
+        -- Re-draw
+        let loop stWT = do -- TODO: Kill when this Window is destroyed
+              t <- atomically . readTMVar . D.wWidgetTree $ w
+              putStrLn "Render WidgetTree"
+              -- render' (D.wRenderer w) t
+              next <- atomically $ do
+                newStWT <- D.updateStateWT t
+                if newStWT == stWT
+                  then retry
+                  else return newStWT
+              loop next
+        curStWT <- atomically $ do
+          t <- readTMVar . D.wWidgetTree $ w
+          D.updateStateWT t
+        forkIO $ loop curStWT
 
       interpret w (is ())
     eval w (TestRenderTree :>>= is) = do

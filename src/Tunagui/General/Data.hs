@@ -13,6 +13,7 @@ module Tunagui.General.Data
   , locateWT
   , renderWT
   , mkUpdateEventWT
+  , updateStateWT
   , DimSize (..)
   ) where
 
@@ -25,11 +26,13 @@ import qualified Data.Text             as T
 import           FRP.Sodium
 import           Control.Concurrent.MVar
 import           Control.Concurrent.STM.TMVar
-import           GHC.Conc.Sync (atomically)
+import           GHC.Conc.Sync (STM, atomically)
 import           Linear.V2
 import           Linear.V4
 import           Data.Set              (Set)
 import qualified Data.Set              as Set
+import           Data.Word (Word8)
+import           Data.Tree (Tree (..))
 
 import qualified SDL
 import           SDL (($=))
@@ -99,7 +102,7 @@ freeWindow w = do
   SDL.destroyRenderer $ wRenderer w
   SDL.destroyWindow $ wWindow w
   where
-    freeWT (Widget _ mTex a) = do
+    freeWT (Widget _ _ mTex a) = do
       SDL.destroyTexture =<< readMVar mTex
       free a
     freeWT (Container _ ws) = mapM_ freeWT ws
@@ -125,12 +128,14 @@ generateWidId win = liftIO . atomically $ do
 
 data WidgetTree =
   forall a. (Show a, Renderable a)
-  => Widget T.WidgetId (MVar SDL.Texture) a | Container Direction [WidgetTree]
+  => Widget T.WidgetId (TMVar Word8) (MVar SDL.Texture) a
+   | Container Direction [WidgetTree]
 
 newWidget :: (MonadIO m, Show a, Renderable a) => Window -> a -> m WidgetTree
 newWidget win prim = liftIO $ do
   wid <- generateWidId win
   mTexture <- newMVar =<< SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (V2 1 1)
+  c <- atomically $ newTMVar 0
   --
   sync $ do
     listen (resize prim) $ \(T.S size) ->
@@ -144,8 +149,12 @@ newWidget win prim = liftIO $ do
       withMVar mTexture $ \t ->
         runRender r $
           withTexture t $ render prim
+      -- Notify updated
+      atomically $ do
+        i <- takeTMVar c
+        putTMVar c (i + 1)
 
-  return $ Widget wid mTexture prim
+  return $ Widget wid c mTexture prim
   where
     r = wRenderer win
 
@@ -155,7 +164,7 @@ data Direction
   deriving Show
 
 instance Show WidgetTree where
-  show (Widget i _ a) = "Widget#" ++ show i ++ " " ++ show a
+  show (Widget i _ _ a) = "Widget#" ++ show i ++ " " ++ show a
   show (Container dir ws) = "Container " ++ show dir ++ " " ++ show ws
 
 -- |
@@ -167,7 +176,7 @@ locateWT w = do
     void $ go tree (T.P (V2 0 0))
   where
     go :: WidgetTree -> T.Point Int -> IO (T.Range Int)
-    go (Widget wid _ a)   p0 = locate a p0 >> range a
+    go (Widget wid _ _ a)   p0 = locate a p0 >> range a
     go (Container dir ws) p0 = snd <$> runStateT (locateList ws p0) (T.R p0 p0)
       where
         locateList :: MonadIO m => [WidgetTree] -> T.Point Int -> StateT (T.Range Int) m ()
@@ -193,7 +202,7 @@ locateWT w = do
 -- |
 -- Render all widgets in WidgetTree.
 renderWT :: SDL.Renderer -> WidgetTree -> TunaguiT ()
-renderWT r (Widget _ mTex a) =
+renderWT r (Widget _ _ mTex a) =
   -- -- TODO: rendererをtextureに切り替える
   -- liftIO $ withMVar mTex $ \tex -> SDL.rendererRenderTarget r $= Just tex
   -- runRender r $ render a
@@ -209,8 +218,12 @@ mkUpdateEventWT win = do
     behCanUp = updatable win
     --
     go :: WidgetTree -> Event ()
-    go (Widget _ _ a) = gate (update a) behCanUp
+    go (Widget _ _ _ a) = gate (update a) behCanUp
     go (Container _ ws) = foldl1' merge $ map go ws
+
+updateStateWT :: WidgetTree -> STM (Tree Word8)
+updateStateWT (Widget _ ti _ _) = Node <$> readTMVar ti <*> pure []
+updateStateWT (Container _ ws) = Node 0 <$> mapM updateStateWT ws
 
 -- *****************************************************************************
 
