@@ -3,7 +3,7 @@ module Tunagui.Widget.Component.Features where
 import           Control.Monad.IO.Class  (MonadIO)
 import           FRP.Sodium
 
-import           Tunagui.General.Types (Point (..), Size (..), Range (..), UpdateType (..))
+import           Tunagui.General.Types (Point (..), Size (..), Range (..))
 import           Tunagui.General.Base (TunaguiT)
 import           Tunagui.Internal.Render (RenderT)
 

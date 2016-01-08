@@ -20,7 +20,7 @@ import qualified SDL.Font                 as TTF
 
 import qualified Tunagui.General.Data     as D
 import           Tunagui.General.Data     (DimSize (..))
-import           Tunagui.General.Types    (Point(..), Size(..), Range(..), Shape(..), plusPS, plusPP, mkRange, UpdateType)
+import           Tunagui.General.Types    (Point(..), Size(..), Range(..), Shape(..), plusPS, plusPP, mkRange)
 import           Tunagui.General.Base     (TunaguiT, runTuna)
 import           Tunagui.Internal.Render  as R
 import           Tunagui.Internal.Render (RenderT, runRender)

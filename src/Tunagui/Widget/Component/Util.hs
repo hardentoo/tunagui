@@ -1,5 +1,5 @@
 module Tunagui.Widget.Component.Util
-  ( upD, upS, up
+  ( up
   , mkSizeBehav
   ) where
 
@@ -7,15 +7,9 @@ import Control.Monad (void)
 import FRP.Sodium
 import Linear.V2
 
-import Tunagui.General.Types (Point (..), Size (..), UpdateType (..), plusPP)
+import Tunagui.General.Types (Point (..), Size (..), plusPP)
 import Tunagui.General.Data (DimSize (..))
 import Tunagui.Widget.Component.Conf (DimConf (..))
-
-upD :: Behavior a -> Event UpdateType
-upD beh = const Redraw <$> updates beh
-
-upS :: Behavior a -> Event UpdateType
-upS beh = const Reshape <$> updates beh
 
 up :: Behavior a -> Event ()
 up beh = void $ updates beh

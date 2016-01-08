@@ -8,7 +8,6 @@ module Tunagui.General.Types
   , mkRange
   , Shape(..), within
   , WidgetId
-  , UpdateType (..)
   ) where
 
 import           Linear.V2
@@ -51,8 +50,3 @@ within (P (V2 x y)) (P (V2 x0 y0), Circle r) =
     distSqr = dx * dx + dy * dy
 
 type WidgetId = Integer
-
-data UpdateType
-  = Reshape -- Widget is reshaped. It affects other widgets.
-  | Redraw  -- Widget requires only drawing. It doesn't affect other widgets.
-  deriving (Eq, Show)
