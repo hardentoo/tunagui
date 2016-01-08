@@ -28,14 +28,16 @@ import           Control.Concurrent.STM.TMVar
 import           GHC.Conc.Sync (atomically)
 import           Linear.V2
 import           Linear.V4
-import qualified SDL
 import           Data.Set              (Set)
 import qualified Data.Set              as Set
+
+import qualified SDL
+import           SDL (($=))
 
 import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..), TunaguiT)
 import qualified Tunagui.General.Types as T
 import           Tunagui.Widget.Component.Features (Renderable, locate, range, render, update, resize, free)
-import           Tunagui.Internal.Render (RenderP)
+import           Tunagui.Internal.Render (runRender, withTexture)
 
 -- Window
 data Window = Window
@@ -129,11 +131,20 @@ newWidget :: (MonadIO m, Show a, Renderable a) => Window -> a -> m WidgetTree
 newWidget win prim = liftIO $ do
   wid <- generateWidId win
   mTexture <- newMVar =<< SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (V2 1 1)
-  sync $ listen (resize prim) $ \(T.S size) ->
-    modifyMVar_ mTexture $ \texture -> do
-      putStrLn $ "Recreate texture! " ++ show wid
-      SDL.destroyTexture texture
-      SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (fromIntegral <$> size)
+  --
+  sync $ do
+    listen (resize prim) $ \(T.S size) ->
+      modifyMVar_ mTexture $ \texture -> do
+        putStrLn $ "Recreate texture! " ++ show wid
+        SDL.destroyTexture texture
+        SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (fromIntegral <$> size)
+    --
+    listen (update prim) $ \_ -> do
+      putStrLn "Render by itself"
+      withMVar mTexture $ \t ->
+        runRender r $
+          withTexture t $ render prim
+
   return $ Widget wid mTexture prim
   where
     r = wRenderer win
@@ -149,25 +160,22 @@ instance Show WidgetTree where
 
 -- |
 -- Fix the location of WidgetTree
-locateWT :: Window -> Set T.WidgetId -> IO ()
-locateWT w reshapeIds = do
+locateWT :: Window -> IO ()
+locateWT w = do
   tree <- atomically . readTMVar . wWidgetTree $ w
   withUpdatable w $
-    void $ go tree (T.P (V2 0 0)) False
+    void $ go tree (T.P (V2 0 0))
   where
-    go :: WidgetTree -> T.Point Int -> Bool -> IO (Bool, T.Range Int)
-    go (Widget wid _ a) p0 pre = do
-      let isUpdated = pre || Set.member wid reshapeIds
-      when isUpdated $ locate a p0
-      (,) isUpdated <$> range a
-    go (Container dir ws) p0 pre = runStateT (locateList ws p0 pre) (T.R p0 p0)
+    go :: WidgetTree -> T.Point Int -> IO (T.Range Int)
+    go (Widget wid _ a)   p0 = locate a p0 >> range a
+    go (Container dir ws) p0 = snd <$> runStateT (locateList ws p0) (T.R p0 p0)
       where
-        locateList :: MonadIO m => [WidgetTree] -> T.Point Int -> Bool -> StateT (T.Range Int) m Bool
-        locateList []     _ pre' = return pre'
-        locateList (a:as) p pre' = do
-          (b,r) <- liftIO $ go a p pre'
+        locateList :: MonadIO m => [WidgetTree] -> T.Point Int -> StateT (T.Range Int) m ()
+        locateList []     _ = return ()
+        locateList (a:as) p = do
+          r <- liftIO $ go a p
           modify (expand r)
-          locateList as (nextPt r) b
+          locateList as (nextPt r)
 
         expand :: T.Range Int -> T.Range Int -> T.Range Int
         expand ra rb =
@@ -184,20 +192,25 @@ locateWT w reshapeIds = do
 
 -- |
 -- Render all widgets in WidgetTree.
-renderWT :: WidgetTree -> RenderP TunaguiT ()
-renderWT (Widget _ _ a)   = render a
-renderWT (Container _ ws) = mapM_ renderWT ws
+renderWT :: SDL.Renderer -> WidgetTree -> TunaguiT ()
+renderWT r (Widget _ mTex a) =
+  -- -- TODO: rendererをtextureに切り替える
+  -- liftIO $ withMVar mTex $ \tex -> SDL.rendererRenderTarget r $= Just tex
+  -- runRender r $ render a
+  -- liftIO $ SDL.rendererRenderTarget r $= Nothing
+  return ()
+renderWT r (Container _ ws) = mapM_ (renderWT r) ws
 
-mkUpdateEventWT :: Window -> IO (Event [(T.WidgetId, T.UpdateType)])
+mkUpdateEventWT :: Window -> IO (Event ())
 mkUpdateEventWT win = do
   t <- atomically . readTMVar . wWidgetTree $ win
   return $ go t
   where
-    behUp = updatable win
+    behCanUp = updatable win
     --
-    go :: WidgetTree -> Event [(T.WidgetId, T.UpdateType)]
-    go (Widget wid _ a) = (\t -> [(wid,t)]) <$> gate (update a) behUp
-    go (Container _ ws) = foldl1' (mergeWith (++)) $ map go ws
+    go :: WidgetTree -> Event ()
+    go (Widget _ _ a) = gate (update a) behCanUp
+    go (Container _ ws) = foldl1' merge $ map go ws
 
 -- *****************************************************************************
 

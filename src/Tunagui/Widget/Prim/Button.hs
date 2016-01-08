@@ -16,15 +16,17 @@ import qualified Data.Text                as T
 import           Data.List                (foldl1')
 import           Data.Maybe               (fromMaybe)
 
+import qualified SDL.Font                 as TTF
+
 import qualified Tunagui.General.Data     as D
 import           Tunagui.General.Data     (DimSize (..))
 import           Tunagui.General.Types    (Point(..), Size(..), Range(..), Shape(..), plusPS, plusPP, mkRange, UpdateType)
 import           Tunagui.General.Base     (TunaguiT, runTuna)
 import           Tunagui.Internal.Render  as R
-import           Tunagui.Internal.Render.SDL (runRender)
+import           Tunagui.Internal.Render (RenderT, runRender)
 import           Tunagui.Widget.Component.Features
 import qualified Tunagui.Widget.Component.Part as PRT
-import           Tunagui.Widget.Component.Util (upS, upD, mkSizeBehav)
+import           Tunagui.Widget.Component.Util (up, mkSizeBehav)
 import           Tunagui.Widget.Component.Color as COL
 import           Tunagui.Widget.Component.Conf (DimConf (..))
 
@@ -34,10 +36,10 @@ data Button = Button
   , color :: Behavior COL.ShapeColor
   -- Features
   , btnClkArea :: PRT.ClickableArea
-  , render_ :: R.RenderP TunaguiT ()
+  , render_ :: RenderT ()
   , locate_     :: Point Int -> IO ()
   , range_ :: IO (Range Int)
-  , update_ :: Event UpdateType
+  , update_ :: Event ()
   , resize_ :: Event (Size Int)
   , free_ :: IO ()
   }
@@ -76,54 +78,62 @@ instance Renderable Button where
   free   = free_
 
 mkButton :: Config -> D.Window -> TunaguiT Button
-mkButton conf win = do
-  tuna <- ask
-  liftIO . sync $ do
-    -- Text
-    tc <- PRT.mkTextContent tuna win (bcText conf)
-    -- Position
-    (behAbsPos0, pushAbsPos0) <- newBehavior $ P (V2 0 0)
-    -- Size
-    (behBorderRelPos, behTextRelPos, behBorderSize, behRangeSize) <- mkSizeBehav' behAbsPos0 conf tc
-    -- Make parts
-    let behBorderAbsPos = plusPP <$> behAbsPos0 <*> behBorderRelPos
-    clk <- PRT.mkClickableArea behBorderAbsPos (Rect <$> behBorderSize) (D.wePML events) (D.weRML events) (D.weMMPos events)
-    -- Hover
-    behShapeColor <- hold COL.planeShapeColor $ toShapeColor <$> PRT.crossBoundary clk
-    -- Update event
-    let eUpdate = foldl1' mappend
-          [ upS behAbsPos0, upS behBorderSize, upS behRangeSize, upD behShapeColor]
+mkButton conf win =
+  liftIO $ do
+    font <- TTF.load "data/sample.ttf" 16
+    sync $ do
+      -- Text
+      tc <- PRT.mkTextContent win font (bcText conf)
+      -- Position
+      (behAbsPos0, pushAbsPos0) <- newBehavior $ P (V2 0 0)
+      -- Size
+      (behBorderRelPos, behTextRelPos, behBorderSize, behRangeSize) <- mkSizeBehav' behAbsPos0 conf tc
+      -- Make parts
+      let behBorderAbsPos = plusPP <$> behAbsPos0 <*> behBorderRelPos
+      clk <- PRT.mkClickableArea behBorderAbsPos (Rect <$> behBorderSize) (D.wePML events) (D.weRML events) (D.weMMPos events)
+      -- Hover
+      behShapeColor <- hold COL.planeShapeColor $ toShapeColor <$> PRT.crossBoundary clk
+      -- Update event
+      let update' = foldl1' mappend
+            [ up behBorderSize
+            , up behRangeSize
+            , up behShapeColor
+            ]
 
-    -- Features
-    let range' = sync $ mkRange <$> sample behAbsPos0 <*> sample behRangeSize
-
-    let render' = do
-          (bp, bs, tp, c, t) <- liftIO . sync $ do
-            bp <- sample behBorderRelPos
-            bs <- sample behBorderSize
-            tp <- sample behTextRelPos
-            c <- sample behShapeColor
-            t <- sample $ PRT.tcText tc
-            return (bp, bs, tp, c, t)
-          R.setColor $ COL.fill c
-          R.fillRect bp bs
-          R.setColor $ COL.border c
-          R.drawRect bp bs
-          -- Text
-          R.renderText tp t
-    return Button
-      { modifyText = PRT.modifyText tc
-      --
-      , color = behShapeColor
       -- Features
-      , btnClkArea = clk
-      , render_ = render'
-      , locate_ = sync . pushAbsPos0
-      , range_ = range'
-      , update_ = eUpdate
-      , resize_ = value behRangeSize -- TODO: Check if it fires when range is resized
-      , free_ = putStrLn "free Button" -- test
-      }
+      let range' = sync $ mkRange <$> sample behAbsPos0 <*> sample behRangeSize
+
+      let render' = do
+            (bp, bs, tp, c, t) <- liftIO . sync $ do
+              bp <- sample behBorderRelPos
+              bs <- sample behBorderSize
+              tp <- sample behTextRelPos
+              c <- sample behShapeColor
+              t <- sample $ PRT.tcText tc
+              return (bp, bs, tp, c, t)
+            R.setColor $ COL.fill c
+            R.fillRect bp bs
+            R.setColor $ COL.border c
+            R.drawRect bp bs
+            -- Text
+            R.renderText font tp t
+
+      let free' = do
+            putStrLn "free Button"
+            TTF.free font
+      return Button
+        { modifyText = PRT.modifyText tc
+        --
+        , color = behShapeColor
+        -- Features
+        , btnClkArea = clk
+        , render_ = render'
+        , locate_ = sync . pushAbsPos0
+        , range_ = range'
+        , update_ = update'
+        , resize_ = value behRangeSize -- TODO: Check if it fires when range is resized
+        , free_ = free'
+        }
   where
     events = D.wEvents win
     toShapeColor :: Bool -> COL.ShapeColor

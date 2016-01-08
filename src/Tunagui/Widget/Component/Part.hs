@@ -14,11 +14,13 @@ import qualified Data.Text as T
 import           Linear.V2
 import           Data.Maybe (fromMaybe)
 
+import qualified SDL.Font as TTF
+
 import           Tunagui.General.Base (Tunagui, runTuna)
 import qualified Tunagui.General.Data as D
 import           Tunagui.General.Types (Point(..), Size(..), Shape(..), within)
 import qualified Tunagui.Internal.Render as R
-import           Tunagui.Internal.Render.SDL (runRender)
+import           Tunagui.Internal.Render (runRender)
 
 data ClickableArea = ClickableArea
   { clickEvent :: Event (Point Int)
@@ -60,14 +62,14 @@ data TextContent = TextContent
   , modifyText :: (T.Text -> T.Text) -> Reactive ()
   }
 
-mkTextContent :: Tunagui -> D.Window -> Maybe T.Text -> Reactive TextContent
-mkTextContent tuna win mtext = do
+mkTextContent :: D.Window -> TTF.Font -> Maybe T.Text -> Reactive TextContent
+mkTextContent win font mtext = do
   (behCW, pushCW) <- newBehavior 0
   (behCH, pushCH) <- newBehavior 0
   (behText, pushText) <- newBehavior $ T.pack ""
   listen (updates behText) $ \text ->
-    void . forkIO . runTuna tuna $ do
-      (S (V2 w h)) <- runRender (D.wRenderer win) (R.textSize text)
+    void . forkIO $ do
+      (S (V2 w h)) <- runRender (D.wRenderer win) $ R.textSize font text
       liftIO . sync $ do
         pushCW w
         pushCH h

@@ -1,5 +1,5 @@
 module Tunagui.Widget.Component.Util
-  ( upD, upS
+  ( upD, upS, up
   , mkSizeBehav
   ) where
 
@@ -16,6 +16,9 @@ upD beh = const Redraw <$> updates beh
 
 upS :: Behavior a -> Event UpdateType
 upS beh = const Reshape <$> updates beh
+
+up :: Behavior a -> Event ()
+up beh = void $ updates beh
 
 mkDimBehav :: (Ord a, Num a) =>
   DimSize a ->

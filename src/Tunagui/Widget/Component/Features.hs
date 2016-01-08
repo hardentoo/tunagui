@@ -5,13 +5,13 @@ import           FRP.Sodium
 
 import           Tunagui.General.Types (Point (..), Size (..), Range (..), UpdateType (..))
 import           Tunagui.General.Base (TunaguiT)
-import           Tunagui.Internal.Render (RenderP)
+import           Tunagui.Internal.Render (RenderT)
 
 class Renderable a where
-  render :: a -> RenderP TunaguiT ()
+  render :: a -> RenderT ()
   locate :: a -> Point Int -> IO ()
   range  :: a -> IO (Range Int)
-  update :: a -> Event UpdateType -- When content is changed
+  update :: a -> Event () -- When content is changed
   resize :: a -> Event (Size Int) -- When range is changed
   free   :: a -> IO ()
 
