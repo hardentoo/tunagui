@@ -38,7 +38,6 @@ import           Data.Word (Word8)
 import           Data.Tree (Tree (..))
 
 import qualified SDL
-import           SDL (($=))
 
 import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..), TunaguiT)
 import qualified Tunagui.General.Types as T
@@ -139,8 +138,8 @@ data WidgetTree =
 newWidget :: (MonadIO m, Show a, Renderable a) => Window -> a -> m WidgetTree
 newWidget win prim = liftIO $ do
   wid <- generateWidId win
-  mTexture <- withMVar mr $ \r ->
-    newMVar =<< SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (V2 1 1)
+  tex <- withMVar mr $ \r -> runRender r $ createTexture (V2 1 1)
+  mTexture <- newMVar tex
   cntr <- atomically $ newTMVar 0
 
   sync $ do -- Set listener
@@ -160,7 +159,7 @@ newWidget win prim = liftIO $ do
       modifyMVar_ mTexture $ \texture -> do
         SDL.destroyTexture texture
         withMVar mr $ \r ->
-          SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (fromIntegral <$> size)
+          runRender r $ createTexture size
     --
     reRender mr mTexture cntr = do
       withMVar mr $ \r -> do -- Lock Renderer
