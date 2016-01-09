@@ -34,11 +34,10 @@ mkDimBehav dimA conf behContent = do
     minmax = conv max (minv conf) . conv min (maxv conf)
 
 mkSizeBehav :: (Ord a, Num a) =>
-  Behavior (Point a) -> -- Position
   DimSize a -> DimConf a -> Behavior a -> -- Width
   DimSize a -> DimConf a -> Behavior a -> -- Height
   Reactive (Behavior (Point a), Behavior (Point a), Behavior (Size a), Behavior (Size a))
-mkSizeBehav behP0 wDim wConf behCW hDim hConf behCH = do
+mkSizeBehav wDim wConf behCW hDim hConf behCH = do
   (behBW, behRW) <- mkDimBehav wDim wConf behCW
   (behBH, behRH) <- mkDimBehav hDim hConf behCH
   let behBorderSize = mkSize behBW behBH

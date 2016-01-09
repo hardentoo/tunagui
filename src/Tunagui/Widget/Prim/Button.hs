@@ -9,6 +9,7 @@ import           Control.Monad.IO.Class   (MonadIO, liftIO)
 import           Control.Monad.Reader     (ask)
 import           Control.Monad            (void)
 import           Control.Concurrent       (forkIO)
+import           Control.Concurrent.MVar  (withMVar)
 import           FRP.Sodium
 import           Linear.V2
 import           Linear.V4
@@ -87,7 +88,7 @@ mkButton conf win =
       -- Position
       (behAbsPos0, pushAbsPos0) <- newBehavior $ P (V2 0 0)
       -- Size
-      (behBorderRelPos, behTextRelPos, behBorderSize, behRangeSize) <- mkSizeBehav' behAbsPos0 conf tc
+      (behBorderRelPos, behTextRelPos, behBorderSize, behRangeSize) <- mkSizeBehav' conf tc
       -- Make parts
       let behBorderAbsPos = plusPP <$> behAbsPos0 <*> behBorderRelPos
       clk <- PRT.mkClickableArea behBorderAbsPos (Rect <$> behBorderSize) (D.wePML events) (D.weRML events) (D.weMMPos events)
@@ -139,6 +140,6 @@ mkButton conf win =
 
     mkSize behW behH = S <$> (V2 <$> behW <*> behH)
 
-    mkSizeBehav' behPos c tc =
-      mkSizeBehav behPos (width c) (widthConf c) (PRT.tcWidth tc)
-                         (height c) (heightConf c) (PRT.tcHeight tc)
+    mkSizeBehav' c tc =
+      mkSizeBehav (width c) (widthConf c) (PRT.tcWidth tc)
+                  (height c) (heightConf c) (PRT.tcHeight tc)
