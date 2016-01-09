@@ -12,7 +12,7 @@ module Tunagui.General.Data
   , newWidget
   , renderWT
   , sizeWT -- for debug
-  , mkUpdateEventWT
+  -- , mkUpdateEventWT
   , updateStateWT
   , DimSize (..)
   ) where
@@ -38,6 +38,7 @@ import           Data.Word (Word8)
 import           Data.Tree (Tree (..))
 
 import qualified SDL
+import           SDL (($=))
 
 import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..), TunaguiT)
 import qualified Tunagui.General.Types as T
@@ -77,9 +78,11 @@ newWindow cnf es = do
   let es = mkEvents sWin
   (behUp, pushUp) <- sync $ newBehavior True
   let withUp = bracket_ (sync $ pushUp False) (sync $ pushUp True)
-  win <- Window sWin es
-          <$> (newMVar =<< SDL.createRenderer sWin (-1) SDL.defaultRenderer)
-          <*> atomically (newTMVar (Container DirV []))
+  renderer <- SDL.createRenderer sWin (-1) SDL.defaultRenderer
+  SDL.rendererDrawBlendMode renderer $= SDL.BlendAdditive
+  mr <- newMVar renderer
+  win <- Window sWin es mr
+          <$> atomically (newTMVar (Container DirV []))
           <*> atomically (newTMVar Set.empty)
           <*> pure behUp
           <*> pure withUp
@@ -144,12 +147,12 @@ newWidget win prim = liftIO $ do
 
   sync $ do -- Set listener
     listen (resize prim) $ newTexture mr mTexture
-    listen (update prim) $ \_ -> void . forkIO $ reRender mr mTexture cntr
+    listen (update prim) $ \_ -> void . forkIO $ renderOnSelfTex mr mTexture cntr
 
   liftIO $ do -- Initialize
     sz <- size prim
     newTexture mr mTexture sz
-    reRender mr mTexture cntr
+    renderOnSelfTex mr mTexture cntr
 
   return $ Widget wid cntr mTexture prim
   where
@@ -161,11 +164,13 @@ newWidget win prim = liftIO $ do
         withMVar mr $ \r ->
           runRender r $ createTexture size
     --
-    reRender mr mTexture cntr = do
+    renderOnSelfTex mr mTexture cntr = do
       withMVar mr $ \r -> do -- Lock Renderer
         t <- readMVar mTexture
         runRender r $
-          onTexture t $
+          onTexture t $ do
+            setColor $ V4 0 0 0 0
+            clear
             render prim
       -- Notify updated
       atomically $ do
@@ -190,6 +195,7 @@ renderWT tree = go tree (T.P (V2 0 0))
     go :: WidgetTree -> T.Point Int -> RenderT ()
     go wt@(Widget _ _ mTex a) tp@(T.P p) = do
       r <- ask
+      liftIO . print =<< SDL.get (SDL.rendererDrawBlendMode r)
       liftIO $ locate a tp -- 'locate' isn't this function's work
       (T.S sz) <- liftIO $ size a
       let rect = SDL.Rectangle (A.P (fromIntegral <$> p)) (fromIntegral <$> sz)
@@ -203,7 +209,9 @@ renderWT tree = go tree (T.P (V2 0 0))
             rect = SDL.Rectangle (A.P (fromIntegral <$> p)) sz'
         return (ps, sz, rect)
       withTexture sz $ \cntTex -> do
-        onTexture cntTex $
+        onTexture cntTex $ do
+          setColor $ V4 0 0 0 0
+          clear
           mapM_ (uncurry go) $ zip as ps
         copy cntTex Nothing (Just rect)
 
@@ -236,17 +244,6 @@ sizeWT (Container dir as) = do
       case dir of
         DirH -> T.P (V2 x1 y0)
         DirV -> T.P (V2 x0 y1)
-
-mkUpdateEventWT :: Window -> IO (Event ())
-mkUpdateEventWT win = do
-  t <- atomically . readTMVar . wWidgetTree $ win
-  return $ go t
-  where
-    behCanUp = updatable win
-    --
-    go :: WidgetTree -> Event ()
-    go (Widget _ _ _ a) = gate (update a) behCanUp
-    go (Container _ ws) = foldl1' merge $ map go ws
 
 updateStateWT :: WidgetTree -> STM (Tree Word8)
 updateStateWT (Widget _ ti _ _) = Node <$> readTMVar ti <*> pure []

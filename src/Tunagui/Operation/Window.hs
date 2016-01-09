@@ -23,7 +23,7 @@ import           Data.Set (Set)
 import           Data.Tree                   (flatten)
 
 import qualified Tunagui.General.Data        as D
-import           Tunagui.General.Data        (WidgetTree, mkUpdateEventWT, renderWT, newWidget)
+import           Tunagui.General.Data        (WidgetTree, renderWT, newWidget)
 import qualified Tunagui.General.Types       as T
 import           Tunagui.General.Base        (Tunagui, TunaguiT, runTuna)
 import qualified Tunagui.Internal.Render     as R
@@ -72,7 +72,7 @@ runWin = interpret
       tuna <- ask
       liftIO $ do
         _ <- atomically $ swapTMVar (D.wWidgetTree w) tree
-        --
+        -- TODO: Set when Window is initialized
         let loop stWT = do -- TODO: Kill when this Window is destroyed
               putStrLn "!Render WidgetTree"
               print $ flatten stWT
