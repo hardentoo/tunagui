@@ -20,6 +20,7 @@ module Tunagui.General.Data
 import           Control.Monad         (void, foldM, when)
 import           Control.Monad.IO.Class  (MonadIO, liftIO)
 import           Control.Monad.Trans.State
+import           Control.Monad.Reader (ask)
 import           Data.List               (foldl', foldl1')
 import           Control.Exception     (bracket, bracket_)
 import qualified Data.Text             as T
@@ -41,8 +42,8 @@ import           SDL (($=))
 
 import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..), TunaguiT)
 import qualified Tunagui.General.Types as T
-import           Tunagui.Widget.Component.Features (Renderable, size, render, update, resize, free)
-import           Tunagui.Internal.Render (runRender, onTexture)
+import           Tunagui.Widget.Component.Features (Renderable, size, render, locate, update, resize, free)
+import           Tunagui.Internal.Render (RenderT, runRender, onTexture)
 
 -- Window
 data Window = Window
@@ -150,15 +151,17 @@ newWidget win prim = liftIO $ do
     --
     listen (update prim) $ \_ -> void . forkIO $ do
       putStrLn $ "Rendering itself! " ++ show wid
-      withMVar mTexture $ \t ->
-        withMVar mr $ \r -> -- Lock Renderer
+      withMVar mr $ \r -> -- (1) Lock Renderer
+        withMVar mTexture $ \t -> -- (2) Lock Texture
           runRender r $
             onTexture t $
               render prim
       -- Notify updated
+      putStrLn $ "Notify updated! " ++ show wid
       atomically $ do
         i <- takeTMVar c
         putTMVar c (i + 1)
+      putStrLn $ "fin" ++ show wid
 
   return $ Widget wid c mTexture prim
   where
@@ -175,15 +178,14 @@ instance Show WidgetTree where
 
 -- |
 -- Render all widgets in WidgetTree.
-renderWT :: MonadIO m => Window -> m ()
-renderWT win = liftIO $ do
-  tree <- atomically . readTMVar . wWidgetTree $ win
-  withMVar mr $ \r -> go r tree (T.P (V2 0 0))
+renderWT :: WidgetTree -> RenderT ()
+renderWT tree = do
+  r <- ask
+  liftIO $ go r tree (T.P (V2 0 0))
   where
-    mr = wRenderer win
-    --
     go :: MonadIO m => SDL.Renderer -> WidgetTree -> T.Point Int -> m ()
-    go r wt@(Widget _ _ mTex a) (T.P p) = liftIO $ do
+    go r wt@(Widget _ _ mTex a) tp@(T.P p) = liftIO $ do
+      locate a tp
       (T.S sz) <- size a
       let rect = SDL.Rectangle (A.P (fromIntegral <$> p)) (fromIntegral <$> sz)
       withMVar mTex $ \tex -> SDL.copy r tex Nothing (Just rect)

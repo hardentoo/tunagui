@@ -71,6 +71,7 @@ instance Clickable Button where
 
 instance Renderable Button where
   render = render_
+  locate = locate_
   size   = size_
   update = update_
   resize = resize_

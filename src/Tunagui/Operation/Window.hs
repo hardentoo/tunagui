@@ -77,13 +77,14 @@ runWin = interpret
               putStrLn "!Render WidgetTree"
               print $ flatten stWT
               render' w
-              t <- atomically . readTMVar . D.wWidgetTree $ w
               next <- atomically $ do
+                t <- readTMVar . D.wWidgetTree $ w
                 newStWT <- D.updateStateWT t
                 if newStWT == stWT
                   then retry
                   else return newStWT
               loop next
+        -- Start with initial state
         curStWT <- atomically $ do
           t <- readTMVar . D.wWidgetTree $ w
           D.updateStateWT t
@@ -106,11 +107,13 @@ runWin = interpret
     --   (interpret w . is) =<< genWT w =<< Label.mkLabel cfg w beh
 
     render' win = do
-      withMVar mr $ \r -> runRender r $ do
-        R.setColor $ V4 45 45 45 255
-        R.clear
-      renderWT win
-      withMVar mr $ \r -> runRender r R.flush
+      tree <- atomically . readTMVar . D.wWidgetTree $ win
+      withMVar mr $ \r ->
+        runRender r $ do
+          R.setColor $ V4 45 45 45 255
+          R.clear
+          renderWT tree
+          R.flush
       where
         mr = D.wRenderer win
 
