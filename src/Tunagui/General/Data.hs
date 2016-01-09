@@ -112,6 +112,15 @@ withWindow cnf t = bracket (newWindow cnf events) freeWindow
   where
     events = cntEvents t
 
+withRenderer :: Window -> String -> (SDL.Renderer -> IO a) -> IO a
+withRenderer win str f = do
+  putStrLn $ "<Renderer: " ++ str ++ " start"
+  ret <- withMVar mr f
+  putStrLn $ ">Renderer: " ++ str ++ " end"
+  return ret
+  where
+    mr = wRenderer win
+
 generateWidId :: MonadIO m => Window -> m T.WidgetId
 generateWidId win = liftIO . atomically $ do
   (is, v) <- work <$> takeTMVar t
@@ -133,34 +142,35 @@ data WidgetTree =
 
 newWidget :: (MonadIO m, Show a, Renderable a) => Window -> a -> m WidgetTree
 newWidget win prim = liftIO $ do
+  putStrLn "@newWidget start"
   wid <- generateWidId win
-  tex <- withMVar mr $ \r -> runRender r $ createTexture (V2 1 1)
+  tex <- withRenderer win "<newWidget>" $ \r -> runRender r $ createTexture (V2 1 1)
   mTexture <- newMVar tex
   cntr <- atomically $ newTMVar 0
 
   sync $ do -- Set listener
-    listen (resize prim) $ newTexture mr mTexture
-    listen (update prim) $ \_ -> void . forkIO $ renderOnSelfTex mr mTexture cntr
+    listen (resize prim) $ newTexture wid mTexture
+    listen (update prim) $ \_ -> void . forkIO $ renderOnSelfTex wid mTexture cntr
 
   liftIO $ do -- Initialize
     sz <- size prim
-    newTexture mr mTexture sz
-    renderOnSelfTex mr mTexture cntr
+    newTexture wid mTexture sz
+    renderOnSelfTex wid mTexture cntr
 
+  putStrLn "@newWidget end"
   return $ Widget wid cntr mTexture prim
   where
-    mr = wRenderer win
-    --
-    newTexture mr mTexture (T.S size) =
-      withMVar mr $ \r -> -- (1) Lock Renderer
+    newTexture wid mTexture (T.S size) = do
+      putStrLn " newTexture start"
+      withRenderer win ("<newTexture>" ++ show wid) $ \r -> -- (1) Lock Renderer
         modifyMVar_ mTexture $ \texture -> do -- (2) Lock Texture
           SDL.destroyTexture texture
-          newTex <- runRender r $ createTexture size
-          SDL.textureBlendMode newTex $= SDL.BlendNone
-          return newTex
+          runRender r $ createTexture size
+      putStrLn " newTexture end"
     --
-    renderOnSelfTex mr mTexture cntr = do
-      withMVar mr $ \r -> -- (1) Lock Renderer
+    renderOnSelfTex wid mTexture cntr = do
+      putStrLn " renderOnTex start"
+      withRenderer win ("<renderOnSelfTex>" ++ show wid) $ \r -> -- (1) Lock Renderer
         withMVar mTexture $ \tex -> -- (2) Lock Texture
           runRender r $
             onTexture tex $ do
@@ -171,6 +181,7 @@ newWidget win prim = liftIO $ do
       atomically $ do
         i <- takeTMVar cntr
         putTMVar cntr (i + 1)
+      putStrLn " renderOnTex end"
 
 data Direction
   = DirH -- Horizontal
