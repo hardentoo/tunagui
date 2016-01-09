@@ -48,9 +48,7 @@ onTexture texture f = do
 createTexture :: V2 Int -> RenderT SDL.Texture
 createTexture size = do
   r <- ask
-  tex <- SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (fromIntegral <$> size)
-  SDL.textureBlendMode tex $= SDL.BlendAdditive
-  return tex
+  SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (fromIntegral <$> size)
 
 destroyTexture :: MonadIO m => SDL.Texture -> m ()
 destroyTexture = SDL.destroyTexture

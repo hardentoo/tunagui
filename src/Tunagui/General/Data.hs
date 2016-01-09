@@ -52,8 +52,6 @@ data Window = Window
   , wRenderer   :: MVar SDL.Renderer
   , wWidgetTree :: TMVar WidgetTree
   , idSet       :: TMVar (Set T.WidgetId)
-  , updatable   :: Behavior Bool
-  , withUpdatable :: IO () -> IO ()
   }
 
 -- | Events of each Window
@@ -76,17 +74,11 @@ newWindow cnf es = do
   putStrLn "* creating window"
   sWin <- SDL.createWindow (winTitle cnf) winConf
   let es = mkEvents sWin
-  (behUp, pushUp) <- sync $ newBehavior True
-  let withUp = bracket_ (sync $ pushUp False) (sync $ pushUp True)
-  renderer <- SDL.createRenderer sWin (-1) SDL.defaultRenderer
-  SDL.rendererDrawBlendMode renderer $= SDL.BlendAdditive
-  mr <- newMVar renderer
-  win <- Window sWin es mr
-          <$> atomically (newTMVar (Container DirV []))
+  win <- Window sWin es
+          <$> (newMVar =<< SDL.createRenderer sWin (-1) SDL.defaultRenderer)
+          <*> atomically (newTMVar (Container DirV []))
           <*> atomically (newTMVar Set.empty)
-          <*> pure behUp
-          <*> pure withUp
-  _unlisten <- sync $ listen (weClosed es) $ \_ -> freeWindow win -- TODO: Check if thread leak occurs
+  sync $ listen (weClosed es) $ \_ -> freeWindow win -- TODO: Check if thread leak occurs
   putStrLn "* finished creating window"
   return win
   where
@@ -105,6 +97,7 @@ newWindow cnf es = do
 
 freeWindow :: Window -> IO ()
 freeWindow w = do
+  putStrLn "freeWindow"
   freeWT =<< (atomically . readTMVar . wWidgetTree $ w)
   SDL.destroyRenderer =<< readMVar (wRenderer w)
   SDL.destroyWindow $ wWindow w
@@ -159,24 +152,25 @@ newWidget win prim = liftIO $ do
     mr = wRenderer win
     --
     newTexture mr mTexture (T.S size) =
-      modifyMVar_ mTexture $ \texture -> do
-        SDL.destroyTexture texture
-        withMVar mr $ \r ->
-          runRender r $ createTexture size
+      withMVar mr $ \r -> -- (1) Lock Renderer
+        modifyMVar_ mTexture $ \texture -> do -- (2) Lock Texture
+          SDL.destroyTexture texture
+          newTex <- runRender r $ createTexture size
+          SDL.textureBlendMode newTex $= SDL.BlendNone
+          return newTex
     --
     renderOnSelfTex mr mTexture cntr = do
-      withMVar mr $ \r -> do -- Lock Renderer
-        t <- readMVar mTexture
-        runRender r $
-          onTexture t $ do
-            setColor $ V4 0 0 0 0
-            clear
-            render prim
+      withMVar mr $ \r -> -- (1) Lock Renderer
+        withMVar mTexture $ \tex -> -- (2) Lock Texture
+          runRender r $
+            onTexture tex $ do
+              setColor $ V4 255 255 0 0
+              clear
+              render prim
       -- Notify updated
       atomically $ do
         i <- takeTMVar cntr
         putTMVar cntr (i + 1)
-      -- putStrLn $ "fin" ++ show wid
 
 data Direction
   = DirH -- Horizontal
@@ -195,7 +189,6 @@ renderWT tree = go tree (T.P (V2 0 0))
     go :: WidgetTree -> T.Point Int -> RenderT ()
     go wt@(Widget _ _ mTex a) tp@(T.P p) = do
       r <- ask
-      liftIO . print =<< SDL.get (SDL.rendererDrawBlendMode r)
       liftIO $ locate a tp -- 'locate' isn't this function's work
       (T.S sz) <- liftIO $ size a
       let rect = SDL.Rectangle (A.P (fromIntegral <$> p)) (fromIntegral <$> sz)
@@ -209,8 +202,9 @@ renderWT tree = go tree (T.P (V2 0 0))
             rect = SDL.Rectangle (A.P (fromIntegral <$> p)) sz'
         return (ps, sz, rect)
       withTexture sz $ \cntTex -> do
+        SDL.textureBlendMode cntTex $= SDL.BlendAlphaBlend
         onTexture cntTex $ do
-          setColor $ V4 0 0 0 0
+          setColor $ V4 0 0 255 0
           clear
           mapM_ (uncurry go) $ zip as ps
         copy cntTex Nothing (Just rect)
