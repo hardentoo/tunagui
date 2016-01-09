@@ -6,6 +6,7 @@ import           Control.Exception         (bracket, bracket_)
 import           Control.Monad.IO.Class    (MonadIO, liftIO)
 import           Control.Monad.Reader      (ReaderT, MonadReader, runReaderT, ask)
 import           Data.Word                 (Word8)
+import           Foreign.C.Types
 import           Linear.V2
 import           Linear.V4
 import qualified Linear.Affine             as A
@@ -43,6 +44,31 @@ onTexture texture f = do
     bracket_ (SDL.rendererRenderTarget r $= Just texture >> putStrLn "> Change rendering target to texture")
              (SDL.rendererRenderTarget r $= curTarget >> putStrLn "< Change back rendering target")
              (runRender r f)
+
+createTexture :: V2 Int -> RenderT SDL.Texture
+createTexture size = do
+  r <- ask
+  SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (fromIntegral <$> size)
+
+destroyTexture :: SDL.Texture -> RenderT ()
+destroyTexture = SDL.destroyTexture
+
+withTexture :: V2 Int -> (SDL.Texture -> RenderT a) -> RenderT a
+withTexture size f = do
+  r <- ask
+  liftIO $
+    bracket (runRender r $ createTexture size)
+            (runRender r . destroyTexture)
+            (runRender r . f)
+
+copy ::
+  SDL.Texture
+  -> Maybe (SDL.Rectangle CInt)
+  -> Maybe (SDL.Rectangle CInt)
+  -> RenderT ()
+copy tex mr1 mr2 = do
+  r <- ask
+  SDL.copy r tex mr1 mr2
 
 setColor :: V4 Word8 -> RenderT ()
 setColor color = do

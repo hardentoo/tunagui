@@ -43,7 +43,7 @@ import           SDL (($=))
 import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..), TunaguiT)
 import qualified Tunagui.General.Types as T
 import           Tunagui.Widget.Component.Features (Renderable, size, render, locate, update, resize, free)
-import           Tunagui.Internal.Render (RenderT, runRender, onTexture)
+import           Tunagui.Internal.Render
 
 -- Window
 data Window = Window
@@ -179,26 +179,27 @@ instance Show WidgetTree where
 -- |
 -- Render all widgets in WidgetTree.
 renderWT :: WidgetTree -> RenderT ()
-renderWT tree = do
-  r <- ask
-  liftIO $ go r tree (T.P (V2 0 0))
+renderWT tree = go tree (T.P (V2 0 0))
   where
-    go :: MonadIO m => SDL.Renderer -> WidgetTree -> T.Point Int -> m ()
-    go r wt@(Widget _ _ mTex a) tp@(T.P p) = liftIO $ do
-      locate a tp
-      (T.S sz) <- size a
-      let rect = SDL.Rectangle (A.P (fromIntegral <$> p)) (fromIntegral <$> sz)
-      withMVar mTex $ \tex -> SDL.copy r tex Nothing (Just rect)
-    go r wt@(Container _ as) (T.P p) = liftIO $ do
-      (ps, T.S sz) <- sizeWT wt
-      let sz' = fromIntegral <$> sz
-          rect = SDL.Rectangle (A.P (fromIntegral <$> p)) sz'
-      bracket (SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget sz')
-              SDL.destroyTexture
-              (\cntTex -> do
-                  runRender r $ onTexture cntTex $ mapM_ (uncurry (go r)) $ zip as ps
-                  SDL.copy r cntTex Nothing (Just rect)
-              )
+    go :: WidgetTree -> T.Point Int -> RenderT ()
+    go wt@(Widget _ _ mTex a) tp@(T.P p) = do
+      r <- ask
+      liftIO $ do
+        locate a tp
+        (T.S sz) <- size a
+        let rect = SDL.Rectangle (A.P (fromIntegral <$> p)) (fromIntegral <$> sz)
+        withMVar mTex $ \tex -> SDL.copy r tex Nothing (Just rect)
+    go wt@(Container _ as) (T.P p) = do
+      r <- ask
+      (ps, sz, rect) <- liftIO $ do
+        (ps, T.S sz) <- sizeWT wt
+        let sz' = fromIntegral <$> sz
+            rect = SDL.Rectangle (A.P (fromIntegral <$> p)) sz'
+        return (ps, sz, rect)
+      withTexture sz $ \cntTex -> do
+        onTexture cntTex$
+          mapM_ (uncurry go) $ zip as ps
+        copy cntTex Nothing (Just rect)
 
 sizeWT :: MonadIO m => WidgetTree -> m ([T.Point Int], T.Size Int)
 sizeWT (Widget _ _ _ a) = liftIO $ (,) [T.P (V2 0 0)] <$> size a
