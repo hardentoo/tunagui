@@ -73,6 +73,7 @@ data WinConfig = WinConfig
 
 newWindow :: WinConfig -> FrameEvents -> IO Window
 newWindow cnf es = do
+  putStrLn "* creating window"
   sWin <- SDL.createWindow (winTitle cnf) winConf
   let es = mkEvents sWin
   (behUp, pushUp) <- sync $ newBehavior True
@@ -84,6 +85,7 @@ newWindow cnf es = do
           <*> pure behUp
           <*> pure withUp
   _unlisten <- sync $ listen (weClosed es) $ \_ -> freeWindow win -- TODO: Check if thread leak occurs
+  putStrLn "* finished creating window"
   return win
   where
     winConf = SDL.defaultWindow
@@ -139,33 +141,38 @@ newWidget win prim = liftIO $ do
   wid <- generateWidId win
   mTexture <- withMVar mr $ \r ->
     newMVar =<< SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (V2 1 1)
-  c <- atomically $ newTMVar 0
-  --
-  sync $ do
-    listen (resize prim) $ \(T.S size) ->
+  cntr <- atomically $ newTMVar 0
+
+  sync $ do -- Set listener
+    listen (resize prim) $ newTexture mr mTexture
+    listen (update prim) $ \_ -> void . forkIO $ reRender mr mTexture cntr
+
+  liftIO $ do -- Initialize
+    sz <- size prim
+    newTexture mr mTexture sz
+    reRender mr mTexture cntr
+
+  return $ Widget wid cntr mTexture prim
+  where
+    mr = wRenderer win
+    --
+    newTexture mr mTexture (T.S size) =
       modifyMVar_ mTexture $ \texture -> do
-        putStrLn $ "Recreate texture! " ++ show wid
         SDL.destroyTexture texture
         withMVar mr $ \r ->
           SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (fromIntegral <$> size)
     --
-    listen (update prim) $ \_ -> void . forkIO $ do
-      putStrLn $ "Rendering itself! " ++ show wid
-      withMVar mr $ \r -> -- (1) Lock Renderer
-        withMVar mTexture $ \t -> -- (2) Lock Texture
-          runRender r $
-            onTexture t $
-              render prim
+    reRender mr mTexture cntr = do
+      withMVar mr $ \r -> do -- Lock Renderer
+        t <- readMVar mTexture
+        runRender r $
+          onTexture t $
+            render prim
       -- Notify updated
-      putStrLn $ "Notify updated! " ++ show wid
       atomically $ do
-        i <- takeTMVar c
-        putTMVar c (i + 1)
-      putStrLn $ "fin" ++ show wid
-
-  return $ Widget wid c mTexture prim
-  where
-    mr = wRenderer win
+        i <- takeTMVar cntr
+        putTMVar cntr (i + 1)
+      -- putStrLn $ "fin" ++ show wid
 
 data Direction
   = DirH -- Horizontal
@@ -184,11 +191,11 @@ renderWT tree = go tree (T.P (V2 0 0))
     go :: WidgetTree -> T.Point Int -> RenderT ()
     go wt@(Widget _ _ mTex a) tp@(T.P p) = do
       r <- ask
-      liftIO $ do
-        locate a tp
-        (T.S sz) <- size a
-        let rect = SDL.Rectangle (A.P (fromIntegral <$> p)) (fromIntegral <$> sz)
-        withMVar mTex $ \tex -> SDL.copy r tex Nothing (Just rect)
+      liftIO $ locate a tp -- 'locate' isn't this function's work
+      (T.S sz) <- liftIO $ size a
+      let rect = SDL.Rectangle (A.P (fromIntegral <$> p)) (fromIntegral <$> sz)
+      tex <- liftIO $ readMVar mTex
+      copy tex Nothing (Just rect)
     go wt@(Container _ as) (T.P p) = do
       r <- ask
       (ps, sz, rect) <- liftIO $ do
@@ -197,7 +204,7 @@ renderWT tree = go tree (T.P (V2 0 0))
             rect = SDL.Rectangle (A.P (fromIntegral <$> p)) sz'
         return (ps, sz, rect)
       withTexture sz $ \cntTex -> do
-        onTexture cntTex$
+        onTexture cntTex $
           mapM_ (uncurry go) $ zip as ps
         copy cntTex Nothing (Just rect)
 

@@ -41,8 +41,8 @@ onTexture texture f = do
   r <- ask
   liftIO $ do
     curTarget <- get $ SDL.rendererRenderTarget r
-    bracket_ (SDL.rendererRenderTarget r $= Just texture >> putStrLn "> Change rendering target to texture")
-             (SDL.rendererRenderTarget r $= curTarget >> putStrLn "< Change back rendering target")
+    bracket_ (SDL.rendererRenderTarget r $= Just texture)
+             (SDL.rendererRenderTarget r $= curTarget)
              (runRender r f)
 
 createTexture :: V2 Int -> RenderT SDL.Texture
@@ -50,7 +50,7 @@ createTexture size = do
   r <- ask
   SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (fromIntegral <$> size)
 
-destroyTexture :: SDL.Texture -> RenderT ()
+destroyTexture :: MonadIO m => SDL.Texture -> m ()
 destroyTexture = SDL.destroyTexture
 
 withTexture :: V2 Int -> (SDL.Texture -> RenderT a) -> RenderT a
@@ -58,7 +58,7 @@ withTexture size f = do
   r <- ask
   liftIO $
     bracket (runRender r $ createTexture size)
-            (runRender r . destroyTexture)
+            destroyTexture
             (runRender r . f)
 
 copy ::
