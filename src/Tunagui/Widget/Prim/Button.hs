@@ -86,7 +86,7 @@ mkButton conf win =
       -- Text
       tc <- PRT.mkTextContent win font (bcText conf)
       -- Position
-      (behAbsPos0, pushAbsPos0) <- newBehavior $ P (V2 0 0)
+      (behAbsPos0, pushAbsPos0) <- newBehavior $ P (V2 100000 100000)
       -- Size
       (behBorderRelPos, behTextRelPos, behBorderSize, behRangeSize) <- mkSizeBehav' conf tc
       -- Make parts
