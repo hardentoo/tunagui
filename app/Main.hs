@@ -8,6 +8,7 @@ import           Control.Monad.IO.Class (liftIO)
 import           Linear.V2
 import qualified Data.Text              as T
 import           FRP.Sodium
+import System.IO
 
 import qualified Tunagui                as GUI
 import           Tunagui                (runTuna, WidgetTree (..), Direction (..)
@@ -33,7 +34,8 @@ select = GUI.withTunagui $ \tuna ->
       liftIO $ btnButton `onClick` testButton tuna
       liftIO $ btnLabel `onClick` testLabel tuna
     forever $ do -- TODO: Clear thread leak
-      putStrLn "."
+      putChar '.'
+      hFlush stdout
       threadDelay 1000000
 
 testButton :: GUI.Tunagui -> IO ()
