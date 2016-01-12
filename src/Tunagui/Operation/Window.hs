@@ -12,6 +12,7 @@ import           Control.Concurrent.STM.TMVar
 import           Linear.V4                   (V4 (..))
 import           Data.Text (Text)
 import           Data.Tree                   (flatten)
+import           FRP.Sodium
 
 import qualified Tunagui.General.Data        as D
 import           Tunagui.General.Data        (WidgetTree, renderWT, newWidget)
@@ -22,7 +23,7 @@ import           Tunagui.Internal.Render     (runRender)
 import           Tunagui.Widget.Component.Features
 
 import qualified Tunagui.Widget.Prim.Button  as Button
--- import qualified Tunagui.Widget.Prim.Label   as Label
+import qualified Tunagui.Widget.Prim.Label   as Label
 
 -- TODO: Function inserting WidgetTree to Window
 
@@ -30,8 +31,8 @@ data WindowI a where
   TestOverwriteTree :: WidgetTree -> WindowI ()
   TestRenderTree :: WindowI ()
   MkButton :: Button.Config -> WindowI (Button.Button, WidgetTree)
-  -- MkLabelT :: Label.Config -> Text -> WindowI (Label.Label, WidgetTree)
-  -- MkLabelB :: Label.Config -> Behavior Text -> WindowI (Label.Label, WidgetTree)
+  MkLabelT :: Label.Config -> Text -> WindowI (Label.Label, WidgetTree)
+  MkLabelB :: Label.Config -> Behavior Text -> WindowI (Label.Label, WidgetTree)
 
 type WindowP m a = ProgramT WindowI m a
 
@@ -45,11 +46,11 @@ testRenderTree = singleton TestRenderTree
 newButton :: Button.Config -> ProgramT WindowI m (Button.Button, WidgetTree)
 newButton = singleton . MkButton
 
--- newLabelT :: Label.Config -> Text -> ProgramT WindowI m (Label.Label, WidgetTree)
--- newLabelT c t = singleton $ MkLabelT c t
---
--- newLabelB :: Label.Config -> Behavior Text -> ProgramT WindowI m (Label.Label, WidgetTree)
--- newLabelB c b = singleton $ MkLabelB c b
+newLabelT :: Label.Config -> Text -> ProgramT WindowI m (Label.Label, WidgetTree)
+newLabelT c t = singleton $ MkLabelT c t
+
+newLabelB :: Label.Config -> Behavior Text -> ProgramT WindowI m (Label.Label, WidgetTree)
+newLabelB c b = singleton $ MkLabelB c b
 
 -- *****************************************************************************
 runWin :: D.Window -> WindowP TunaguiT a -> TunaguiT a
@@ -93,11 +94,11 @@ runWin = interpret
 
     eval w (MkButton cfg :>>= is) =
       (interpret w . is) =<< genWT w =<< Button.mkButton cfg w
-    -- eval w (MkLabelT cfg text :>>= is) = do
-    --   (beh,_) <- liftIO . sync $ newBehavior text
-    --   (interpret w . is) =<< genWT w =<< Label.mkLabel cfg w beh
-    -- eval w (MkLabelB cfg beh :>>= is) =
-    --   (interpret w . is) =<< genWT w =<< Label.mkLabel cfg w beh
+    eval w (MkLabelT cfg text :>>= is) = do
+      (beh,_) <- liftIO . sync $ newBehavior text
+      (interpret w . is) =<< genWT w =<< Label.mkLabel cfg w beh
+    eval w (MkLabelB cfg beh :>>= is) =
+      (interpret w . is) =<< genWT w =<< Label.mkLabel cfg w beh
 
     render' win = do
       tree <- atomically . readTMVar . D.wWidgetTree $ win

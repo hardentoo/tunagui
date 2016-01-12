@@ -7,13 +7,14 @@ import           Control.Monad          (forever)
 import           Control.Monad.IO.Class (liftIO)
 import           Linear.V2
 import qualified Data.Text              as T
+import           FRP.Sodium
 
 import qualified Tunagui                as GUI
 import           Tunagui                (runTuna, WidgetTree (..), Direction (..)
                                         ,withWindow, WinConfig (..))
 import           Tunagui.Widget         (onClick)
 import qualified Tunagui.Widget.Button  as Button
--- import qualified Tunagui.Widget.Label   as Label
+import qualified Tunagui.Widget.Label   as Label
 import           Tunagui.Operation
 
 main :: IO ()
@@ -24,14 +25,13 @@ select = GUI.withTunagui $ \tuna ->
   withWindow (WinConfig "Select" False (V2 300 300)) tuna $ \win -> do
     runTuna tuna $ runWin win $ do
       (btnButton, wRunButton) <- Button.new $ Button.defaultConfig {Button.bcText = Just "Button test"}
-      (_btnLabel, wRunLabel) <- Button.new $ Button.defaultConfig {Button.bcText = Just "Label test"}
+      (btnLabel, wRunLabel) <- Button.new $ Button.defaultConfig {Button.bcText = Just "Label test"}
       --
       testOverwriteTreeOP $ Container DirV [wRunButton, wRunLabel]
-      -- testOverwriteTreeOP $ Container DirV [wRunButton]
       testRenderTree
       --
       liftIO $ btnButton `onClick` testButton tuna
-      -- liftIO $ btnLabel `onClick` testLabel tuna
+      liftIO $ btnLabel `onClick` testLabel tuna
     forever $ do -- TODO: Clear thread leak
       putStrLn "."
       threadDelay 1000000
@@ -57,24 +57,24 @@ testButton tuna =
         text = Just $ T.pack $ show i
         work = putStrLn $ "click: " ++ show i
 
--- testLabel :: GUI.Tunagui -> IO ()
--- testLabel tuna =
---   withWindow (WinConfig "main" True (V2 300 300)) tuna $ \win -> do
---     (beh, push) <- liftIO . sync $ newBehavior (0 :: Integer)
---     _ <- runTuna tuna $ runWin win $ do
---       (btnP,wBtnP) <- Button.new (Button.defaultConfig {Button.bcText = Just "+"})
---       (btnM,wBtnM) <- Button.new (Button.defaultConfig {Button.bcText = Just "-"})
---       (btnC,wBtnC) <- Button.new (Button.defaultConfig {Button.bcText = Just "CLEAR"})
---       (_,wLbl) <- Label.newB Label.defaultConfig (T.pack . show <$> beh)
---       let cBtn = Container DirH [wBtnP, wBtnM]
---       testOverwriteTreeOP (Container DirV [cBtn,wLbl,wBtnC])
---       testRenderTree
---       --
---       liftIO $ do
---         btnP `onClick` sync (push . (+ 1) =<< sample beh)
---         btnM `onClick` sync (push . (+ (-1)) =<< sample beh)
---         btnC `onClick` sync (push 0)
---
---     liftIO . forever $ do -- Clear thread leak
---       putStrLn "."
---       threadDelay 1000000
+testLabel :: GUI.Tunagui -> IO ()
+testLabel tuna =
+  withWindow (WinConfig "main" True (V2 300 300)) tuna $ \win -> do
+    (beh, push) <- liftIO . sync $ newBehavior (0 :: Integer)
+    _ <- runTuna tuna $ runWin win $ do
+      (btnP,wBtnP) <- Button.new (Button.defaultConfig {Button.bcText = Just "+"})
+      (btnM,wBtnM) <- Button.new (Button.defaultConfig {Button.bcText = Just "-"})
+      (btnC,wBtnC) <- Button.new (Button.defaultConfig {Button.bcText = Just "CLEAR"})
+      (_,wLbl) <- Label.newB Label.defaultConfig (T.pack . show <$> beh)
+      let cBtn = Container DirH [wBtnP, wBtnM]
+      testOverwriteTreeOP (Container DirV [cBtn,wLbl,wBtnC])
+      testRenderTree
+      --
+      liftIO $ do
+        btnP `onClick` sync (push . (+ 1) =<< sample beh)
+        btnM `onClick` sync (push . (+ (-1)) =<< sample beh)
+        btnC `onClick` sync (push 0)
+
+    liftIO . forever $ do -- Clear thread leak
+      putStrLn "."
+      threadDelay 1000000

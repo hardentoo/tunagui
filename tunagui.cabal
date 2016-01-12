@@ -19,7 +19,7 @@ library
                      , Tunagui.Operation
                      , Tunagui.Widget
                      , Tunagui.Widget.Button
-                    --  , Tunagui.Widget.Label
+                     , Tunagui.Widget.Label
   other-modules:
                        Tunagui.General.Data
                      , Tunagui.General.Types
@@ -34,7 +34,7 @@ library
                      , Tunagui.Widget.Component.Conf
                      , Tunagui.Widget.Component.Util
                      , Tunagui.Widget.Prim.Button
-                    --  , Tunagui.Widget.Prim.Label
+                     , Tunagui.Widget.Prim.Label
 
   -- other-extensions:
   pkgconfig-depends:   sdl2 >= 2

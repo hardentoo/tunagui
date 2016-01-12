@@ -12,28 +12,27 @@ import Control.Concurrent (forkIO)
 import FRP.Sodium
 import qualified Data.Text as T
 import Linear.V2
+import Data.List (foldl1')
+
+import qualified Graphics.UI.SDL.TTF as TTF
 
 import qualified Tunagui.General.Data as D
 import Tunagui.General.Data (DimSize(..))
-import Tunagui.General.Types (Point(..), Size(..), Range(..), plusPS, mkRange, UpdateType)
+import Tunagui.General.Types (Point(..), Size(..), Range(..), plusPS, mkRange)
 import Tunagui.General.Base (TunaguiT, runTuna)
 import Tunagui.Internal.Render as R
-import Tunagui.Internal.Render (runRender)
+import Tunagui.Internal.Render (RenderT, runRender)
 import Tunagui.Widget.Component.Features
 import qualified Tunagui.Widget.Component.Part as PRT
-import Tunagui.Widget.Component.Util (upS, mkSizeBehav)
+import Tunagui.Widget.Component.Util (up, mkSizeBehav)
 import Tunagui.Widget.Component.Conf (DimConf (..))
 
 data Label = Label
-  { pos :: Behavior (Point Int)
-  , size :: Behavior (Size Int)
-  --
-  , textPos :: Behavior (Point Int)
-  , text :: Behavior T.Text
-  --
+  { render_ :: RenderT ()
   , locate_ :: Point Int -> IO ()
-  , update_ :: Event UpdateType
-  , resize_ :: Event (Size Int)
+  , size_ :: IO (Size Int)
+  , updated_ :: Event ()
+  , resized_ :: Event (Size Int)
   , free_ :: IO ()
   }
 
@@ -58,50 +57,53 @@ instance Show Label where
 instance Renderable Label where
   render = render_
   locate = locate_
-  range  = range_
-  update = update_
-  resize = resize_
-  free   = free_
+  size = size_
+  updated = updated_
+  resized = resized_
+  free = free_
 
 mkLabel :: Config -> D.Window -> Behavior T.Text -> TunaguiT Label
 mkLabel conf win behText = do
   tuna <- ask
-  liftIO . sync $ do
-    -- Text
-    tc <- PRT.mkTextContent tuna win . Just =<< sample behText
-    listen (updates behText) $ \text -> -- connect
-      void . forkIO . void . sync $ PRT.modifyText tc (const text)
-    -- Position
-    (behPos, pushPos) <- newBehavior $ P (V2 0 0)
-    -- Size
-    (behBorderPos, behTextPos, _behBorderSize, behRangeSize) <- mkSizeBehav' behPos conf tc
-    -- Make update event
-    let eUpdate = upS behText
-    return Label
-      { pos = behPos
-      , size = behRangeSize
+  liftIO $ do
+    font <- TTF.openFont "data/sample.ttf" 16
+    sync $ do
       -- Text
-      , textPos = behTextPos
-      , text = PRT.tcText tc
-      -- Features
-      , locate_ = sync . pushPos
-      , update_ = eUpdate
-      , resize_ = updates behRangeSize
-      , free_ = putStrLn "free Label" -- test
-      }
+      tc <- PRT.mkTextContent win font =<< (Just <$> sample behText)
+      listen (updates behText) $ \text -> -- connect
+        void . forkIO . void . sync $ PRT.modifyText tc (const text)
+      -- Position
+      (behAbsPos0, pushAbsPos0) <- newBehavior $ P (V2 0 0)
+      -- Size
+      (behBorderRelPos, behTextRelPos, behBorderSize, behRangeSize) <- mkSizeBehav' conf tc
+      -- Make update event
+      let updated' = foldl1' mappend
+            [ up behText
+            , up behBorderSize
+            , up behRangeSize
+            ]
+
+      let render' = do
+            (p, t) <- liftIO . sync $ do
+              p <- sample behTextRelPos
+              t <- sample $ PRT.tcText tc
+              return (p, t)
+            R.renderText font p t
+
+      let free' = do
+            putStrLn "free Label"
+            TTF.closeFont font
+
+      return Label
+        {
+          render_ = render'
+        , locate_ = sync . pushAbsPos0
+        , size_ = sync $ sample behRangeSize
+        , updated_ = updated'
+        , resized_ = updates behRangeSize
+        , free_ = free'
+        }
   where
-    mkSizeBehav' behPos c tc =
-      mkSizeBehav behPos (width c) (widthConf c) (PRT.tcWidth tc)
-                         (height c) (heightConf c) (PRT.tcHeight tc)
-
-range_ :: Label -> IO (Range Int)
-range_ label = sync $
-  mkRange <$> sample (pos label) <*> sample (size label)
-
-render_ :: Label -> R.RenderP TunaguiT ()
-render_ label = do
-  (tp, t) <- liftIO . sync $ do
-    tp <- sample (textPos label)
-    t <- sample (text label)
-    return (tp, t)
-  R.renderText tp t
+    mkSizeBehav' c tc =
+      mkSizeBehav (width c) (widthConf c) (PRT.tcWidth tc)
+                  (height c) (heightConf c) (PRT.tcHeight tc)
