@@ -148,44 +148,24 @@ newWidget win prim = liftIO $ do
   mTexture <- newMVar tex
   cntr <- atomically $ newTMVar 1
 
-  sync $ do -- Set listener
+  sync $ do
     listen (resized prim) $ newTexture wid mTexture
-    -- listen (updated prim) $ \_ -> void . forkIO $ renderOnSelfTex wid mTexture cntr
-
     listen (updated prim) $ \_ -> atomically $ do
       i <- takeTMVar cntr
       putTMVar cntr (i + 1)
 
-  liftIO $ do -- Initialize
-    sz <- size prim
-    newTexture wid mTexture sz
-    -- renderOnSelfTex wid mTexture cntr
+  newTexture wid mTexture =<< size prim
 
   putStrLn "@newWidget end"
   return $ Widget wid cntr mTexture prim
   where
-    newTexture wid mTexture (T.S size) = do
+    newTexture wid mTexture (T.S size) = liftIO $ do
       putStrLn " newTexture start"
       withRenderer win ("<newTexture>" ++ show wid) $ \r -> -- (1) Lock Renderer
         modifyMVar_ mTexture $ \texture -> do -- (2) Lock Texture
           SDL.destroyTexture texture
           runRender r $ createTexture size
       putStrLn " newTexture end"
-    --
-    -- renderOnSelfTex wid mTexture cntr = do
-    --   putStrLn " renderOnTex start"
-    --   withRenderer win ("<renderOnSelfTex>" ++ show wid) $ \r -> -- (1) Lock Renderer
-    --     withMVar mTexture $ \tex -> -- (2) Lock Texture
-    --       runRender r $
-    --         onTexture tex $ do
-    --           setColor $ V4 255 255 0 0
-    --           clear
-    --           render prim
-    --   -- Notify updated
-    --   atomically $ do
-    --     i <- takeTMVar cntr
-    --     putTMVar cntr (i + 1)
-    --   putStrLn " renderOnTex end"
 
 data Direction
   = DirH -- Horizontal
