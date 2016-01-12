@@ -35,7 +35,7 @@ data Button = Button
   , locate_ :: Point Int -> IO ()
   , size_ :: IO (Size Int)
   , updated_ :: Event ()
-  , resize_ :: Event (Size Int)
+  , resized_ :: Event (Size Int)
   , free_ :: IO ()
   }
 
@@ -69,7 +69,7 @@ instance Renderable Button where
   locate = locate_
   size = size_
   updated = updated_
-  resized = resize_
+  resized = resized_
   free = free_
 
 mkButton :: Config -> D.Window -> TunaguiT Button
@@ -123,7 +123,7 @@ mkButton conf win =
         , locate_ = sync . pushAbsPos0
         , size_ = sync (sample behRangeSize)
         , updated_ = updated'
-        , resize_ = value behRangeSize -- TODO: Check if it fires when range is resized
+        , resized_ = value behRangeSize -- TODO: Check if it fires when range is resized
         , free_ = free'
         }
   where
