@@ -73,7 +73,8 @@ runWin = interpret
               next <- atomically $ do
                 t <- readTMVar . D.wWidgetTree $ w
                 newStWT <- D.updateStateWT t
-                if newStWT == stWT
+                let rendering = sum . map snd . flatten $ newStWT
+                if newStWT == stWT || rendering == 0
                   then retry
                   else return newStWT
               loop next

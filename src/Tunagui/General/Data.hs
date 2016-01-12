@@ -17,11 +17,10 @@ module Tunagui.General.Data
   , DimSize (..)
   ) where
 
-import           Control.Concurrent                (forkIO)
 import           Control.Concurrent.MVar
 import           Control.Concurrent.STM.TMVar
 import           Control.Exception                 (bracket)
-import           Control.Monad                     (void)
+import           Control.Monad                     (void, when)
 import           Control.Monad.IO.Class            (MonadIO, liftIO)
 import           Control.Monad.Reader              (ask)
 import           Control.Monad.Trans.State
@@ -29,7 +28,6 @@ import           Data.Set                          (Set)
 import qualified Data.Set                          as Set
 import qualified Data.Text                         as T
 import           Data.Tree                         (Tree (..))
-import           Data.Word                         (Word8)
 import           FRP.Sodium
 import           GHC.Conc.Sync                     (STM, atomically)
 import qualified Linear.Affine                     as A
@@ -139,7 +137,7 @@ generateWidId win = liftIO . atomically $ do
 
 data WidgetTree =
   forall a. (Show a, Renderable a)
-  => Widget T.WidgetId (TMVar Word8) (MVar SDL.Texture) a
+  => Widget T.WidgetId (TMVar Int) (MVar SDL.Texture) a
    | Container Direction [WidgetTree]
 
 newWidget :: (MonadIO m, Show a, Renderable a) => Window -> a -> m WidgetTree
@@ -148,16 +146,20 @@ newWidget win prim = liftIO $ do
   wid <- generateWidId win
   tex <- withRenderer win "<newWidget>" $ \r -> runRender r $ createTexture (V2 1 1)
   mTexture <- newMVar tex
-  cntr <- atomically $ newTMVar 0
+  cntr <- atomically $ newTMVar 1
 
   sync $ do -- Set listener
     listen (resized prim) $ newTexture wid mTexture
-    listen (updated prim) $ \_ -> void . forkIO $ renderOnSelfTex wid mTexture cntr
+    -- listen (updated prim) $ \_ -> void . forkIO $ renderOnSelfTex wid mTexture cntr
+
+    listen (updated prim) $ \_ -> atomically $ do
+      i <- takeTMVar cntr
+      putTMVar cntr (i + 1)
 
   liftIO $ do -- Initialize
     sz <- size prim
     newTexture wid mTexture sz
-    renderOnSelfTex wid mTexture cntr
+    -- renderOnSelfTex wid mTexture cntr
 
   putStrLn "@newWidget end"
   return $ Widget wid cntr mTexture prim
@@ -170,20 +172,20 @@ newWidget win prim = liftIO $ do
           runRender r $ createTexture size
       putStrLn " newTexture end"
     --
-    renderOnSelfTex wid mTexture cntr = do
-      putStrLn " renderOnTex start"
-      withRenderer win ("<renderOnSelfTex>" ++ show wid) $ \r -> -- (1) Lock Renderer
-        withMVar mTexture $ \tex -> -- (2) Lock Texture
-          runRender r $
-            onTexture tex $ do
-              setColor $ V4 255 255 0 0
-              clear
-              render prim
-      -- Notify updated
-      atomically $ do
-        i <- takeTMVar cntr
-        putTMVar cntr (i + 1)
-      putStrLn " renderOnTex end"
+    -- renderOnSelfTex wid mTexture cntr = do
+    --   putStrLn " renderOnTex start"
+    --   withRenderer win ("<renderOnSelfTex>" ++ show wid) $ \r -> -- (1) Lock Renderer
+    --     withMVar mTexture $ \tex -> -- (2) Lock Texture
+    --       runRender r $
+    --         onTexture tex $ do
+    --           setColor $ V4 255 255 0 0
+    --           clear
+    --           render prim
+    --   -- Notify updated
+    --   atomically $ do
+    --     i <- takeTMVar cntr
+    --     putTMVar cntr (i + 1)
+    --   putStrLn " renderOnTex end"
 
 data Direction
   = DirH -- Horizontal
@@ -200,9 +202,21 @@ renderWT :: WidgetTree -> RenderT ()
 renderWT tree = go tree (T.P (V2 0 0))
   where
     go :: WidgetTree -> T.Point Int -> RenderT ()
-    go wt@(Widget _ _ mTex a) tp@(T.P p) = do
+    go (Widget wid ti mTex a) tp@(T.P p) = do
       r <- ask
       liftIO $ locate a tp -- 'locate' isn't this function's work
+      -- Rendering if required
+      i <- liftIO . atomically . readTMVar $ ti
+      liftIO $ when (i > 0) $ do
+        putStrLn $ "Rendering " ++ show wid
+        withMVar mTex $ \tex ->
+          runRender r $
+            onTexture tex $ do
+              setColor $ V4 255 255 0 0
+              clear
+              render a
+        atomically $ putTMVar ti 0
+      --
       (T.S sz) <- liftIO $ size a
       let rect = SDL.Rectangle (A.P (fromIntegral <$> p)) (fromIntegral <$> sz)
       tex <- liftIO $ readMVar mTex
@@ -221,6 +235,7 @@ renderWT tree = go tree (T.P (V2 0 0))
           clear
           mapM_ (uncurry go) $ zip as ps
         copy cntTex Nothing (Just rect)
+
 
 sizeWT :: MonadIO m => WidgetTree -> m ([T.Point Int], T.Size Int)
 sizeWT (Widget _ _ _ a) = liftIO $ (,) [T.P (V2 0 0)] <$> size a
@@ -252,9 +267,11 @@ sizeWT (Container dir as) = do
         DirH -> T.P (V2 x1 y0)
         DirV -> T.P (V2 x0 y1)
 
-updateStateWT :: WidgetTree -> STM (Tree Word8)
-updateStateWT (Widget _ ti _ _) = Node <$> readTMVar ti <*> pure []
-updateStateWT (Container _ ws) = Node 0 <$> mapM updateStateWT ws
+updateStateWT :: WidgetTree -> STM (Tree (T.WidgetId, Int))
+updateStateWT (Widget wid ti _ _) = do
+  i <- readTMVar ti
+  return $ Node (wid, i) []
+updateStateWT (Container _ ws) = Node (0,0) <$> mapM updateStateWT ws
 
 -- *****************************************************************************
 
