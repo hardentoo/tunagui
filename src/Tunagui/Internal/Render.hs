@@ -19,8 +19,6 @@ import           SDL.Raw (Color(..))
 import qualified Graphics.UI.SDL.TTF as TTF
 import           Graphics.UI.SDL.TTF.FFI (TTFFont)
 
-import           Control.Monad.Operational
-
 import           Tunagui.General.Types     (Point(..), Size(..))
 
 newtype RenderT a = RenderT {

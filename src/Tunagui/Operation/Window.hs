@@ -4,28 +4,18 @@
 
 module Tunagui.Operation.Window where
 
-import           Control.Monad               (void, unless)
 import           Control.Monad.IO.Class      (MonadIO, liftIO)
-import           Control.Monad.Trans.RWS.Lazy (RWST, runRWST)
-import           Control.Monad.Trans.Class   (lift)
 import           Control.Monad.Operational
-import           Control.Monad.Reader        (ask, asks)
-import           Control.Concurrent          (forkIO)
-import           FRP.Sodium
-import           Control.Concurrent.MVar     (MVar, swapMVar, readMVar)
+import           Control.Monad.Reader        (ask)
 import           GHC.Conc.Sync
 import           Control.Concurrent.STM.TMVar
-import           Linear.V2                   (V2 (..))
 import           Linear.V4                   (V4 (..))
 import           Data.Text (Text)
-import qualified Data.Set as Set
-import           Data.Set (Set)
 import           Data.Tree                   (flatten)
 
 import qualified Tunagui.General.Data        as D
 import           Tunagui.General.Data        (WidgetTree, renderWT, newWidget)
-import qualified Tunagui.General.Types       as T
-import           Tunagui.General.Base        (Tunagui, TunaguiT, runTuna)
+import           Tunagui.General.Base        (TunaguiT)
 import qualified Tunagui.Internal.Render     as R
 import           Tunagui.Internal.Render     (runRender)
 
@@ -46,7 +36,10 @@ data WindowI a where
 type WindowP m a = ProgramT WindowI m a
 
 -- *****************************************************************************
+testOverwriteTreeOP :: WidgetTree -> ProgramT WindowI m ()
 testOverwriteTreeOP = singleton . TestOverwriteTree
+
+testRenderTree :: ProgramT WindowI m ()
 testRenderTree = singleton TestRenderTree
 
 newButton :: Button.Config -> ProgramT WindowI m (Button.Button, WidgetTree)
@@ -69,7 +62,6 @@ runWin = interpret
     eval _ (Return a) = return a
     eval w (TestOverwriteTree tree :>>= is) = do
       liftIO $ print tree -- test
-      tuna <- ask
       liftIO $ do
         _ <- atomically $ swapTMVar (D.wWidgetTree w) tree
         -- TODO: Set when Window is initialized
@@ -89,6 +81,7 @@ runWin = interpret
           t <- readTMVar . D.wWidgetTree $ w
           D.updateStateWT t
         forkIO $ loop curStWT
+        return ()
 
       interpret w (is ())
     eval w (TestRenderTree :>>= is) =

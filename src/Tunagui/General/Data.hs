@@ -17,33 +17,35 @@ module Tunagui.General.Data
   , DimSize (..)
   ) where
 
-import           Control.Monad         (void, foldM, when)
-import           Control.Monad.IO.Class  (MonadIO, liftIO)
-import           Control.Monad.Trans.State
-import           Control.Monad.Reader (ask)
-import           Data.List               (foldl', foldl1')
-import           Control.Exception     (bracket, bracket_)
-import qualified Data.Text             as T
-import           FRP.Sodium
-import           Control.Concurrent (forkIO)
+import           Control.Concurrent                (forkIO)
 import           Control.Concurrent.MVar
 import           Control.Concurrent.STM.TMVar
-import           GHC.Conc.Sync (STM, atomically)
+import           Control.Exception                 (bracket)
+import           Control.Monad                     (void)
+import           Control.Monad.IO.Class            (MonadIO, liftIO)
+import           Control.Monad.Reader              (ask)
+import           Control.Monad.Trans.State
+import           Data.Set                          (Set)
+import qualified Data.Set                          as Set
+import qualified Data.Text                         as T
+import           Data.Tree                         (Tree (..))
+import           Data.Word                         (Word8)
+import           FRP.Sodium
+import           GHC.Conc.Sync                     (STM, atomically)
+import qualified Linear.Affine                     as A
 import           Linear.V2
 import           Linear.V4
-import qualified Linear.Affine as A
-import           Data.Set              (Set)
-import qualified Data.Set              as Set
-import           Data.Word (Word8)
-import           Data.Tree (Tree (..))
 
+import           SDL                               (($=))
 import qualified SDL
-import           SDL (($=))
 
-import           Tunagui.General.Base  (Tunagui (..), FrameEvents (..), TunaguiT)
-import qualified Tunagui.General.Types as T
-import           Tunagui.Widget.Component.Features (Renderable, size, render, locate, update, resize, free)
+import           Tunagui.General.Base              (FrameEvents (..),
+                                                    Tunagui (..))
+import qualified Tunagui.General.Types             as T
 import           Tunagui.Internal.Render
+import           Tunagui.Widget.Component.Features (Renderable, free, locate,
+                                                    render, resize, size,
+                                                    update)
 
 -- Window
 data Window = Window
@@ -57,15 +59,15 @@ data Window = Window
 -- | Events of each Window
 data WinEvents = WinEvents
   { weClosed :: Event ()
-  , wePML :: Event (T.Point Int)
-  , weRML :: Event (T.Point Int)
-  , weMMPos :: Event (T.Point Int) -- Mouse motiong
+  , wePML    :: Event (T.Point Int)
+  , weRML    :: Event (T.Point Int)
+  , weMMPos  :: Event (T.Point Int) -- Mouse motiong
   }
 
 data WinConfig = WinConfig
   {
-    winTitle :: T.Text
-  , winResizable :: Bool
+    winTitle       :: T.Text
+  , winResizable   :: Bool
   , winInitialSize :: V2 Int
   }
 
@@ -73,12 +75,12 @@ newWindow :: WinConfig -> FrameEvents -> IO Window
 newWindow cnf es = do
   putStrLn "* creating window"
   sWin <- SDL.createWindow (winTitle cnf) winConf
-  let es = mkEvents sWin
-  win <- Window sWin es
+  let winEvents = mkEvents sWin
+  win <- Window sWin winEvents
           <$> (newMVar =<< SDL.createRenderer sWin (-1) SDL.defaultRenderer)
           <*> atomically (newTMVar (Container DirV []))
           <*> atomically (newTMVar Set.empty)
-  sync $ listen (weClosed es) $ \_ -> freeWindow win -- TODO: Check if thread leak occurs
+  sync $ listen (weClosed winEvents) $ \_ -> freeWindow win -- TODO: Check if thread leak occurs
   putStrLn "* finished creating window"
   return win
   where

@@ -5,26 +5,20 @@ module Tunagui.Widget.Prim.Button
   , mkButton
   ) where
 
-import           Control.Monad.IO.Class   (MonadIO, liftIO)
-import           Control.Monad.Reader     (ask)
-import           Control.Monad            (void)
-import           Control.Concurrent       (forkIO)
-import           Control.Concurrent.MVar  (withMVar)
+import           Control.Monad.IO.Class   (liftIO)
 import           FRP.Sodium
 import           Linear.V2
-import           Linear.V4
 import qualified Data.Text                as T
 import           Data.List                (foldl1')
-import           Data.Maybe               (fromMaybe)
 
 import qualified Graphics.UI.SDL.TTF as TTF
 
 import qualified Tunagui.General.Data     as D
 import           Tunagui.General.Data     (DimSize (..))
-import           Tunagui.General.Types    (Point(..), Size(..), Range(..), Shape(..), plusPS, plusPP, mkRange)
+import           Tunagui.General.Types    (Point(..), Size(..), Shape(..), plusPP)
 import           Tunagui.General.Base     (TunaguiT, runTuna)
 import           Tunagui.Internal.Render  as R
-import           Tunagui.Internal.Render (RenderT, runRender)
+import           Tunagui.Internal.Render (RenderT)
 import           Tunagui.Widget.Component.Features
 import qualified Tunagui.Widget.Component.Part as PRT
 import           Tunagui.Widget.Component.Util (up, mkSizeBehav)
@@ -137,8 +131,6 @@ mkButton conf win =
     toShapeColor :: Bool -> COL.ShapeColor
     toShapeColor True  = COL.hoverShapeColor
     toShapeColor False = COL.planeShapeColor
-
-    mkSize behW behH = S <$> (V2 <$> behW <*> behH)
 
     mkSizeBehav' c tc =
       mkSizeBehav (width c) (widthConf c) (PRT.tcWidth tc)

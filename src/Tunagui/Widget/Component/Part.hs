@@ -15,10 +15,8 @@ import qualified Data.Text as T
 import           Linear.V2
 import           Data.Maybe (fromMaybe)
 
-import qualified Graphics.UI.SDL.TTF as TTF
 import           Graphics.UI.SDL.TTF.FFI (TTFFont)
 
-import           Tunagui.General.Base (Tunagui, runTuna)
 import qualified Tunagui.General.Data as D
 import           Tunagui.General.Types (Point(..), Size(..), Shape(..), within)
 import qualified Tunagui.Internal.Render as R
@@ -51,7 +49,7 @@ mkClickableArea bPos bShape eClick eRelease eMotion = do
     -- Motion
     mkMotion = do
       (behPre, pushPre) <- newBehavior False
-      listen eMotionOn $ void . forkIO . sync . pushPre
+      _ <- listen eMotionOn $ void . forkIO . sync . pushPre
       return $ fst <$> filterE (uncurry (/=)) (snapshot (,) eMotionOn behPre)
       where
         eMotionOn = within' <$> snapshot (,) eMotion bArea
@@ -69,7 +67,7 @@ mkTextContent win font mtext = do
   (behCW, pushCW) <- newBehavior 0
   (behCH, pushCH) <- newBehavior 0
   (behText, pushText) <- newBehavior $ T.pack ""
-  listen (updates behText) $ \text ->
+  _ <- listen (updates behText) $ \text ->
     void . forkIO $ do
       (S (V2 w h)) <- withMVar (D.wRenderer win) $ \r ->
         runRender r $ R.textSize font text

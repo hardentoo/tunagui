@@ -5,7 +5,6 @@ module Main where
 import           Control.Concurrent     (threadDelay)
 import           Control.Monad          (forever)
 import           Control.Monad.IO.Class (liftIO)
-import           FRP.Sodium
 import           Linear.V2
 import qualified Data.Text              as T
 
@@ -25,7 +24,7 @@ select = GUI.withTunagui $ \tuna ->
   withWindow (WinConfig "Select" False (V2 300 300)) tuna $ \win -> do
     runTuna tuna $ runWin win $ do
       (btnButton, wRunButton) <- Button.new $ Button.defaultConfig {Button.bcText = Just "Button test"}
-      (btnLabel, wRunLabel) <- Button.new $ Button.defaultConfig {Button.bcText = Just "Label test"}
+      (_btnLabel, wRunLabel) <- Button.new $ Button.defaultConfig {Button.bcText = Just "Label test"}
       --
       testOverwriteTreeOP $ Container DirV [wRunButton, wRunLabel]
       -- testOverwriteTreeOP $ Container DirV [wRunButton]
