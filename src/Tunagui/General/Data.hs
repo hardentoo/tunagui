@@ -202,22 +202,21 @@ renderWT :: WidgetTree -> RenderT ()
 renderWT tree = go tree (T.P (V2 0 0))
   where
     go :: WidgetTree -> T.Point Int -> RenderT ()
-    go (Widget wid ti mTex a) tp@(T.P p) = do
+    go (Widget wid ti mTex prim) tp@(T.P p) = do
       r <- ask
-      liftIO $ locate a tp -- 'locate' isn't this function's work
-      -- Rendering if required
-      i <- liftIO . atomically . readTMVar $ ti
-      liftIO $ when (i > 0) $ do
-        putStrLn $ "Rendering " ++ show wid
-        withMVar mTex $ \tex ->
-          runRender r $
-            onTexture tex $ do
-              setColor $ V4 255 255 0 0
-              clear
-              render a
-        atomically $ putTMVar ti 0
+      liftIO $ locate prim tp -- 'locate' isn't this function's work
+      liftIO $ do -- Rendering if prim is updated
+        i <- atomically . readTMVar $ ti
+        when (i > 0) $ do
+          withMVar mTex $ \tex ->
+            runRender r $
+              onTexture tex $ do
+                setColor $ V4 255 255 0 0
+                clear
+                render prim
+          void . atomically $ swapTMVar ti 0
       --
-      (T.S sz) <- liftIO $ size a
+      (T.S sz) <- liftIO $ size prim
       let rect = SDL.Rectangle (A.P (fromIntegral <$> p)) (fromIntegral <$> sz)
       tex <- liftIO $ readMVar mTex
       copy tex Nothing (Just rect)
@@ -235,7 +234,6 @@ renderWT tree = go tree (T.P (V2 0 0))
           clear
           mapM_ (uncurry go) $ zip as ps
         copy cntTex Nothing (Just rect)
-
 
 sizeWT :: MonadIO m => WidgetTree -> m ([T.Point Int], T.Size Int)
 sizeWT (Widget _ _ _ a) = liftIO $ (,) [T.P (V2 0 0)] <$> size a
