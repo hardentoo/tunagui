@@ -8,10 +8,10 @@ import           Tunagui.Internal.Render (RenderT)
 class Renderable a where
   render :: a -> RenderT ()
   locate :: a -> Point Int -> IO ()
-  size   :: a -> IO (Size Int)
-  update :: a -> Event () -- When content is changed
-  resize :: a -> Event (Size Int) -- When range is changed
-  free   :: a -> IO ()
+  size :: a -> IO (Size Int)
+  updated :: a -> Event () -- When content is changed
+  resized :: a -> Event (Size Int) -- When range is changed
+  free :: a -> IO ()
 
 class Clickable a where
   clickEvent :: a -> Event (Point Int)

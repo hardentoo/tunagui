@@ -44,8 +44,8 @@ import           Tunagui.General.Base              (FrameEvents (..),
 import qualified Tunagui.General.Types             as T
 import           Tunagui.Internal.Render
 import           Tunagui.Widget.Component.Features (Renderable, free, locate,
-                                                    render, resize, size,
-                                                    update)
+                                                    render, resized, size,
+                                                    updated)
 
 -- Window
 data Window = Window
@@ -151,8 +151,8 @@ newWidget win prim = liftIO $ do
   cntr <- atomically $ newTMVar 0
 
   sync $ do -- Set listener
-    listen (resize prim) $ newTexture wid mTexture
-    listen (update prim) $ \_ -> void . forkIO $ renderOnSelfTex wid mTexture cntr
+    listen (resized prim) $ newTexture wid mTexture
+    listen (updated prim) $ \_ -> void . forkIO $ renderOnSelfTex wid mTexture cntr
 
   liftIO $ do -- Initialize
     sz <- size prim

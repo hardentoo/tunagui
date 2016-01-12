@@ -34,7 +34,7 @@ data Button = Button
   , render_ :: RenderT ()
   , locate_ :: Point Int -> IO ()
   , size_ :: IO (Size Int)
-  , update_ :: Event ()
+  , updated_ :: Event ()
   , resize_ :: Event (Size Int)
   , free_ :: IO ()
   }
@@ -67,10 +67,10 @@ instance Clickable Button where
 instance Renderable Button where
   render = render_
   locate = locate_
-  size   = size_
-  update = update_
-  resize = resize_
-  free   = free_
+  size = size_
+  updated = updated_
+  resized = resize_
+  free = free_
 
 mkButton :: Config -> D.Window -> TunaguiT Button
 mkButton conf win =
@@ -89,7 +89,7 @@ mkButton conf win =
       -- Hover
       behShapeColor <- hold COL.planeShapeColor $ toShapeColor <$> PRT.crossBoundary clk
       -- Update event
-      let update' = foldl1' mappend
+      let updated' = foldl1' mappend
             [ up behBorderSize
             , up behRangeSize
             , up behShapeColor
@@ -122,7 +122,7 @@ mkButton conf win =
         , render_ = render'
         , locate_ = sync . pushAbsPos0
         , size_ = sync (sample behRangeSize)
-        , update_ = update'
+        , updated_ = updated'
         , resize_ = value behRangeSize -- TODO: Check if it fires when range is resized
         , free_ = free'
         }
