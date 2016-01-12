@@ -8,24 +8,22 @@ module Tunagui.General.Base
   ) where
 
 import           Control.Monad.Reader
-import           Control.Monad.State
 import           FRP.Sodium
 
 import qualified SDL
-import qualified Graphics.UI.SDL.TTF as TTF
 
 import qualified Tunagui.General.Types as T
 
 data Tunagui = Tunagui
-  { cntEvents  :: FrameEvents
+  { cntEvents :: FrameEvents
   }
 
 data FrameEvents = FrameEvents
-  { behQuit :: Behavior Bool
+  { behQuit    :: Behavior Bool
   , eWinClosed :: Event SDL.Window
-  , ePML  :: Event (SDL.Window, T.Point Int) -- Press Mouse Left
-  , eRML  :: Event (SDL.Window, T.Point Int) -- Release Mouse Left
-  , eMMPos :: Event (SDL.Window, T.Point Int) -- Mouse motion
+  , ePML       :: Event (SDL.Window, T.Point Int) -- Press Mouse Left
+  , eRML       :: Event (SDL.Window, T.Point Int) -- Release Mouse Left
+  , eMMPos     :: Event (SDL.Window, T.Point Int) -- Mouse motion
   }
 
 newtype TunaguiT a = TunaguiT {

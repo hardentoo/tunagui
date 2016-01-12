@@ -4,8 +4,8 @@ module Tunagui.General.Initialize
 
 import           Control.Exception
 
+import qualified Graphics.UI.SDL.TTF   as TTF
 import qualified SDL
-import qualified Graphics.UI.SDL.TTF as TTF
 
 import           Tunagui.General.Base  (Tunagui (..))
 import           Tunagui.General.Event (listenAllEvents)
