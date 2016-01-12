@@ -123,7 +123,7 @@ mkButton conf win =
         , locate_ = sync . pushAbsPos0
         , size_ = sync $ sample behRangeSize
         , updated_ = updated'
-        , resized_ = value behRangeSize
+        , resized_ = updates behRangeSize
         , free_ = free'
         }
   where
