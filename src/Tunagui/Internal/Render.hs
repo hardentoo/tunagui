@@ -15,7 +15,9 @@ import           Control.Monad.Managed     (runManaged, managed)
 
 import qualified SDL
 import           SDL                       (($=), get)
-import qualified SDL.Font as TTF
+import           SDL.Raw (Color(..))
+import qualified Graphics.UI.SDL.TTF as TTF
+import           Graphics.UI.SDL.TTF.FFI (TTFFont)
 
 import           Control.Monad.Operational
 
@@ -85,23 +87,24 @@ drawRect p s = do
   r <- ask
   SDL.drawRect r $ Just (SDL.Rectangle (convP p) (convS s))
 
-textSize :: TTF.Font -> T.Text -> RenderT (Size Int)
-textSize font text = do
-  (w, h) <- TTF.size font text
-  return $ S $ fromIntegral <$> V2 w h
+textSize :: TTFFont -> T.Text -> RenderT (Size Int)
+textSize font text = liftIO $ do
+  (w, h) <- TTF.sizeText font (T.unpack text)
+  return $ S (V2 w h)
 
-renderText :: TTF.Font -> Point Int -> T.Text -> RenderT ()
+renderText :: TTFFont -> Point Int -> T.Text -> RenderT ()
 renderText font pos text = do
   r <- ask
   (S sz) <- textSize font text
   liftIO . runManaged $ do
-    surface <- managed $ bracket (TTF.blended font (V4 255 255 255 255) text) SDL.freeSurface
+    surface <- managed $ bracket (mkSurface <$> TTF.renderTextBlended font (T.unpack text) (Color 255 255 255 255)) SDL.freeSurface
     texture <- managed $ bracket (SDL.createTextureFromSurface r surface) SDL.destroyTexture
     let rect = Just $ SDL.Rectangle pos' (fromIntegral <$> sz)
     SDL.copy r texture Nothing rect
   where
     (P p) = pos
     pos' = A.P $ fromIntegral <$> p
+    mkSurface ptr = SDL.Surface ptr Nothing
 
 -- *****************************************************************************
 convP :: (Integral a, Integral b) => Point a -> A.Point V2 b

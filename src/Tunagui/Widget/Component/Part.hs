@@ -15,7 +15,8 @@ import qualified Data.Text as T
 import           Linear.V2
 import           Data.Maybe (fromMaybe)
 
-import qualified SDL.Font as TTF
+import qualified Graphics.UI.SDL.TTF as TTF
+import           Graphics.UI.SDL.TTF.FFI (TTFFont)
 
 import           Tunagui.General.Base (Tunagui, runTuna)
 import qualified Tunagui.General.Data as D
@@ -63,7 +64,7 @@ data TextContent = TextContent
   , modifyText :: (T.Text -> T.Text) -> Reactive ()
   }
 
-mkTextContent :: D.Window -> TTF.Font -> Maybe T.Text -> Reactive TextContent
+mkTextContent :: D.Window -> TTFFont -> Maybe T.Text -> Reactive TextContent
 mkTextContent win font mtext = do
   (behCW, pushCW) <- newBehavior 0
   (behCH, pushCH) <- newBehavior 0

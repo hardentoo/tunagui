@@ -12,13 +12,12 @@ import           Control.Monad.State
 import           FRP.Sodium
 
 import qualified SDL
-import qualified SDL.Font              as TTF
+import qualified Graphics.UI.SDL.TTF as TTF
 
 import qualified Tunagui.General.Types as T
 
 data Tunagui = Tunagui
   { cntEvents  :: FrameEvents
-  , cntFont :: TTF.Font
   }
 
 data FrameEvents = FrameEvents

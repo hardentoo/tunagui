@@ -17,7 +17,7 @@ import qualified Data.Text                as T
 import           Data.List                (foldl1')
 import           Data.Maybe               (fromMaybe)
 
-import qualified SDL.Font                 as TTF
+import qualified Graphics.UI.SDL.TTF as TTF
 
 import qualified Tunagui.General.Data     as D
 import           Tunagui.General.Data     (DimSize (..))
@@ -81,7 +81,7 @@ instance Renderable Button where
 mkButton :: Config -> D.Window -> TunaguiT Button
 mkButton conf win =
   liftIO $ do
-    font <- TTF.load "data/sample.ttf" 16
+    font <- TTF.openFont "data/sample.ttf" 16
     sync $ do
       -- Text
       tc <- PRT.mkTextContent win font (bcText conf)
@@ -118,7 +118,7 @@ mkButton conf win =
 
       let free' = do
             putStrLn "free Button"
-            TTF.free font
+            TTF.closeFont font
       return Button
         { modifyText = PRT.modifyText tc
         --

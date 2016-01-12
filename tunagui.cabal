@@ -27,7 +27,6 @@ library
                      , Tunagui.General.Event
                      , Tunagui.General.Initialize
                      , Tunagui.Internal.Render
-                    --  , Tunagui.Internal.Render.SDL
                      , Tunagui.Operation.Window
                      , Tunagui.Widget.Component.Features
                      , Tunagui.Widget.Component.Part
@@ -37,15 +36,9 @@ library
                      , Tunagui.Widget.Prim.Button
                     --  , Tunagui.Widget.Prim.Label
 
-                     -- git@github.com:sbidin/sdl2-ttf.git
-                     , SDL.Font
-                     , SDL.Raw.Font
-                     , SDL.ExceptionHelper
-                     , SDL.Raw.Helper
-
   -- other-extensions:
-  pkgconfig-depends:   sdl2 >= 2.0.3
-                     , SDL2_ttf >= 2.0.0
+  pkgconfig-depends:   sdl2 >= 2
+                     , SDL2_ttf >= 2
 
   c-sources:           cbits/helpers.c
 
@@ -57,12 +50,10 @@ library
                      , operational
                      , sodium
                      , sdl2 >= 2
+                     , sdl2-ttf >= 0.2.2
                      , linear
                      , containers
                      , managed
-                     -- For sdl2-ttf
-                     , bytestring >= 0.10.4.0
-                     , template-haskell
   default-language:    Haskell2010
 
 executable tuna
