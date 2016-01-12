@@ -16,7 +16,7 @@ import qualified Graphics.UI.SDL.TTF as TTF
 import qualified Tunagui.General.Data     as D
 import           Tunagui.General.Data     (DimSize (..))
 import           Tunagui.General.Types    (Point(..), Size(..), Shape(..), plusPP)
-import           Tunagui.General.Base     (TunaguiT, runTuna)
+import           Tunagui.General.Base     (TunaguiT)
 import           Tunagui.Internal.Render  as R
 import           Tunagui.Internal.Render (RenderT)
 import           Tunagui.Widget.Component.Features
@@ -121,9 +121,9 @@ mkButton conf win =
         , btnClkArea = clk
         , render_ = render'
         , locate_ = sync . pushAbsPos0
-        , size_ = sync (sample behRangeSize)
+        , size_ = sync $ sample behRangeSize
         , updated_ = updated'
-        , resized_ = value behRangeSize -- TODO: Check if it fires when range is resized
+        , resized_ = value behRangeSize
         , free_ = free'
         }
   where
