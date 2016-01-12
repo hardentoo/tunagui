@@ -33,7 +33,7 @@ data Button = Button
   , btnClkArea :: PRT.ClickableArea
   , render_ :: RenderT ()
   , locate_ :: Point Int -> IO ()
-  , size_ :: IO (Size Int)
+  , sizeof_ :: IO (Size Int)
   , updated_ :: Event ()
   , resized_ :: Event (Size Int)
   , free_ :: IO ()
@@ -67,7 +67,7 @@ instance Clickable Button where
 instance Renderable Button where
   render = render_
   locate = locate_
-  size = size_
+  sizeof = sizeof_
   updated = updated_
   resized = resized_
   free = free_
@@ -121,7 +121,7 @@ mkButton conf win =
         , btnClkArea = clk
         , render_ = render'
         , locate_ = sync . pushAbsPos0
-        , size_ = sync $ sample behRangeSize
+        , sizeof_ = sync $ sample behRangeSize
         , updated_ = updated'
         , resized_ = updates behRangeSize
         , free_ = free'

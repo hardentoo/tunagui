@@ -42,7 +42,7 @@ import           Tunagui.General.Base              (FrameEvents (..),
 import qualified Tunagui.General.Types             as T
 import           Tunagui.Internal.Render
 import           Tunagui.Widget.Component.Features (Renderable, free, locate,
-                                                    render, resized, size,
+                                                    render, resized, sizeof,
                                                     updated)
 
 -- Window
@@ -154,7 +154,7 @@ newWidget win prim = liftIO $ do
       i <- takeTMVar cntr
       putTMVar cntr (i + 1)
 
-  newTexture wid mTexture =<< size prim
+  newTexture wid mTexture =<< sizeof prim
 
   putStrLn "@newWidget end"
   return $ Widget wid cntr mTexture prim
@@ -182,7 +182,7 @@ renderWT :: WidgetTree -> RenderT ()
 renderWT tree = go tree (T.P (V2 0 0))
   where
     go :: WidgetTree -> T.Point Int -> RenderT ()
-    go (Widget wid ti mTex prim) tp@(T.P p) = do
+    go (Widget _ ti mTex prim) tp@(T.P p) = do
       r <- ask
       liftIO $ locate prim tp -- 'locate' isn't this function's work
       liftIO $ do -- Rendering if prim is updated
@@ -196,12 +196,11 @@ renderWT tree = go tree (T.P (V2 0 0))
                 render prim
           void . atomically $ swapTMVar ti 0
       --
-      (T.S sz) <- liftIO $ size prim
+      (T.S sz) <- liftIO $ sizeof prim
       let rect = SDL.Rectangle (A.P (fromIntegral <$> p)) (fromIntegral <$> sz)
       tex <- liftIO $ readMVar mTex
       copy tex Nothing (Just rect)
     go wt@(Container _ as) (T.P p) = do
-      r <- ask
       (ps, sz, rect) <- liftIO $ do
         (ps, T.S sz) <- sizeWT wt
         let sz' = fromIntegral <$> sz
@@ -216,7 +215,7 @@ renderWT tree = go tree (T.P (V2 0 0))
         copy cntTex Nothing (Just rect)
 
 sizeWT :: MonadIO m => WidgetTree -> m ([T.Point Int], T.Size Int)
-sizeWT (Widget _ _ _ a) = liftIO $ (,) [T.P (V2 0 0)] <$> size a
+sizeWT (Widget _ _ _ prim) = liftIO $ (,) [T.P (V2 0 0)] <$> sizeof prim
 sizeWT (Container dir as) = do
   (ps, T.R _ (T.P s)) <- runStateT (go as p0) (T.R p0 p0)
   return (ps, T.S s)
